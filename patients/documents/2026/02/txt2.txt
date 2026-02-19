@@ -1,0 +1,48 @@
+Global Healthcare CRM & Enterprise Competitors
+These are big CRM platforms used by large healthcare providers and hospitals:
+Epic Systems (Cheers / EHR + CRM) – Widely used in hospital networks with large deployment.
+Salesforce Health Cloud – Enterprise CRM with patient engagement, analytics and workflow automation.
+Microsoft Dynamics 365 (Healthcare) – Strong enterprise CRM with predictive analytics and MS ecosystem integration.
+Oracle Healthcare CRM – Cloud CRM with enterprise-grade features.
+SAP Healthcare CRM – Large hospital and network focus with deep analytics.
+IBM CRM / Care solutions – Enterprise CRM and patient engagement.
+Veeva CRM – CRM for life sciences and large healthcare organizations.
+Cerner (Oracle Health) – Hospital IT / CRM + clinical systems (often competing with Epic).
+Allscripts Healthcare Solutions – Integrated EHR + CRM workflows.
+Infor Healthcare CRM – CRM integrated with hospital solutions.
+
+
+ Practice & Clinic / Hospital Management Competitors
+These are clinic/hospital focused platforms that combine CRM with scheduling, billing, EHR, and engagement tools:
+Practo / Ray by Practo – Popular clinic/hospital management & patient engagement solution.
+MocDoc – Cloud-based hospital software with EHR, inventory, billing, lab integration.
+Clinicea – Customizable digital clinic workflow and EMR system.
+CareCloud – U.S. healthcare IT + CRM + billing + patient engagement.
+Athenahealth – Practice management with revenue cycle + CRM capabilities.
+eClinicalWorks – Integrated EHR & CRM functions, scheduling, analytics.
+NextGen Healthcare – CRM and clinical/operational management.
+
+
+India & Emerging Market CRM / Healthcare Software
+These platforms are especially relevant if you want to compete in India / APAC:
+Practo (Indian origin) – Strong brand and multi-product healthcare suite.
+Healthray – AI-driven analytics + hospital management system.
+KareXpert – Cloud & AI powered hospital software.
+
+
+Docfyn CRM – Indian healthcare CRM reported popular with hospitals & clinics (user feedback).
+LeadSquared Healthcare CRM – Marketing + patient lead management.
+HubSpot for Healthcare – CRM used by smaller healthcare providers.
+Zoho CRM (Healthcare configurations) – Cost-effective and customizable CRM adapted for clinics with partners.
+
+
+Other CRM Tools Commonly Tailored to Healthcare
+(Not healthcare-specific but used with customizations)
+Pipedrive – Simple sales/patient tracking CRM adapted by clinics.
+Onpipeline – CRM with email/calendar integrations useful for patient outreach.
+SugarCRM / Freshworks / others – General CRMs adapted for healthcare use with HIPAA-compliant setups.
+
+
+Competitive Landscape Snapshot
+Enterprise heavyweights like Salesforce, Microsoft, Oracle and Epic dominate large hospital networks, while clinic-focused players such as Practo, MocDoc, Clinicea and Docfyn serve smaller providers and multi-specialty clinics. Hybrid solutions with strong analytics and AI features are emerging as key differentiators in 2025–26.
+

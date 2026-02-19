@@ -33,15 +33,17 @@ ALLOWED_HOSTS = ['*']
 SHARED_APPS = [
     "django_tenants",
 
-    "django.contrib.admin",          # ✅ ADD THIS
-    "django.contrib.auth",           # ✅ ADD THIS
+    "django.contrib.admin",
+    "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    "apps.tenants",  
-    "apps.accounts"                # your tenant app
+    "apps.tenants",
+    "apps.accounts",
+    "apps.core",
+    "apps.patients",
 ]
 
 TENANT_APPS = [
@@ -183,7 +185,18 @@ STATIC_URL = "static/"
 TENANT_MODEL = "tenants.Client"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
 
+# Fall back to the public schema when no tenant matches the hostname.
+# This lets 127.0.0.1 / localhost work during development.
+SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
+
 
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
