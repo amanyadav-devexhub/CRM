@@ -1,1 +1,15 @@
-/venv
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Django stuff
+db.sqlite3
+media/
+*.log
+
+# Optional: OS files
+.DS_Store
+Thumbs.db

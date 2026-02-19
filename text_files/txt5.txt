@@ -1,0 +1,424 @@
+1. HIGH-LEVEL DJANGO PROJECT STRUCTURE
+healthcare_crm/
+│
+├── 📁 config/                          # Django project configuration
+│   ├── settings/
+│   │   ├── base.py                    # Base settings
+│   │   ├── development.py             # Dev settings
+│   │   ├── staging.py                 # Staging settings
+│   │   ├── production.py              # Production settings
+│   │   └── tenant.py                  # Tenant-specific settings
+│   ├── urls.py                        # Main URL configuration
+│   ├── wsgi.py
+│   ├── asgi.py
+│   └── celery.py                      # Celery configuration
+│
+├── 📁 apps/                           # Django applications
+│   ├── 📁 core/                       # Core functionality
+│   ├── 📁 accounts/                   # Authentication & users
+│   ├── 📁 tenants/                    # Tenant management
+│   ├── 📁 patients/                   # Patient management
+│   ├── 📁 appointments/               # Scheduling
+│   ├── 📁 billing/                    # Billing & payments
+│   ├── 📁 clinical/                   # Clinical features
+│   ├── 📁 communications/             # WhatsApp, SMS, Email
+│   ├── 📁 labs/                       # Lab integration
+│   ├── 📁 pharmacy/                   # Pharmacy module
+│   ├── 📁 analytics/                  # Reporting & analytics
+│   ├── 📁 ai/                         # AI features
+│   └── 📁 notifications/              # Real-time notifications
+│
+├── 📁 templates/                      # Django templates
+│   ├── 📁 admin/                      # Admin portal templates
+│   ├── 📁 tenant/                     # Clinic staff portal templates
+│   ├── 📁 patient/                    # Patient portal templates
+│   ├── 📁 emails/                     # Email templates
+│   └── 📁 base/                       # Base templates
+│
+├── 📁 static/                         # Static files
+│   ├── 📁 css/
+│   ├── 📁 js/
+│   ├── 📁 images/
+│   └── 📁 fonts/
+│
+├── 📁 media/                          # Uploaded media files
+│
+├── 📁 utils/                          # Utility functions
+│   ├── 📁 validators/
+│   ├── 📁 decorators/
+│   ├── 📁 helpers/
+│   └── 📁 constants.py
+│
+├── 📁 management/                     # Custom management commands
+│   └── commands/
+│
+├── 📁 fixtures/                       # Initial data
+├── 📁 tests/                          # Test files
+├── 📁 docs/                           # Documentation
+├── manage.py
+└── requirements/
+    ├── base.txt
+    ├── development.txt
+    └── production.txt
+🔧 2. DETAILED APP STRUCTURES
+A. Core App (apps/core/)
+core/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── forms.py
+├── management/
+│   └── commands/
+│       ├── setup_tenant.py
+│       └── create_test_data.py
+├── mixins/
+│   ├── TenantAwareMixin.py
+│   ├── AuditMixin.py
+│   └── SoftDeleteMixin.py
+├── middleware/
+│   ├── TenantMiddleware.py
+│   └── SecurityHeadersMiddleware.py
+├── utils/
+│   ├── tenant_context.py
+│   └── encryption.py
+└── templatetags/
+    └── core_tags.py
+B. Accounts App (apps/accounts/)
+accounts/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── forms.py
+├── backends/
+│   └── TenantAuthenticationBackend.py
+├── models/
+│   ├── User.py                    # Custom User model
+│   ├── Role.py
+│   ├── Permission.py
+│   └── UserSession.py
+├── views/
+│   ├── auth_views.py
+│   ├── user_views.py
+│   └── role_views.py
+├── templates/accounts/
+│   ├── login.html
+│   ├── register.html
+│   ├── password_reset.html
+│   └── profile.html
+└── signals.py
+C. Tenants App (apps/tenants/)
+tenants/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── forms.py
+├── models/
+│   ├── Tenant.py
+│   ├── SubscriptionPlan.py
+│   ├── TenantConfiguration.py
+│   └── TenantFeature.py
+├── views/
+│   ├── tenant_views.py
+│   ├── subscription_views.py
+│   └── configuration_views.py
+├── services/
+│   ├── tenant_service.py
+│   └── subscription_service.py
+├── migrations/
+├── templates/tenants/
+│   ├── dashboard.html
+│   ├── settings.html
+│   └── billing.html
+└── signals.py                    # Tenant creation signals
+D. Patients App (apps/patients/)
+patients/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── forms.py
+├── models/
+│   ├── Patient.py
+│   ├── Address.py
+│   ├── EmergencyContact.py
+│   ├── MedicalHistory.py
+│   ├── Allergy.py
+│   └── Insurance.py
+├── views/
+│   ├── patient_views.py
+│   ├── medical_history_views.py
+│   └── family_views.py
+├── forms/
+│   ├── PatientForm.py
+│   ├── MedicalHistoryForm.py
+│   └── InsuranceForm.py
+├── templatetags/
+│   └── patient_tags.py
+├── templates/patients/
+│   ├── list.html
+│   ├── detail.html
+│   ├── create.html
+│   └── medical_history.html
+└── utils/
+    └── patient_search.py
+E. Appointments App (apps/appointments/)
+appointments/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── forms.py
+├── models/
+│   ├── Appointment.py
+│   ├── Schedule.py
+│   ├── TimeSlot.py
+│   ├── Queue.py
+│   └── Calendar.py
+├── views/
+│   ├── appointment_views.py
+│   ├── schedule_views.py
+│   ├── calendar_views.py
+│   └── queue_views.py
+├── services/
+│   ├── scheduling_service.py
+│   └── availability_service.py
+├── templatetags/
+│   └── appointment_tags.py
+├── templates/appointments/
+│   ├── calendar.html
+│   ├── create.html
+│   ├── queue.html
+│   └── day_view.html
+└── utils/
+    └── slot_generator.py
+F. Billing App (apps/billing/)
+billing/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── forms.py
+├── models/
+│   ├── Invoice.py
+│   ├── InvoiceItem.py
+│   ├── Payment.py
+│   ├── InsuranceClaim.py
+│   └── Tax.py
+├── views/
+│   ├── invoice_views.py
+│   ├── payment_views.py
+│   ├── insurance_views.py
+│   └── report_views.py
+├── integrations/
+│   ├── stripe_integration.py
+│   ├── razorpay_integration.py
+│   └── insurance_integration.py
+├── templates/billing/
+│   ├── invoice.html
+│   ├── payment.html
+│   ├── insurance_claims.html
+│   └── reports.html
+└── utils/
+    └── tax_calculator.py
+G. Clinical App (apps/clinical/)
+clinical/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── forms.py
+├── models/
+│   ├── ClinicalNote.py
+│   ├── Prescription.py
+│   ├── VitalSigns.py
+│   ├── Diagnosis.py
+│   └── Procedure.py
+├── views/
+│   ├── clinical_note_views.py
+│   ├── prescription_views.py
+│   └── diagnosis_views.py
+├── forms/
+│   ├── ClinicalNoteForm.py
+│   ├── PrescriptionForm.py
+│   └── SOAPForm.py
+├── templates/clinical/
+│   ├── clinical_note.html
+│   ├── prescription.html
+│   └── soap_template.html
+└── utils/
+    └── medical_templates.py
+H. AI App (apps/ai/)
+ai/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+├── views.py
+├── urls.py
+├── services/
+│   ├── clinical_note_ai.py
+│   ├── triage_service.py
+│   ├── prediction_service.py
+│   └── voice_to_text.py
+├── ml_models/
+│   ├── symptom_checker/
+│   ├── note_generator/
+│   └── no_show_predictor/
+├── templates/ai/
+│   ├── triage_form.html
+│   └── ai_notes.html
+└── utils/
+    └── model_loader.py
+ 3. TEMPLATES STRUCTURE (Django Templates)
+Base Templates
+templates/
+├── base.html                        # Main base template
+├── base_admin.html                  # Admin portal base
+├── base_tenant.html                 # Clinic staff portal base
+├── base_patient.html                # Patient portal base
+├── base_auth.html                   # Authentication pages base
+└── base_email.html                  # Email template base
+Admin Portal Templates
+templates/admin/
+├── dashboard.html                   # Admin dashboard
+├── tenants/
+│   ├── list.html                   # List all tenants
+│   ├── detail.html                 # Tenant details
+│   ├── create.html                 # Create new tenant
+│   └── settings.html               # Tenant settings
+├── subscriptions/
+│   ├── plans.html                  # Subscription plans
+│   └── billing.html                # Platform billing
+├── system/
+│   ├── health.html                 # System health
+│   ├── logs.html                   # System logs
+│   └── settings.html               # System settings
+└── reports/
+    ├── platform.html               # Platform reports
+    └── analytics.html              # Analytics dashboard
+Tenant Portal Templates (Clinic/Hospital Staff)
+
+
+templates/tenant/
+├── dashboard.html                   # Clinic dashboard
+├── patients/
+│   ├── list.html                   # Patient list
+│   ├── detail.html                 # Patient profile
+│   ├── create.html                 # Register patient
+│   ├── medical_history.html        # Medical history
+│   └── documents.html              # Patient documents
+├── appointments/
+│   ├── calendar.html               # Calendar view
+│   ├── day_view.html               # Day view
+│   ├── create.html                 # Create appointment
+│   ├── queue.html                  # Live queue
+│   └── walkin.html                 # Walk-in registration
+├── billing/
+│   ├── invoices/
+│   │   ├── list.html              # Invoice list
+│   │   ├── create.html            # Create invoice
+│   │   └── detail.html            # Invoice detail
+│   ├── payments/
+│   │   ├── collect.html           # Collect payment
+│   │   └── history.html           # Payment history
+│   └── insurance/
+│       ├── claims.html            # Insurance claims
+│       └── preauth.html           # Pre-authorization
+├── clinical/
+│   ├── consultation/
+│   │   ├── notes.html             # Clinical notes
+│   │   ├── soap.html              # SOAP notes
+│   │   └── prescription.html      # Prescription
+│   └── diagnostics/
+│       ├── lab_orders.html        # Lab test orders
+│       └── results.html           # Lab results
+├── communications/
+│   ├── messages.html              # Message inbox
+│   ├── campaigns.html             # Campaigns
+│   └── templates.html             # Message templates
+├── reports/
+│   ├── financial.html             # Financial reports
+│   ├── clinical.html              # Clinical reports
+│   └── custom.html                # Custom reports
+└── settings/
+    ├── clinic.html                # Clinic settings
+    ├── staff.html                 # Staff management
+    ├── billing.html               # Billing settings
+    └── integrations.html          # Integrations
+Patient Portal Templates
+templates/patient/
+├── dashboard.html                   # Patient dashboard
+├── appointments/
+│   ├── book.html                   # Book appointment
+│   ├── my_appointments.html        # My appointments
+│   ├── reschedule.html             # Reschedule appointment
+│   └── cancel.html                 # Cancel appointment
+├── health/
+│   ├── records.html                # Health records
+│   ├── prescriptions.html          # My prescriptions
+│   ├── lab_results.html            # Lab results
+│   └── vaccinations.html           # Vaccination records
+├── billing/
+│   ├── invoices.html               # My invoices
+│   ├── payments.html               # Make payment
+│   └── insurance.html              # Insurance details
+├── profile/
+│   ├── personal.html               Personal information
+│   ├── family.html                 Family members
+│   └── preferences.html            Communication preferences
+├── communications/
+│   ├── messages.html               Messages from clinic
+│   └── feedback.html               Provide feedback
+└── auth/
+    ├── login.html                  Patient login
+    ├── register.html               Patient registration
+    └── password_reset.html         Password reset
+Email Templates
+templates/emails/
+├── appointment/
+│   ├── confirmation.html          # Appointment confirmation
+│   ├── reminder.html              # Appointment reminder
+│   ├── rescheduled.html           # Appointment rescheduled
+│   └── cancelled.html             # Appointment cancelled
+├── billing/
+│   ├── invoice.html               # Invoice sent
+│   ├── payment_receipt.html       # Payment receipt
+│   └── payment_reminder.html      # Payment reminder
+├── clinical/
+│   ├── prescription_ready.html    # Prescription ready
+│   ├── lab_results.html           # Lab results available
+│   └── follow_up.html             # Follow-up reminder
+├── patient/
+│   ├── welcome.html               # Welcome email
+│   ├── feedback_request.html      # Feedback request
+│   └── health_tips.html           # Health tips
+└── system/
+    ├── password_reset.html        # Password reset
+    └── account_verify.html        # Account verification
+
+
