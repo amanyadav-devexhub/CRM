@@ -1,0 +1,258 @@
+{% extends "base_admin.html" %}
+
+{% block nav_admin_dashboard %}active{% endblock %}
+{% block page_title %}Admin Dashboard <span>/ Platform Overview</span>{% endblock %}
+
+{% block content %}
+
+<!-- ─── Platform Stats ─── -->
+<div class="stats-grid">
+    <div class="stat-card purple animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Total Tenants</div>
+            <div class="stat-value" data-target="{{ tenant_count }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Healthcare organizations
+            </div>
+        </div>
+        <div class="stat-icon purple">
+            <span class="material-icons-round">apartment</span>
+        </div>
+    </div>
+
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Active Subscriptions</div>
+            <div class="stat-value" data-target="{{ subscription_count }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Paying customers
+            </div>
+        </div>
+        <div class="stat-icon blue">
+            <span class="material-icons-round">credit_card</span>
+        </div>
+    </div>
+
+    <div class="stat-card green animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Platform Patients</div>
+            <div class="stat-value" data-target="{{ patient_count }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Across all tenants
+            </div>
+        </div>
+        <div class="stat-icon green">
+            <span class="material-icons-round">people</span>
+        </div>
+    </div>
+
+    <div class="stat-card orange animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Feature Flags</div>
+            <div class="stat-value" data-target="{{ feature_count }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Platform features
+            </div>
+        </div>
+        <div class="stat-icon orange">
+            <span class="material-icons-round">toggle_on</span>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Row: Tenants Table + Quick Actions / Plans ─── -->
+<div class="content-grid">
+
+    <!-- Tenants List -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">apartment</span>
+                Registered Tenants
+            </h3>
+            <a href="/tenants/create/" class="card-action">+ Add Tenant</a>
+        </div>
+        <div class="card-body" style="padding:0">
+            {% if tenants %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Organization</th>
+                        <th>Subdomain</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tenants %}
+                    <tr>
+                        <td>
+                            <div class="patient-cell">
+                                <div class="tenant-type-icon hospital">
+                                    <span class="material-icons-round" style="font-size:16px">local_hospital</span>
+                                </div>
+                                <div>
+                                    <div class="patient-name">{{ t.name }}</div>
+                                    <div class="patient-id">{{ t.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code style="color:var(--accent-cyan); font-size:12px;">{{ t.subdomain }}</code></td>
+                        <td>{{ t.phone|default:"—" }}</td>
+                        <td>
+                            <span class="badge-tag {% if t.is_active %}active{% else %}expired{% endif %}">
+                                {% if t.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ t.created_at|date:"d M Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">domain_disabled</div>
+                <p>No tenants registered yet.</p>
+                <a href="/tenants/create/" class="action-btn primary"
+                    style="margin-top:16px; display:inline-flex; text-decoration:none;">
+                    <span class="icon material-icons-round">add_business</span>
+                    Add First Tenant
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar column: Quick Actions + Subscription Plans -->
+    <div>
+        <!-- Quick Actions -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">bolt</span>
+                    Quick Actions
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="/tenants/create/" class="action-btn primary" style="text-decoration:none;">
+                        <span class="icon material-icons-round">add_business</span>
+                        New Tenant
+                    </a>
+                    <a href="#" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">credit_card</span>
+                        Manage Plans
+                    </a>
+                    <a href="#" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">toggle_on</span>
+                        Feature Flags
+                    </a>
+                    <a href="/admin/" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">admin_panel_settings</span>
+                        Django Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Plans -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">workspace_premium</span>
+                    Subscription Plans
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if plans %}
+                <ul class="sub-info">
+                    {% for plan in plans %}
+                    <li>
+                        <span class="label">{{ plan.get_name_display }}</span>
+                        <span class="value">₹{{ plan.price }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="empty-state">
+                    <div class="icon material-icons-round">credit_card_off</div>
+                    <p>No plans configured yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Row: Feature Flags + Platform Health ─── -->
+<div class="content-grid equal">
+
+    <!-- Feature Flags -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">toggle_on</span>
+                Feature Flags
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if features %}
+            <ul class="feature-list">
+                {% for f in features %}
+                <li class="feature-item">
+                    <div class="feature-name">
+                        <span class="dot {% if f.is_active %}on{% else %}off{% endif %}"></span>
+                        {{ f.name }}
+                    </div>
+                    <span class="badge-tag {% if f.is_active %}active{% else %}expired{% endif %}">
+                        {% if f.is_active %}ON{% else %}OFF{% endif %}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">flag</div>
+                <p>No feature flags configured.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Platform Health -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">monitor_heart</span>
+                Platform Health
+            </h3>
+        </div>
+        <div class="card-body">
+            <ul class="sub-info">
+                <li>
+                    <span class="label">Active Tenants</span>
+                    <span class="value" style="color:var(--accent-green);">{{ active_tenant_count }}</span>
+                </li>
+                <li>
+                    <span class="label">Inactive Tenants</span>
+                    <span class="value" style="color:var(--accent-red);">{{ inactive_tenant_count }}</span>
+                </li>
+                <li>
+                    <span class="label">Trial Subscriptions</span>
+                    <span class="value" style="color:var(--accent-orange);">{{ trial_count }}</span>
+                </li>
+                <li>
+                    <span class="label">Total Patients (Platform)</span>
+                    <span class="value" style="color:var(--accent-blue);">{{ patient_count }}</span>
+                </li>
+                <li>
+                    <span class="label">Platform Features</span>
+                    <span class="value">{{ feature_count }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Healthcare CRM — Platform Admin">
+    <title>{% block title %}Admin{% endblock %} — HealthCRM Platform</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        /* Admin-specific brand color override */
+        .sidebar-brand .brand-icon {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .sidebar-brand h2 {
+            background: linear-gradient(135deg, #a78bfa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-item.active {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--accent-purple);
+        }
+
+        .nav-item .badge {
+            background: var(--accent-purple);
+        }
+
+        /* Admin-specific progress bar styles */
+        .progress-bar-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        .progress-bar-fill.blue {
+            background: var(--gradient-blue);
+        }
+
+        .progress-bar-fill.green {
+            background: var(--gradient-green);
+        }
+
+        .progress-bar-fill.purple {
+            background: var(--gradient-purple);
+        }
+
+        .progress-bar-fill.orange {
+            background: var(--gradient-orange);
+        }
+
+        /* Tenant card list */
+        .tenant-type-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .tenant-type-icon.hospital {
+            background: var(--gradient-blue);
+        }
+
+        .tenant-type-icon.clinic {
+            background: var(--gradient-green);
+        }
+
+        .tenant-type-icon.pharmacy {
+            background: var(--gradient-orange);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="layout">
+
+        <!-- ─── Admin Sidebar ─── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">P</div>
+                <div>
+                    <h2>HealthCRM</h2>
+                    <span>Platform Admin</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="/admin-dashboard/" class="nav-item {% block nav_admin_dashboard %}{% endblock %}">
+                        <span class="icon material-icons-round">space_dashboard</span>
+                        Dashboard
+                    </a>
+                    <a href="#" class="nav-item {% block nav_analytics %}{% endblock %}">
+                        <span class="icon material-icons-round">insights</span>
+                        Global Analytics
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Tenant Management</div>
+                    <a href="#" class="nav-item {% block nav_tenants %}{% endblock %}">
+                        <span class="icon material-icons-round">apartment</span>
+                        All Tenants
+                        {% if tenant_count %}<span class="badge">{{ tenant_count }}</span>{% endif %}
+                    </a>
+                    <a href="/tenants/create/" class="nav-item {% block nav_tenant_create %}{% endblock %}">
+                        <span class="icon material-icons-round">add_business</span>
+                        Add Tenant
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Billing & Plans</div>
+                    <a href="#" class="nav-item {% block nav_subscriptions %}{% endblock %}">
+                        <span class="icon material-icons-round">credit_card</span>
+                        Subscriptions
+                    </a>
+                    <a href="#" class="nav-item {% block nav_plans %}{% endblock %}">
+                        <span class="icon material-icons-round">workspace_premium</span>
+                        Plans & Pricing
+                    </a>
+                    <a href="#" class="nav-item {% block nav_revenue %}{% endblock %}">
+                        <span class="icon material-icons-round">payments</span>
+                        Revenue
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Platform Config</div>
+                    <a href="#" class="nav-item {% block nav_features %}{% endblock %}">
+                        <span class="icon material-icons-round">toggle_on</span>
+                        Feature Flags
+                    </a>
+                    <a href="/admin/" class="nav-item">
+                        <span class="icon material-icons-round">admin_panel_settings</span>
+                        Django Admin
+                    </a>
+                    <a href="#" class="nav-item {% block nav_settings %}{% endblock %}">
+                        <span class="icon material-icons-round">settings</span>
+                        Platform Settings
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- ─── Main ─── -->
+        <div class="main-content">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span class="material-icons-round">menu</span>
+                    </button>
+                    <h1>{% block page_title %}Admin Dashboard{% endblock %}</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="search-box">
+                        <span class="icon material-icons-round">search</span>
+                        <input type="text" placeholder="Search tenants, plans…">
+                    </div>
+                    <button class="topbar-btn" title="Notifications">
+                        <span class="material-icons-round">notifications</span>
+                        <span class="dot"></span>
+                    </button>
+                    <div class="user-pill">
+                        <div class="user-avatar" style="background: var(--gradient-purple);">P</div>
+                        <div class="user-info">
+                            <div class="name">Platform Owner</div>
+                            <div class="role">Super Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="page">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

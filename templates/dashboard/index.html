@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Dashboard <span>/ Clinic Overview</span>{% endblock %}
+
+{% block content %}
+
+<!-- ─── Stat Cards ─── -->
+<div class="stats-grid">
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Total Patients</div>
+            <div class="stat-value" data-target="{{ patient_count }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Registered in clinic
+            </div>
+        </div>
+        <div class="stat-icon blue">
+            <span class="material-icons-round">people</span>
+        </div>
+    </div>
+
+    <div class="stat-card green animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Today's Appointments</div>
+            <div class="stat-value" data-target="{{ today_appointments }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Scheduled today
+            </div>
+        </div>
+        <div class="stat-icon green">
+            <span class="material-icons-round">calendar_month</span>
+        </div>
+    </div>
+
+    <div class="stat-card purple animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Pending Labs</div>
+            <div class="stat-value" data-target="{{ pending_labs }}">0</div>
+            <div class="stat-sub">
+                Awaiting results
+            </div>
+        </div>
+        <div class="stat-icon purple">
+            <span class="material-icons-round">biotech</span>
+        </div>
+    </div>
+
+    <div class="stat-card orange animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Monthly Revenue</div>
+            <div class="stat-value" data-target="{{ monthly_revenue }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> This month
+            </div>
+        </div>
+        <div class="stat-icon orange">
+            <span class="material-icons-round">payments</span>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Row: Recent Patients + Quick Actions ─── -->
+<div class="content-grid">
+
+    <!-- Recent Patients -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">person</span>
+                Recent Patients
+            </h3>
+            <a href="/patients/" class="card-action">View All →</a>
+        </div>
+        <div class="card-body" style="padding:0">
+            {% if recent_patients %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Gender</th>
+                        <th>Phone</th>
+                        <th>Blood</th>
+                        <th>Registered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in recent_patients %}
+                    <tr>
+                        <td>
+                            <div class="patient-cell">
+                                <div class="patient-avatar"
+                                    style="background: {% cycle 'var(--gradient-blue)' 'var(--gradient-purple)' 'var(--gradient-green)' 'var(--gradient-orange)' %}">
+                                    {{ p.first_name.0 }}{{ p.last_name.0 }}
+                                </div>
+                                <div>
+                                    <a href="/patients/{{ p.id }}/" class="patient-name"
+                                        style="text-decoration:none;">{{ p.first_name }} {{ p.last_name }}</a>
+                                    <div class="patient-id">{{ p.patient_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span
+                                class="badge-tag {% if p.gender == 'M' %}male{% elif p.gender == 'F' %}female{% else %}other{% endif %}">
+                                {{ p.get_gender_display }}
+                            </span>
+                        </td>
+                        <td>{{ p.phone|default:"—" }}</td>
+                        <td>{{ p.blood_group|default:"—" }}</td>
+                        <td>{{ p.created_at|date:"d M Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">person_off</div>
+                <p>No patients registered yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar column: Quick Actions + Upcoming -->
+    <div>
+        <!-- Quick Actions -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">bolt</span>
+                    Quick Actions
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
+                        <span class="icon material-icons-round">person_add</span>
+                        New Patient
+                    </a>
+                    <a href="#" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">event</span>
+                        Book Appointment
+                    </a>
+                    <a href="/patients/" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">list_alt</span>
+                        All Patients
+                    </a>
+                    <a href="#" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">biotech</span>
+                        Lab Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">schedule</span>
+                    Today's Schedule
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="empty-state">
+                    <div class="icon material-icons-round">event_busy</div>
+                    <p>No appointments for today.</p>
+                    <a href="#" class="action-btn primary"
+                        style="margin-top:16px; display:inline-flex; text-decoration:none;">
+                        <span class="icon material-icons-round">event</span>
+                        Book Appointment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

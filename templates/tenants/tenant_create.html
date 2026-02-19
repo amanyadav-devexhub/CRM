@@ -1,0 +1,147 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Tenants <span>/ Create New</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-secondary);
+    }
+
+    .form-group input,
+    .form-group select {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        font-size: 14px;
+        color: var(--text-primary);
+        font-family: inherit;
+        outline: none;
+        transition: var(--transition);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        margin-top: 8px;
+    }
+
+    @media (max-width: 640px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+    <a href="/admin-dashboard/" class="action-btn" style="text-decoration:none; padding:8px 12px;">
+        <span class="material-icons-round">arrow_back</span>
+    </a>
+    <h2 style="font-size:22px; font-weight:700;">Create New Tenant</h2>
+</div>
+
+<form method="post" class="card">
+    {% csrf_token %}
+
+    <div class="card-header">
+        <h3><span class="icon material-icons-round">apartment</span> Tenant Details</h3>
+    </div>
+    <div class="card-body">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="name">Organization Name *</label>
+                <input type="text" id="name" name="name" required placeholder="City Hospital">
+            </div>
+            <div class="form-group">
+                <label for="schema_name">Schema Name *</label>
+                <input type="text" id="schema_name" name="schema_name" required placeholder="city_hospital"
+                    pattern="[a-z_]+" title="Lowercase letters and underscores only">
+            </div>
+            <div class="form-group full">
+                <label for="domain_url">Domain URL *</label>
+                <input type="text" id="domain_url" name="domain_url" required placeholder="cityhospital.localhost">
+            </div>
+        </div>
+    </div>
+
+    <div class="card-header" style="border-top:1px solid var(--border-color);">
+        <h3><span class="icon material-icons-round">admin_panel_settings</span> Admin Account</h3>
+    </div>
+    <div class="card-body">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="owner_username">Username *</label>
+                <input type="text" id="owner_username" name="owner_username" required placeholder="admin">
+            </div>
+            <div class="form-group">
+                <label for="owner_email">Email *</label>
+                <input type="email" id="owner_email" name="owner_email" required placeholder="admin@hospital.com">
+            </div>
+            <div class="form-group">
+                <label for="owner_password">Password *</label>
+                <input type="password" id="owner_password" name="owner_password" required minlength="8">
+            </div>
+        </div>
+
+        {% if form_errors %}
+        <div
+            style="margin-top:16px; padding:12px 16px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);">
+            <p style="color:var(--accent-red); font-size:13px; font-weight:500;">
+                <span class="material-icons-round" style="font-size:16px; vertical-align:middle;">error</span>
+                {{ form_errors }}
+            </p>
+        </div>
+        {% endif %}
+
+        {% if success_message %}
+        <div
+            style="margin-top:16px; padding:12px 16px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius-sm);">
+            <p style="color:var(--accent-green); font-size:13px; font-weight:500;">
+                <span class="material-icons-round" style="font-size:16px; vertical-align:middle;">check_circle</span>
+                {{ success_message }}
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <a href="/admin-dashboard/" class="action-btn" style="text-decoration:none;">Cancel</a>
+            <button type="submit" class="action-btn primary">
+                <span class="icon material-icons-round">add_business</span>
+                Create Tenant
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
