@@ -109,28 +109,31 @@ SubscriptionPlan.add_to_class(
 
 
 class TenantFeature(models.Model):
-    """
-    Tenant-level feature override
-    """
-    tenant = models.ForeignKey(
-        Tenant,
-        on_delete=models.CASCADE,
-        related_name="feature_overrides"
-    )
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE)
+    feature_name = models.CharField(max_length=100)
 
-    feature = models.ForeignKey(
-        Feature,
-        on_delete=models.CASCADE
-    )
+    is_enabled = models.BooleanField(default=False)
+    rollout_percentage = models.IntegerField(default=100)
 
-    is_enabled = models.BooleanField(default=True)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("tenant", "feature")
+        unique_together = ("tenant", "feature_name")
 
-    def __str__(self):
-        return f"{self.tenant.name} - {self.feature.code}"
+    def is_time_valid(self):
+        now = timezone.now()
 
+        if self.start_date and now < self.start_date:
+            return False
+
+        if self.end_date and now > self.end_date:
+            return False
+
+        return True
 
 from django.core.cache import cache
 
