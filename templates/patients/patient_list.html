@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block nav_patients %}active{% endblock %}
+{% block page_title %}Patients <span>/ Registry</span>{% endblock %}
+
+{% block content %}
+<!-- ─── Top Bar ─── -->
+<div
+    style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+    <div>
+        <h2 style="font-size:22px; font-weight:700;">Patient Registry</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">{{ patients|length }} patient{{
+            patients|length|pluralize }} registered</p>
+    </div>
+    <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
+        <span class="icon material-icons-round">person_add</span>
+        Add New Patient
+    </a>
+</div>
+
+<!-- ─── Filters ─── -->
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:14px 22px;">
+        <form method="get" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <div class="search-box" style="flex:1; min-width:200px;">
+                <span class="icon material-icons-round">search</span>
+                <input type="text" name="search" placeholder="Search by name, phone, ID…" value="{{ search_query }}"
+                    style="width:100%;">
+            </div>
+            <select name="gender" class="form-select">
+                <option value="">All Genders</option>
+                <option value="M" {% if gender_filter == "M" %}selected{% endif %}>Male</option>
+                <option value="F" {% if gender_filter == "F" %}selected{% endif %}>Female</option>
+                <option value="O" {% if gender_filter == "O" %}selected{% endif %}>Other</option>
+            </select>
+            <select name="blood_group" class="form-select">
+                <option value="">All Blood Groups</option>
+                {% for bg in blood_groups %}
+                <option value="{{ bg }}" {% if blood_filter == bg %}selected{% endif %}>{{ bg }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="action-btn" style="padding:10px 20px;">
+                <span class="icon material-icons-round">filter_list</span>
+                Filter
+            </button>
+            {% if search_query or gender_filter or blood_filter %}
+            <a href="/patients/" class="action-btn"
+                style="padding:10px 16px; text-decoration:none; color:var(--accent-red);">
+                <span class="icon material-icons-round">close</span>
+                Clear
+            </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- ─── Patient Table ─── -->
+<div class="card">
+    <div class="card-body" style="padding:0; overflow-x:auto;">
+        {% if patients %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Patient ID</th>
+                    <th>Gender</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Blood Group</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td>
+                        <div class="patient-cell">
+                            <div class="patient-avatar"
+                                style="background: {% cycle 'var(--gradient-blue)' 'var(--gradient-purple)' 'var(--gradient-green)' 'var(--gradient-orange)' %}">
+                                {{ p.first_name.0 }}{{ p.last_name.0 }}
+                            </div>
+                            <div>
+                                <a href="/patients/{{ p.id }}/" class="patient-name" style="text-decoration:none;">
+                                    {{ p.first_name }} {{ p.last_name }}
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                    <td><code style="color:var(--accent-cyan); font-size:12px;">{{ p.patient_id }}</code></td>
+                    <td>
+                        <span
+                            class="badge-tag {% if p.gender == 'M' %}male{% elif p.gender == 'F' %}female{% else %}other{% endif %}">
+                            {{ p.get_gender_display }}
+                        </span>
+                    </td>
+                    <td>{{ p.phone|default:"—" }}</td>
+                    <td>{{ p.email|default:"—" }}</td>
+                    <td>{{ p.blood_group|default:"—" }}</td>
+                    <td>{{ p.created_at|date:"d M Y" }}</td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <a href="/patients/{{ p.id }}/" class="tbl-action" title="View">
+                                <span class="material-icons-round">visibility</span>
+                            </a>
+                            <a href="/patients/{{ p.id }}/edit/" class="tbl-action" title="Edit">
+                                <span class="material-icons-round">edit</span>
+                            </a>
+                            <form method="post" action="/patients/{{ p.id }}/delete/" style="display:inline;"
+                                onsubmit="return confirm('Delete patient {{ p.first_name }} {{ p.last_name }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="tbl-action danger" title="Delete">
+                                    <span class="material-icons-round">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">person_off</div>
+            <p>No patients found.</p>
+            <a href="/patients/create/" class="action-btn primary"
+                style="margin-top:16px; display:inline-flex; text-decoration:none;">
+                <span class="icon material-icons-round">person_add</span>
+                Add First Patient
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

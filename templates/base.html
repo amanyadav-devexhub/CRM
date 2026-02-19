@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Healthcare CRM — Clinic Dashboard">
+    <title>{% block title %}Dashboard{% endblock %} — HealthCRM</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        /* Tenant/Clinic brand color — teal/green */
+        .sidebar-brand .brand-icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .sidebar-brand h2 {
+            background: linear-gradient(135deg, #34d399, #6ee7b7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-item.active {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-green);
+        }
+
+        .nav-item .badge {
+            background: var(--accent-green);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="layout">
+
+        <!-- ─── Tenant Sidebar ─── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">H</div>
+                <div>
+                    <h2>HealthCRM</h2>
+                    <span>Clinic Dashboard</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="/dashboard/" class="nav-item {% block nav_dashboard %}{% endblock %}">
+                        <span class="icon material-icons-round">dashboard</span>
+                        Dashboard
+                    </a>
+                    <a href="/patients/" class="nav-item {% block nav_patients %}{% endblock %}">
+                        <span class="icon material-icons-round">people</span>
+                        Patients
+                        {% if patient_count %}<span class="badge">{{ patient_count }}</span>{% endif %}
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Operations</div>
+                    <a href="#" class="nav-item {% block nav_appointments %}{% endblock %}">
+                        <span class="icon material-icons-round">calendar_month</span>
+                        Appointments
+                    </a>
+                    <a href="#" class="nav-item {% block nav_billing %}{% endblock %}">
+                        <span class="icon material-icons-round">receipt_long</span>
+                        Billing
+                    </a>
+                    <a href="#" class="nav-item {% block nav_queue %}{% endblock %}">
+                        <span class="icon material-icons-round">format_list_numbered</span>
+                        Queue / Tokens
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Clinical</div>
+                    <a href="#" class="nav-item {% block nav_clinical %}{% endblock %}">
+                        <span class="icon material-icons-round">medical_services</span>
+                        Clinical Notes
+                    </a>
+                    <a href="#" class="nav-item {% block nav_pharmacy %}{% endblock %}">
+                        <span class="icon material-icons-round">medication</span>
+                        Pharmacy
+                    </a>
+                    <a href="#" class="nav-item {% block nav_labs %}{% endblock %}">
+                        <span class="icon material-icons-round">biotech</span>
+                        Lab Reports
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Insights</div>
+                    <a href="#" class="nav-item {% block nav_analytics %}{% endblock %}">
+                        <span class="icon material-icons-round">bar_chart</span>
+                        Analytics
+                    </a>
+                    <a href="#" class="nav-item {% block nav_communications %}{% endblock %}">
+                        <span class="icon material-icons-round">chat</span>
+                        Communications
+                    </a>
+                    <a href="#" class="nav-item {% block nav_settings %}{% endblock %}">
+                        <span class="icon material-icons-round">settings</span>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- ─── Main ─── -->
+        <div class="main-content">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span class="material-icons-round">menu</span>
+                    </button>
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="search-box">
+                        <span class="icon material-icons-round">search</span>
+                        <input type="text" placeholder="Search patients, appointments…">
+                    </div>
+                    <button class="topbar-btn" title="Notifications">
+                        <span class="material-icons-round">notifications</span>
+                        <span class="dot"></span>
+                    </button>
+                    <div class="user-pill">
+                        <div class="user-avatar" style="background: var(--gradient-green);">S</div>
+                        <div class="user-info">
+                            <div class="name">Staff</div>
+                            <div class="role">Sub Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="page">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

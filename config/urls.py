@@ -1,25 +1,36 @@
 """
 URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
 from django.contrib import admin
-from django.urls import path ,include
+from django.urls import path, include
+from apps.tenants.views import AdminDashboardView, SubAdminDashboardView
+from apps.patients.template_views import (
+    PatientListView, PatientDetailView,
+    PatientCreateView, PatientEditView, PatientDeleteView,
+)
+from apps.tenants.template_views import TenantCreatePageView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/tenants/",include("apps.tenants.urls")),
-    path("api/patients/",include("apps.patients.urls")),
+
+    # API endpoints
+    path("api/tenants/", include("apps.tenants.urls")),
+    path("api/patients/", include("apps.patients.urls")),
+
+    # Admin Dashboard (Platform Owner)
+    path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+
+    # Sub-Admin Dashboard (Tenant / Clinic)
+    path("dashboard/", SubAdminDashboardView.as_view(), name="dashboard"),
+
+    # Patient HTML pages
+    path("patients/", PatientListView.as_view(), name="patient-list"),
+    path("patients/create/", PatientCreateView.as_view(), name="patient-create"),
+    path("patients/<uuid:pk>/", PatientDetailView.as_view(), name="patient-detail"),
+    path("patients/<uuid:pk>/edit/", PatientEditView.as_view(), name="patient-edit"),
+    path("patients/<uuid:pk>/delete/", PatientDeleteView.as_view(), name="patient-delete"),
+
+    # Tenant HTML pages
+    path("tenants/create/", TenantCreatePageView.as_view(), name="tenant-create-page"),
 ]

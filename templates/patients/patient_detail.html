@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block nav_patients %}active{% endblock %}
+{% block page_title %}Patient <span>/ {{ patient.first_name }} {{ patient.last_name }}</span>{% endblock %}
+
+{% block content %}
+<!-- ─── Header ─── -->
+<div
+    style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+    <div style="display:flex; align-items:center; gap:16px;">
+        <a href="/patients/" class="action-btn" style="text-decoration:none; padding:8px 12px;">
+            <span class="material-icons-round">arrow_back</span>
+        </a>
+        <div class="patient-avatar"
+            style="width:56px; height:56px; font-size:20px; border-radius:14px; background:var(--gradient-blue); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600;">
+            {{ patient.first_name.0 }}{{ patient.last_name.0 }}
+        </div>
+        <div>
+            <h2 style="font-size:22px; font-weight:700;">{{ patient.first_name }} {{ patient.last_name }}</h2>
+            <p style="color:var(--text-muted); font-size:13px;">
+                <code style="color:var(--accent-cyan);">{{ patient.patient_id }}</code>
+                &nbsp;·&nbsp; Registered {{ patient.created_at|date:"d M Y" }}
+            </p>
+        </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+        <a href="/patients/{{ patient.id }}/edit/" class="action-btn" style="text-decoration:none;">
+            <span class="icon material-icons-round">edit</span> Edit
+        </a>
+        <form method="post" action="/patients/{{ patient.id }}/delete/"
+            onsubmit="return confirm('Delete this patient?');">
+            {% csrf_token %}
+            <button type="submit" class="action-btn" style="color:var(--accent-red);">
+                <span class="icon material-icons-round">delete</span> Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ─── Stats Row ─── -->
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-bottom:24px;">
+    <div class="stat-card blue" style="padding:16px 20px;">
+        <div class="stat-info">
+            <div class="stat-label">Gender</div>
+            <div style="font-size:18px; font-weight:600;">{{ patient.get_gender_display|default:"—" }}</div>
+        </div>
+        <div class="stat-icon blue"><span class="material-icons-round">wc</span></div>
+    </div>
+    <div class="stat-card purple" style="padding:16px 20px;">
+        <div class="stat-info">
+            <div class="stat-label">Blood Group</div>
+            <div style="font-size:18px; font-weight:600;">{{ patient.blood_group|default:"—" }}</div>
+        </div>
+        <div class="stat-icon purple"><span class="material-icons-round">bloodtype</span></div>
+    </div>
+    <div class="stat-card green" style="padding:16px 20px;">
+        <div class="stat-info">
+            <div class="stat-label">Age</div>
+            <div style="font-size:18px; font-weight:600;">{% if patient.age %}{{ patient.age }} yrs{% else %}—{% endif
+                %}</div>
+        </div>
+        <div class="stat-icon green"><span class="material-icons-round">cake</span></div>
+    </div>
+    <div class="stat-card orange" style="padding:16px 20px;">
+        <div class="stat-info">
+            <div class="stat-label">Phone</div>
+            <div style="font-size:18px; font-weight:600;">{{ patient.phone|default:"—" }}</div>
+        </div>
+        <div class="stat-icon orange"><span class="material-icons-round">phone</span></div>
+    </div>
+</div>
+
+<!-- ─── Demographics + Contact ─── -->
+<div class="content-grid equal" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">badge</span> Demographics</h3>
+        </div>
+        <div class="card-body">
+            <ul class="sub-info">
+                <li><span class="label">First Name</span><span class="value">{{ patient.first_name }}</span></li>
+                <li><span class="label">Last Name</span><span class="value">{{ patient.last_name }}</span></li>
+                <li><span class="label">Date of Birth</span><span class="value">{{ patient.date_of_birth|date:"d M
+                        Y"|default:"—" }}</span></li>
+                <li><span class="label">Gender</span><span class="value">{{ patient.get_gender_display }}</span></li>
+                <li><span class="label">Blood Group</span><span class="value">{{ patient.blood_group|default:"—"
+                        }}</span></li>
+                <li><span class="label">Marital Status</span><span class="value">{{
+                        patient.get_marital_status_display|default:"—" }}</span></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">contact_phone</span> Contact Info</h3>
+        </div>
+        <div class="card-body">
+            <ul class="sub-info">
+                <li><span class="label">Phone</span><span class="value">{{ patient.phone|default:"—" }}</span></li>
+                <li><span class="label">Email</span><span class="value">{{ patient.email|default:"—" }}</span></li>
+                <li><span class="label">Preferred Language</span><span class="value">{{
+                        patient.preferred_language|default:"English" }}</span></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Medical History ─── -->
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header">
+        <h3><span class="icon material-icons-round">medical_services</span> Medical History</h3>
+    </div>
+    <div class="card-body" style="padding:0;">
+        {% if medical_history %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Condition</th>
+                    <th>Status</th>
+                    <th>Diagnosed</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mh in medical_history %}
+                <tr>
+                    <td style="font-weight:500;">{{ mh.condition }}</td>
+                    <td>
+                        <span
+                            class="badge-tag {% if mh.status == 'active' %}active{% elif mh.status == 'resolved' %}male{% else %}trial{% endif %}">
+                            {{ mh.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ mh.diagnosis_date|date:"d M Y"|default:"—" }}</td>
+                    <td
+                        style="color:var(--text-secondary); max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        {{ mh.notes|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">healing</div>
+            <p>No medical history recorded.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ─── Allergies + Insurance ─── -->
+<div class="content-grid equal" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">warning</span> Allergies</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if allergies %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Allergen</th>
+                        <th>Severity</th>
+                        <th>Reaction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in allergies %}
+                    <tr>
+                        <td style="font-weight:500;">{{ a.allergen }}</td>
+                        <td>
+                            <span
+                                class="badge-tag {% if a.severity == 'severe' %}expired{% elif a.severity == 'moderate' %}trial{% else %}active{% endif %}">
+                                {{ a.get_severity_display }}
+                            </span>
+                        </td>
+                        <td style="color:var(--text-secondary);">{{ a.reaction|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">check_circle</div>
+                <p>No allergies recorded.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">verified_user</span> Insurance</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if insurance %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Policy #</th>
+                        <th>Valid To</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ins in insurance %}
+                    <tr>
+                        <td style="font-weight:500;">{{ ins.provider }}</td>
+                        <td><code style="color:var(--accent-cyan);">{{ ins.policy_number }}</code></td>
+                        <td>{{ ins.valid_to|date:"d M Y"|default:"—" }}</td>
+                        <td>
+                            <span class="badge-tag {% if ins.is_active %}active{% else %}expired{% endif %}">
+                                {% if ins.is_active %}Active{% else %}Expired{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">shield</div>
+                <p>No insurance policies.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ─── Documents + Emergency Contacts ─── -->
+<div class="content-grid equal">
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">description</span> Documents</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if documents %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Uploaded</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td style="font-weight:500;">{{ doc.title }}</td>
+                        <td><span class="badge-tag male">{{ doc.get_document_type_display }}</span></td>
+                        <td>{{ doc.created_at|date:"d M Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">folder_off</div>
+                <p>No documents uploaded.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">contact_emergency</span> Emergency Contacts</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if emergency_contacts %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Relation</th>
+                        <th>Phone</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ec in emergency_contacts %}
+                    <tr>
+                        <td style="font-weight:500;">{{ ec.name }}</td>
+                        <td>{{ ec.get_relationship_display }}</td>
+                        <td>{{ ec.phone }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">person_off</div>
+                <p>No emergency contacts.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,10 +4,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
+from django.shortcuts import render
+from django.views import View
+
 from .serializers import TenantCreateSerializer
-from .models import Client, Domain
+from .models import Client, Domain, Tenant, SubscriptionPlan, TenantSubscription, Feature
 
 User = get_user_model()
+
 
 class TenantCreateAPIView(APIView):
     """
@@ -55,3 +59,113 @@ class TenantCreateAPIView(APIView):
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ──────────────────────────────────────────────
+# Admin Dashboard — Platform Owner View
+# ──────────────────────────────────────────────
+class AdminDashboardView(View):
+    """
+    Platform admin dashboard: tenants, subscriptions, feature flags,
+    and global platform-level stats.
+    """
+    template_name = "dashboard/admin_dashboard.html"
+
+    def get(self, request):
+        # Patient stats (platform-wide)
+        try:
+            from apps.patients.models import Patient
+            patient_count = Patient.objects.count()
+        except Exception:
+            patient_count = 0
+
+        # Tenant stats
+        try:
+            tenants = Tenant.objects.all()
+            tenant_count = tenants.count()
+            active_tenant_count = Tenant.objects.filter(is_active=True).count()
+            inactive_tenant_count = tenant_count - active_tenant_count
+        except Exception:
+            tenants = []
+            tenant_count = 0
+            active_tenant_count = 0
+            inactive_tenant_count = 0
+
+        # Subscription stats
+        try:
+            subscription_count = TenantSubscription.objects.filter(
+                status="ACTIVE"
+            ).count()
+            trial_count = TenantSubscription.objects.filter(
+                status="TRIAL"
+            ).count()
+        except Exception:
+            subscription_count = 0
+            trial_count = 0
+
+        # Subscription plans
+        try:
+            plans = SubscriptionPlan.objects.all()
+        except Exception:
+            plans = []
+
+        # Feature flags
+        try:
+            features = Feature.objects.all()
+            feature_count = features.count()
+        except Exception:
+            features = []
+            feature_count = 0
+
+        context = {
+            "patient_count": patient_count,
+            "tenant_count": tenant_count,
+            "active_tenant_count": active_tenant_count,
+            "inactive_tenant_count": inactive_tenant_count,
+            "tenants": tenants,
+            "subscription_count": subscription_count,
+            "trial_count": trial_count,
+            "plans": plans,
+            "features": features,
+            "feature_count": feature_count,
+        }
+        return render(request, self.template_name, context)
+
+
+# ──────────────────────────────────────────────
+# Sub-Admin Dashboard — Tenant / Clinic View
+# ──────────────────────────────────────────────
+class SubAdminDashboardView(View):
+    """
+    Tenant-level dashboard: patients, appointments, labs, revenue
+    for the hospital/clinic/pharmacy.
+    """
+    template_name = "dashboard/index.html"
+
+    def get(self, request):
+        # Patient stats (tenant-level)
+        try:
+            from apps.patients.models import Patient
+            patient_count = Patient.objects.count()
+            recent_patients = Patient.objects.order_by("-created_at")[:10]
+        except Exception:
+            patient_count = 0
+            recent_patients = []
+
+        # Appointments today (placeholder — appointments app not built yet)
+        today_appointments = 0
+
+        # Pending lab results (placeholder — labs app not built yet)
+        pending_labs = 0
+
+        # Monthly revenue (placeholder — billing app not built yet)
+        monthly_revenue = 0
+
+        context = {
+            "patient_count": patient_count,
+            "recent_patients": recent_patients,
+            "today_appointments": today_appointments,
+            "pending_labs": pending_labs,
+            "monthly_revenue": monthly_revenue,
+        }
+        return render(request, self.template_name, context)
