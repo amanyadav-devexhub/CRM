@@ -61,6 +61,7 @@ TENANT_APPS = [
     "apps.analytics",
     "apps.ai",
     "apps.notifications",
+    "apps.utils"
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
@@ -77,6 +78,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'apps.core.middleware.FeatureFlagMiddleware.FeatureFlagMiddleware',
+
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -121,6 +124,22 @@ DATABASE_ROUTERS = (
 )
 
 
+# Redis Cache
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# Use Redis for sessions
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -139,6 +158,9 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+
+
 
 
 # Internationalization
@@ -177,3 +199,4 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
 }
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
