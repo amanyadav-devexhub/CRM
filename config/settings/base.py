@@ -59,6 +59,7 @@ TENANT_APPS = [
     "apps.analytics",
     "apps.ai",
     "apps.notifications",
+    "apps.utils"
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
@@ -75,6 +76,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'apps.core.middleware.FeatureFlagMiddleware.FeatureFlagMiddleware',
+
 ]
 
 ROOT_URLCONF = "config.urls"
