@@ -1,0 +1,287 @@
+{% extends "base_admin.html" %}
+
+{% block nav_categories %}active{% endblock %}
+{% block page_title %}Categories <span>/ Healthcare Services</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 28px;
+    }
+
+    .category-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 0;
+        overflow: hidden;
+        transition: var(--transition);
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+    }
+
+    .category-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .category-card:hover .category-card-icon {
+        transform: scale(1.1);
+    }
+
+    .category-card-banner {
+        height: 8px;
+        width: 100%;
+    }
+
+    .category-card-body {
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 16px;
+    }
+
+    .category-card-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: #fff;
+        transition: transform 0.3s ease;
+    }
+
+    .category-card-name {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .category-card-desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        max-width: 240px;
+    }
+
+    .category-card-stats {
+        display: flex;
+        gap: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+        justify-content: center;
+    }
+
+    .category-stat {
+        text-align: center;
+    }
+
+    .category-stat-value {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .category-stat-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: 2px;
+    }
+
+    .category-card-footer {
+        padding: 14px 24px;
+        background: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: var(--transition);
+    }
+
+    .category-card:hover .category-card-footer {
+        color: var(--text-primary);
+    }
+
+    .category-card-footer .material-icons-round {
+        font-size: 16px;
+    }
+
+    /* Color themes */
+    .category-card.clinic .category-card-banner {
+        background: var(--gradient-green);
+    }
+
+    .category-card.clinic .category-card-icon {
+        background: var(--gradient-green);
+    }
+
+    .category-card.clinic .category-stat-value {
+        color: var(--accent-green);
+    }
+
+    .category-card.pharmacy .category-card-banner {
+        background: var(--gradient-orange);
+    }
+
+    .category-card.pharmacy .category-card-icon {
+        background: var(--gradient-orange);
+    }
+
+    .category-card.pharmacy .category-stat-value {
+        color: var(--accent-orange);
+    }
+
+    .category-card.hospital .category-card-banner {
+        background: var(--gradient-blue);
+    }
+
+    .category-card.hospital .category-card-icon {
+        background: var(--gradient-blue);
+    }
+
+    .category-card.hospital .category-stat-value {
+        color: var(--accent-blue);
+    }
+
+    .category-card.lab .category-card-banner {
+        background: var(--gradient-purple);
+    }
+
+    .category-card.lab .category-card-icon {
+        background: var(--gradient-purple);
+    }
+
+    .category-card.lab .category-stat-value {
+        color: var(--accent-purple);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;">
+    <div>
+        <h2 style="font-size:22px; font-weight:700; margin-bottom:4px;">Healthcare Registration Lists</h2>
+        <p style="font-size:13px; color:var(--text-secondary);">Select a category to view registered business units</p>
+    </div>
+</div>
+
+<div class="category-grid">
+
+    <!-- Clinic -->
+    <a href="{% url 'category-list' 'clinic' %}" class="category-card clinic animate-in" style="text-decoration:none;">
+        <div class="category-card-banner"></div>
+        <div class="category-card-body">
+            <div class="category-card-icon">
+                <span class="material-icons-round">local_hospital</span>
+            </div>
+            <div class="category-card-name">Clinics</div>
+            <div class="category-card-desc">
+                View registered outpatient clinics and clinical records across the platform.
+            </div>
+            <div class="category-card-stats">
+                <div class="category-stat">
+                    <div class="category-stat-value">0</div>
+                    <div class="category-stat-label">Units</div>
+                </div>
+            </div>
+        </div>
+        <div class="category-card-footer">
+            <span class="material-icons-round">list</span>
+            View Clinic List
+        </div>
+    </a>
+
+    <!-- Pharmacy -->
+    <a href="{% url 'category-list' 'pharmacy' %}" class="category-card pharmacy animate-in"
+        style="text-decoration:none;">
+        <div class="category-card-banner"></div>
+        <div class="category-card-body">
+            <div class="category-card-icon">
+                <span class="material-icons-round">medication</span>
+            </div>
+            <div class="category-card-name">Pharmacies</div>
+            <div class="category-card-desc">
+                Oversee registered pharmacy units and their operational details.
+            </div>
+            <div class="category-card-stats">
+                <div class="category-stat">
+                    <div class="category-stat-value">0</div>
+                    <div class="category-stat-label">Units</div>
+                </div>
+            </div>
+        </div>
+        <div class="category-card-footer">
+            <span class="material-icons-round">list</span>
+            View Pharmacy List
+        </div>
+    </a>
+
+    <!-- Hospitals -->
+    <a href="{% url 'category-list' 'hospitals' %}" class="category-card hospital animate-in"
+        style="text-decoration:none;">
+        <div class="category-card-banner"></div>
+        <div class="category-card-body">
+            <div class="category-card-icon">
+                <span class="material-icons-round">apartment</span>
+            </div>
+            <div class="category-card-name">Hospitals</div>
+            <div class="category-card-desc">
+                Manage high-level records for registered hospitals and departments.
+            </div>
+            <div class="category-card-stats">
+                <div class="category-stat">
+                    <div class="category-stat-value">0</div>
+                    <div class="category-stat-label">Units</div>
+                </div>
+            </div>
+        </div>
+        <div class="category-card-footer">
+            <span class="material-icons-round">list</span>
+            View Hospital List
+        </div>
+    </a>
+
+    <!-- Labs -->
+    <a href="{% url 'category-list' 'labs' %}" class="category-card lab animate-in" style="text-decoration:none;">
+        <div class="category-card-banner"></div>
+        <div class="category-card-body">
+            <div class="category-card-icon">
+                <span class="material-icons-round">biotech</span>
+            </div>
+            <div class="category-card-name">Labs</div>
+            <div class="category-card-desc">
+                Access records for diagnostic labs and testing facilities.
+            </div>
+            <div class="category-card-stats">
+                <div class="category-stat">
+                    <div class="category-stat-value">0</div>
+                    <div class="category-stat-label">Units</div>
+                </div>
+            </div>
+        </div>
+        <div class="category-card-footer">
+            <span class="material-icons-round">list</span>
+            View Lab List
+        </div>
+    </a>
+
+</div>
+
+{% endblock %}

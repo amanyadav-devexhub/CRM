@@ -1,0 +1,137 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-green){% endblock %}
+{% block mgmt_gradient %}var(--gradient-green){% endblock %}
+{% block hub_icon %}local_hospital{% endblock %}
+{% block hub_name %}ClinicHub{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="#" class="nav-item active">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">medical_services</span>
+        Doctors
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">calendar_month</span>
+        Appointments
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">people</span>
+        Patients
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Clinic Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card green animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Active Doctors</div>
+            <div class="stat-value">12</div>
+            <div class="stat-sub">On duty today</div>
+        </div>
+        <div class="stat-icon green">
+            <span class="material-icons-round">stethoscope</span>
+        </div>
+    </div>
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Appointments</div>
+            <div class="stat-value">48</div>
+            <div class="stat-sub">Scheduled today</div>
+        </div>
+        <div class="stat-icon blue">
+            <span class="material-icons-round">event</span>
+        </div>
+    </div>
+    <div class="stat-card purple animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Wait Time</div>
+            <div class="stat-value">15m</div>
+            <div class="stat-sub">Average today</div>
+        </div>
+        <div class="stat-icon purple">
+            <span class="material-icons-round">schedule</span>
+        </div>
+    </div>
+    <div class="stat-card orange animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Revenue</div>
+            <div class="stat-value">₹24.5k</div>
+            <div class="stat-sub">Today's collection</div>
+        </div>
+        <div class="stat-icon orange">
+            <span class="material-icons-round">payments</span>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Upcoming Appointments -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Upcoming Appointments</h3>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>10:30 AM</td>
+                        <td>John Doe</td>
+                        <td>Dr. Smith</td>
+                        <td><span class="badge-tag active">Confirmed</span></td>
+                    </tr>
+                    <tr>
+                        <td>11:15 AM</td>
+                        <td>Jane Roe</td>
+                        <td>Dr. Adams</td>
+                        <td><span class="badge-tag trial">Waiting</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Management -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Management Tools</h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <button class="action-btn">
+                    <span class="material-icons-round">add</span>
+                    New Patient
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">edit_calendar</span>
+                    Sch. Shift
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">description</span>
+                    Prescriptions
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">analytics</span>
+                    Reports
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
