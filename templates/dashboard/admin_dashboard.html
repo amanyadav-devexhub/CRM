@@ -70,7 +70,7 @@
                 <span class="icon material-icons-round">apartment</span>
                 Registered Tenants
             </h3>
-            <a href="/tenants/create/" class="card-action">+ Add Tenant</a>
+            <a href="/categories/" class="card-action">View Categories →</a>
         </div>
         <div class="card-body" style="padding:0">
             {% if tenants %}
@@ -136,9 +136,9 @@
             </div>
             <div class="card-body">
                 <div class="quick-actions">
-                    <a href="/tenants/create/" class="action-btn primary" style="text-decoration:none;">
-                        <span class="icon material-icons-round">add_business</span>
-                        New Tenant
+                    <a href="/categories/" class="action-btn primary" style="text-decoration:none;">
+                        <span class="icon material-icons-round">category</span>
+                        Categories
                     </a>
                     <a href="#" class="action-btn" style="text-decoration:none;">
                         <span class="icon material-icons-round">credit_card</span>
@@ -180,79 +180,122 @@
                     <p>No plans configured yet.</p>
                 </div>
                 {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ─── Row: Feature Flags + Platform Health ─── -->
-<div class="content-grid equal">
-
-    <!-- Feature Flags -->
-    <div class="card">
-        <div class="card-header">
-            <h3>
-                <span class="icon material-icons-round">toggle_on</span>
-                Feature Flags
-            </h3>
-        </div>
-        <div class="card-body">
-            {% if features %}
-            <ul class="feature-list">
-                {% for f in features %}
-                <li class="feature-item">
-                    <div class="feature-name">
-                        <span class="dot {% if f.is_active %}on{% else %}off{% endif %}"></span>
-                        {{ f.name }}
+                <!-- Platform Categories -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3>
+                            <span class="icon material-icons-round">category</span>
+                            Platform Categories
+                        </h3>
                     </div>
-                    <span class="badge-tag {% if f.is_active %}active{% else %}expired{% endif %}">
-                        {% if f.is_active %}ON{% else %}OFF{% endif %}
-                    </span>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <div class="empty-state">
-                <div class="icon material-icons-round">flag</div>
-                <p>No feature flags configured.</p>
+                    <div class="card-body" style="padding:0">
+                        <ul class="feature-list" style="padding: 10px 22px;">
+                            <li class="feature-item">
+                                <div class="feature-name">
+                                    <span class="dot on" style="background: var(--gradient-green);"></span>
+                                    <a href="{% url 'category-list' 'clinic' %}"
+                                        style="color: inherit; text-decoration: none;">Clinics</a>
+                                </div>
+                                <span class="badge-tag active">{{ categories.CLINIC }}</span>
+                            </li>
+                            <li class="feature-item">
+                                <div class="feature-name">
+                                    <span class="dot on" style="background: var(--gradient-orange);"></span>
+                                    <a href="{% url 'category-list' 'pharmacy' %}"
+                                        style="color: inherit; text-decoration: none;">Pharmacies</a>
+                                </div>
+                                <span class="badge-tag active">{{ categories.PHARMACY }}</span>
+                            </li>
+                            <li class="feature-item">
+                                <div class="feature-name">
+                                    <span class="dot on" style="background: var(--gradient-blue);"></span>
+                                    <a href="{% url 'category-list' 'hospitals' %}"
+                                        style="color: inherit; text-decoration: none;">Hospitals</a>
+                                </div>
+                                <span class="badge-tag active">{{ categories.HOSPITAL }}</span>
+                            </li>
+                            <li class="feature-item">
+                                <div class="feature-name">
+                                    <span class="dot on" style="background: var(--gradient-purple);"></span>
+                                    <a href="{% url 'category-list' 'labs' %}"
+                                        style="color: inherit; text-decoration: none;">Labs</a>
+                                </div>
+                                <span class="badge-tag active">{{ categories.LAB }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            {% endif %}
         </div>
-    </div>
 
-    <!-- Platform Health -->
-    <div class="card">
-        <div class="card-header">
-            <h3>
-                <span class="icon material-icons-round">monitor_heart</span>
-                Platform Health
-            </h3>
-        </div>
-        <div class="card-body">
-            <ul class="sub-info">
-                <li>
-                    <span class="label">Active Tenants</span>
-                    <span class="value" style="color:var(--accent-green);">{{ active_tenant_count }}</span>
-                </li>
-                <li>
-                    <span class="label">Inactive Tenants</span>
-                    <span class="value" style="color:var(--accent-red);">{{ inactive_tenant_count }}</span>
-                </li>
-                <li>
-                    <span class="label">Trial Subscriptions</span>
-                    <span class="value" style="color:var(--accent-orange);">{{ trial_count }}</span>
-                </li>
-                <li>
-                    <span class="label">Total Patients (Platform)</span>
-                    <span class="value" style="color:var(--accent-blue);">{{ patient_count }}</span>
-                </li>
-                <li>
-                    <span class="label">Platform Features</span>
-                    <span class="value">{{ feature_count }}</span>
-                </li>
-            </ul>
-        </div>
-    </div>
-</div>
+        <!-- ─── Row: Feature Flags + Platform Health ─── -->
+        <div class="content-grid equal">
 
-{% endblock %}
+            <!-- Feature Flags -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>
+                        <span class="icon material-icons-round">toggle_on</span>
+                        Feature Flags
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if features %}
+                    <ul class="feature-list">
+                        {% for f in features %}
+                        <li class="feature-item">
+                            <div class="feature-name">
+                                <span class="dot {% if f.is_active %}on{% else %}off{% endif %}"></span>
+                                {{ f.name }}
+                            </div>
+                            <span class="badge-tag {% if f.is_active %}active{% else %}expired{% endif %}">
+                                {% if f.is_active %}ON{% else %}OFF{% endif %}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="icon material-icons-round">flag</div>
+                        <p>No feature flags configured.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Platform Health -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>
+                        <span class="icon material-icons-round">monitor_heart</span>
+                        Platform Health
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="sub-info">
+                        <li>
+                            <span class="label">Active Tenants</span>
+                            <span class="value" style="color:var(--accent-green);">{{ active_tenant_count }}</span>
+                        </li>
+                        <li>
+                            <span class="label">Inactive Tenants</span>
+                            <span class="value" style="color:var(--accent-red);">{{ inactive_tenant_count }}</span>
+                        </li>
+                        <li>
+                            <span class="label">Trial Subscriptions</span>
+                            <span class="value" style="color:var(--accent-orange);">{{ trial_count }}</span>
+                        </li>
+                        <li>
+                            <span class="label">Total Patients (Platform)</span>
+                            <span class="value" style="color:var(--accent-blue);">{{ patient_count }}</span>
+                        </li>
+                        <li>
+                            <span class="label">Platform Features</span>
+                            <span class="value">{{ feature_count }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% endblock %}

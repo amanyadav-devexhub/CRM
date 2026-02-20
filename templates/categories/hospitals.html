@@ -1,0 +1,137 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-blue){% endblock %}
+{% block mgmt_gradient %}var(--gradient-blue){% endblock %}
+{% block hub_icon %}local_hospital{% endblock %}
+{% block hub_name %}HospitaLog{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="#" class="nav-item active">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">groups</span>
+        Departments
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">emergency</span>
+        ER Console
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Hospital Operations Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Bed Occupancy</div>
+            <div class="stat-value">82%</div>
+            <div class="stat-sub">164 / 200 occupied</div>
+        </div>
+        <div class="stat-icon blue">
+            <span class="material-icons-round">bed</span>
+        </div>
+    </div>
+    <div class="stat-card green animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Available ICU</div>
+            <div class="stat-value">4</div>
+            <div class="stat-sub">Out of 20 total</div>
+        </div>
+        <div class="stat-icon green">
+            <span class="material-icons-round">monitor_heart</span>
+        </div>
+    </div>
+    <div class="stat-card red animate-in" style="--accent-red: #ef4444;">
+        <div class="stat-info">
+            <div class="stat-label">ER Load</div>
+            <div class="stat-value">High</div>
+            <div class="stat-sub">8 patients waiting</div>
+        </div>
+        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
+            <span class="material-icons-round">emergency</span>
+        </div>
+    </div>
+    <div class="stat-card orange animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Monthly Admits</div>
+            <div class="stat-value">842</div>
+            <div class="stat-sub"><span class="up">↑</span> 12% from last month</div>
+        </div>
+        <div class="stat-icon orange">
+            <span class="material-icons-round">trending_up</span>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Department Overview -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Department Status</h3>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Head Doctor</th>
+                        <th>Staffing</th>
+                        <th>Occupancy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cardiology</td>
+                        <td>Dr. Williams</td>
+                        <td><span class="badge-tag active">Full</span></td>
+                        <td>95%</td>
+                    </tr>
+                    <tr>
+                        <td>Neurology</td>
+                        <td>Dr. Chen</td>
+                        <td><span class="badge-tag trial">Under</span></td>
+                        <td>60%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Hospital Ops Menu -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Operations Control</h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <button class="action-btn">
+                    <span class="material-icons-round">login</span>
+                    New Admission
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">logout</span>
+                    Discharge
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">swap_horiz</span>
+                    Transfer
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">groups</span>
+                    Duty Roster
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

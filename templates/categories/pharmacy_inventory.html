@@ -1,0 +1,183 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block hub_icon %}medication{% endblock %}
+{% block hub_name %}PharmTrack{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'pharmacy-inventory' %}" class="nav-item active">
+        <span class="icon material-icons-round">inventory_2</span>
+        Inventory
+    </a>
+    <a href="{% url 'pharmacy-sales' %}" class="nav-item">
+        <span class="icon material-icons-round">shopping_cart</span>
+        Sales & POS
+    </a>
+    <a href="{% url 'pharmacy-prescriptions' %}" class="nav-item">
+        <span class="icon material-icons-round">receipt_long</span>
+        Prescriptions
+    </a>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Reports</div>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">analytics</span>
+        Sales Report
+    </a>
+    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item" style="color: var(--accent-orange);">
+        <span class="icon material-icons-round">warning</span>
+        Expiry Alerts
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Inventory Management{% endblock %}
+{% block page_subtitle %}Manage your medicine stock, batches, and pricing.{% endblock %}
+
+{% block page_actions %}
+<div class="search-box"
+    style="margin-right: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 4px 12px;">
+    <span class="material-icons-round" style="font-size: 20px; color: var(--text-muted);">search</span>
+    <input type="text" id="inventorySearch" placeholder="Search medicines..."
+        style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px;">
+</div>
+<button class="btn-primary" onclick="openModal()">
+    <span class="material-icons-round">add</span>
+    Add Stock
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table" id="inventoryTable">
+            <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Expiry</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: white;">Paracetamol 500mg</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">SKU: PHA-001</div>
+                    </td>
+                    <td><span class="badge-tag"
+                            style="background: rgba(55, 66, 250, 0.1); color: #3742fa;">Analgesic</span></td>
+                    <td>₹25.00</td>
+                    <td>450 Units</td>
+                    <td>Oct 2026</td>
+                    <td>
+                        <button class="icon-btn"><span class="material-icons-round">edit</span></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: white;">Azithromycin 500mg</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">SKU: PHA-122</div>
+                    </td>
+                    <td><span class="badge-tag"
+                            style="background: rgba(255, 71, 87, 0.1); color: #ff4757;">Antibiotic</span></td>
+                    <td>₹120.00</td>
+                    <td style="color: var(--accent-orange);">12 Units</td>
+                    <td>Jan 2025</td>
+                    <td>
+                        <button class="icon-btn"><span class="material-icons-round">edit</span></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Stock Modal -->
+<div id="addStockModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 24px; position: relative;">
+        <button onclick="closeModal()"
+            style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+        <h3 style="margin: 0 0 20px 0;">Add New Medicine Stock</h3>
+        <form onsubmit="saveStock(event)" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="form-group">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Medicine
+                    Name</label>
+                <input type="text" id="m_name" required placeholder="e.g. Omeprazole"
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Batch
+                        #</label>
+                    <input type="text" id="m_batch" required placeholder="B-2024"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Qty</label>
+                    <input type="number" id="m_qty" required placeholder="100"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 8px;">
+                <span class="material-icons-round">save</span>
+                Save Entry
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() { document.getElementById('addStockModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('addStockModal').style.display = 'none'; }
+
+    function saveStock(e) {
+        e.preventDefault();
+        const name = document.getElementById('m_name').value;
+        const qty = document.getElementById('m_qty').value;
+        const batch = document.getElementById('m_batch').value;
+
+        // Add row to table (mock)
+        const tbody = document.querySelector('#inventoryTable tbody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <div style="font-weight: 600; color: white;">${name}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">SKU: PHA-NEW</div>
+            </td>
+            <td><span class="badge-tag" style="background: rgba(55, 66, 250, 0.1); color: #3742fa;">General</span></td>
+            <td>₹0.00</td>
+            <td>${qty} Units</td>
+            <td>Dec 2026</td>
+            <td><button class="icon-btn"><span class="material-icons-round">edit</span></button></td>
+        `;
+        tbody.prepend(row);
+
+        closeModal();
+        if (typeof showToast === 'function') showToast(`Successfully added ${name} (Batch ${batch})`);
+
+        e.target.reset();
+    }
+
+    document.getElementById('inventorySearch')?.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#inventoryTable tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

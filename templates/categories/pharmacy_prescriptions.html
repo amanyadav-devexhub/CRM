@@ -1,0 +1,76 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block hub_icon %}medication{% endblock %}
+{% block hub_name %}PharmTrack{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'pharmacy-inventory' %}" class="nav-item">
+        <span class="icon material-icons-round">inventory_2</span>
+        Inventory
+    </a>
+    <a href="{% url 'pharmacy-sales' %}" class="nav-item">
+        <span class="icon material-icons-round">shopping_cart</span>
+        Sales & POS
+    </a>
+    <a href="{% url 'pharmacy-prescriptions' %}" class="nav-item active">
+        <span class="icon material-icons-round">receipt_long</span>
+        Prescriptions
+    </a>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Reports</div>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">analytics</span>
+        Sales Report
+    </a>
+    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item" style="color: var(--accent-orange);">
+        <span class="icon material-icons-round">warning</span>
+        Expiry Alerts
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Prescription Records{% endblock %}
+{% block page_subtitle %}Manage digital and physical medicine requests.{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Pending Verifications</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>20 Feb, 10:45 AM</td>
+                    <td>
+                        <div style="font-weight: 600; color: white;">John Doe</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">PID: 2881</div>
+                    </td>
+                    <td>Dr. Sarah Smith</td>
+                    <td><span class="badge-tag trial">Pending Review</span></td>
+                    <td>
+                        <button class="btn-outline" style="font-size: 12px; padding: 6px 12px;">Process</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
