@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Management{% endblock %} — HealthCRM</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        /* Management-specific brand color override */
+        :root {
+            --mgmt-primary: {
+                % block mgmt_color %
+            }
+
+            var(--accent-blue) {
+                % endblock %
+            }
+
+            ;
+
+            --mgmt-gradient: {
+                % block mgmt_gradient %
+            }
+
+            var(--gradient-blue) {
+                % endblock %
+            }
+
+            ;
+        }
+
+        .sidebar-brand .brand-icon {
+            background: var(--mgmt-gradient);
+        }
+
+        .sidebar-brand h2 {
+            background: var(--mgmt-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-item.active {
+            background: rgba(var(--mgmt-primary-rgb, 59, 130, 246), 0.12);
+            color: var(--mgmt-primary);
+        }
+
+        .nav-item .badge {
+            background: var(--mgmt-primary);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="layout">
+        <!-- ─── Unified Management Sidebar ─── -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon"
+                        style="background: var(--mgmt-gradient, var(--gradient-blue)); -webkit-background-clip: padding-box; border-radius: 8px; color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                        {% block hub_icon %}M{% endblock %}
+                    </div>
+                    <div class="logo-text">
+                        <h2
+                            style="margin: 0; font-size: 18px; font-weight: 700; background: var(--mgmt-gradient, var(--gradient-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            {% block hub_name %}HealthCRM{% endblock %}
+                        </h2>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                {% block hub_nav %}{% endblock %}
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" placeholder="{% block search_placeholder %}Search...{% endblock %}">
+                </div>
+                <div class="top-bar-actions">
+                    <button class="icon-btn">
+                        <span class="material-icons-round">notifications</span>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <button class="icon-btn">
+                        <span class="material-icons-round">settings</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <div class="page-header-title">
+                        <h1>{% block page_title %}{% endblock %}</h1>
+                        <p>{% block page_subtitle %}{% endblock %}</p>
+                    </div>
+                    <div class="page-header-actions">
+                        {% block page_actions %}{% endblock %}
+                    </div>
+                </div>
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"
+        style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px;">
+    </div>
+
+    <script>
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? 'check_circle' : 'info';
+            const color = type === 'success' ? '#2ed573' : '#3742fa';
+
+            toast.style.cssText = `
+                background: #1a1a1a;
+                border: 1px solid ${color};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                animation: slideIn 0.3s ease-out forwards;
+                font-size: 14px;
+                min-width: 280px;
+            `;
+
+            toast.innerHTML = `
+                <span class="material-icons-round" style="color: ${color}; font-size: 20px;">${icon}</span>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Add helper animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes fadeOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(20px); opacity: 0; } }
+            .nav-item.active { background: rgba(255,255,255,0.05); color: white; border-left: 3px solid var(--accent-blue); }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

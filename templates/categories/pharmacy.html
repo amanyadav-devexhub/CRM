@@ -1,0 +1,276 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block hub_icon %}medication{% endblock %}
+{% block hub_name %}PharmTrack{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item active">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'pharmacy-inventory' %}" class="nav-item">
+        <span class="icon material-icons-round">inventory_2</span>
+        Inventory
+    </a>
+    <a href="{% url 'pharmacy-sales' %}" class="nav-item">
+        <span class="icon material-icons-round">shopping_cart</span>
+        Sales & POS
+    </a>
+    <a href="{% url 'pharmacy-prescriptions' %}" class="nav-item">
+        <span class="icon material-icons-round">receipt_long</span>
+        Prescriptions
+    </a>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Reports</div>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">analytics</span>
+        Sales Report
+    </a>
+    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item" style="color: var(--accent-orange);">
+        <span class="icon material-icons-round">warning</span>
+        Expiry Alerts
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Pharmacy Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, PharmTrack Manager. Here's your inventory overview.{% endblock %}
+
+{% block page_actions %}
+<button class="btn-outline">
+    <span class="material-icons-round">download</span>
+    Export Data
+</button>
+<button class="btn-primary"
+    onclick="const form = document.getElementById('add-medicine-form'); if(form) window.scrollTo({top: form.offsetTop - 100, behavior: 'smooth'});">
+    <span class="material-icons-round">add</span>
+    New Entry
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Row -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px;">
+    <div class="card stat-card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Total SKUs</span>
+                <h2 style="font-size: 28px; margin: 4px 0; color: white;">1,284</h2>
+            </div>
+            <div class="icon-circle"
+                style="background: rgba(46, 213, 115, 0.1); color: #2ed573; padding: 10px; border-radius: 12px;">
+                <span class="material-icons-round">inventory</span>
+            </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #2ed573;">
+            <span class="material-icons-round" style="font-size: 14px; vertical-align: middle;">arrow_upward</span>
+            +12 this week
+        </div>
+    </div>
+
+    <div class="card stat-card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Low Stock</span>
+                <h2 style="font-size: 28px; margin: 4px 0; color: var(--accent-orange);">42</h2>
+            </div>
+            <div class="icon-circle"
+                style="background: rgba(255, 165, 2, 0.1); color: var(--accent-orange); padding: 10px; border-radius: 12px;">
+                <span class="material-icons-round">warning</span>
+            </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--accent-orange);">
+            Requires immediate reorder
+        </div>
+    </div>
+
+    <div class="card stat-card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Expired Soon</span>
+                <h2 style="font-size: 28px; margin: 4px 0; color: #ff4757;">15</h2>
+            </div>
+            <div class="icon-circle"
+                style="background: rgba(255, 71, 87, 0.1); color: #ff4757; padding: 10px; border-radius: 12px;">
+                <span class="material-icons-round">event_busy</span>
+            </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #ff4757;">
+            Within next 30 days
+        </div>
+    </div>
+
+    <div class="card stat-card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Today's Sales</span>
+                <h2 style="font-size: 28px; margin: 4px 0; color: white;">₹12,450</h2>
+            </div>
+            <div class="icon-circle"
+                style="background: rgba(55, 66, 250, 0.1); color: #3742fa; padding: 10px; border-radius: 12px;">
+                <span class="material-icons-round">payments</span>
+            </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #3742fa;">
+            <span class="material-icons-round" style="font-size: 14px; vertical-align: middle;">trending_up</span>
+            8% vs yesterday
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Inventory Table -->
+    <div class="card">
+        <div class="card-header"
+            style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px; color: white;">
+                <span class="material-icons-round" style="color: var(--text-secondary);">list_alt</span>
+                Inventory Highlights
+            </h3>
+            <a href="{% url 'pharmacy-inventory' %}"
+                style="font-size: 13px; color: #3742fa; text-decoration: none; font-weight: 500;">View All
+                Inventory</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                <thead style="background: rgba(255,255,255,0.02); text-align: left;">
+                    <tr>
+                        <th
+                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
+                            Medicine Name</th>
+                        <th
+                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
+                            Category</th>
+                        <th
+                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
+                            Stock</th>
+                        <th
+                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
+                            Expiry</th>
+                        <th
+                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
+                            Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 16px 20px;">
+                            <div style="font-weight: 600; color: white;">Paracetamol 500mg</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #PC102</div>
+                        </td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Analgesic</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">450 Units</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Oct 2026</td>
+                        <td style="padding: 16px 20px;">
+                            <span class="badge-tag active">In Stock</span>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 16px 20px;">
+                            <div style="font-weight: 600; color: white;">Amoxicillin 250mg</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #AMX88</div>
+                        </td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Antibiotic</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--accent-orange);">12 Units</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Jan 2025</td>
+                        <td style="padding: 16px 20px;">
+                            <span class="badge-tag"
+                                style="background: rgba(255,165,2,0.1); color: var(--accent-orange);">Low Stock</span>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 16px 20px;">
+                            <div style="font-weight: 600; color: white;">Cetirizine Syrup</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #CTZ91</div>
+                        </td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Antihistamine
+                        </td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">85 Bottles</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: #ff4757;">Mar 2024</td>
+                        <td style="padding: 16px 20px;">
+                            <span class="badge-tag expired">Expired</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 16px 20px;">
+                            <div style="font-weight: 600; color: white;">Vitamin D3 Drops</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #VIT04</div>
+                        </td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Supplement</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">200 Units</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Dec 2027</td>
+                        <td style="padding: 16px 20px;">
+                            <span class="badge-tag active">In Stock</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Side Panel: Add Entry Form & Alerts -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="card" id="add-medicine-form">
+            <div class="card-header" style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                <h3 style="margin:0; font-size: 16px; color: white;">Quick Inventory Entry</h3>
+            </div>
+            <div class="card-body" style="padding: 20px;">
+                <form onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label
+                            style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Medicine
+                            Name</label>
+                        <input type="text" placeholder="e.g. Ibuprofen"
+                            style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label
+                                style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Batch
+                                Number</label>
+                            <input type="text" placeholder="#B-101"
+                                style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
+                        </div>
+                        <div class="form-group">
+                            <label
+                                style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Quantity</label>
+                            <input type="number" placeholder="50"
+                                style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label
+                            style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Expiry
+                            Date</label>
+                        <input type="month"
+                            style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
+                    </div>
+                    <button class="btn-primary" style="width: 100%; padding: 12px;">
+                        <span class="material-icons-round">save</span>
+                        Add to Stock
+                    </button>
+                    <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 4px;">Form data
+                        is for demonstration only</p>
+                </form>
+            </div>
+        </div>
+
+        <div class="card"
+            style="background: linear-gradient(135deg, rgba(55,66,250,0.05) 0%, rgba(55,66,250,0.02) 100%); border: 1px dashed rgba(55,66,250,0.3);">
+            <div class="card-body" style="padding: 20px; text-align: center;">
+                <div class="icon" style="color: #3742fa; font-size: 40px; margin-bottom: 12px;">
+                    <span class="material-icons-round" style="font-size: 40px;">rocket_launch</span>
+                </div>
+                <h4 style="margin: 0 0 8px 0; color: white;">Smart POS coming soon</h4>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">Integrated billing with
+                    barcode scanning and automated tax calculation.</p>
+                <button class="btn-outline" style="font-size: 11px; padding: 8px 16px;">Early Access</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

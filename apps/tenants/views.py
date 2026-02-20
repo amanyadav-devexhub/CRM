@@ -117,6 +117,17 @@ class AdminDashboardView(View):
             features = []
             feature_count = 0
 
+        # Category totals
+        try:
+            categories = {
+                'CLINIC': tenants.filter(category='CLINIC').count(),
+                'PHARMACY': tenants.filter(category='PHARMACY').count(),
+                'HOSPITAL': tenants.filter(category='HOSPITAL').count(),
+                'LAB': tenants.filter(category='LAB').count(),
+            }
+        except Exception:
+            categories = {'CLINIC': 0, 'PHARMACY': 0, 'HOSPITAL': 0, 'LAB': 0}
+
         context = {
             "patient_count": patient_count,
             "tenant_count": tenant_count,
@@ -128,6 +139,7 @@ class AdminDashboardView(View):
             "plans": plans,
             "features": features,
             "feature_count": feature_count,
+            "categories": categories,
         }
         return render(request, self.template_name, context)
 
@@ -161,11 +173,16 @@ class SubAdminDashboardView(View):
         # Monthly revenue (placeholder — billing app not built yet)
         monthly_revenue = 0
 
+        # Get tenant category (mock logic for now since we're in template_views context)
+        # In a real scenario, this would come from the current tenant object
+        tenant_category = "CLINIC"  # Default fallback
+        
         context = {
             "patient_count": patient_count,
             "recent_patients": recent_patients,
             "today_appointments": today_appointments,
             "pending_labs": pending_labs,
             "monthly_revenue": monthly_revenue,
+            "tenant_category": tenant_category,
         }
         return render(request, self.template_name, context)

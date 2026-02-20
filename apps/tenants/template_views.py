@@ -7,7 +7,7 @@ from django.views import View
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
 
-from .models import Client, Domain
+from .models import Client, Domain, Tenant
 
 User = get_user_model()
 
@@ -62,3 +62,81 @@ class TenantCreatePageView(View):
             return render(request, "tenants/tenant_create.html", {
                 "form_errors": str(e),
             })
+
+
+# ──────────────────────────────────────────────
+# Category Panel Views (Frontend-only, planning)
+# ──────────────────────────────────────────────
+class CategoryIndexView(View):
+    """Category selection page showing all healthcare categories."""
+    def get(self, request):
+        return render(request, "categories/index.html")
+
+
+class CategoryClinicView(View):
+    """Clinic management panel (frontend-only)."""
+    def get(self, request):
+        return render(request, "categories/clinic.html")
+
+
+class CategoryPharmacyView(View):
+    """Pharmacy management panel (frontend-only)."""
+    def get(self, request):
+        return render(request, "categories/pharmacy.html")
+
+
+class CategoryHospitalsView(View):
+    """Hospitals management panel (frontend-only)."""
+    def get(self, request):
+        return render(request, "categories/hospitals.html")
+
+
+class CategoryLabsView(View):
+    """Labs management panel (frontend-only)."""
+    def get(self, request):
+        return render(request, "categories/labs.html")
+
+
+class CategoryListView(View):
+    """List of tenants filtered by category for Super Admin."""
+    template_name = "dashboard/category_list.html"
+
+    def get(self, request, category_slug):
+        category_map = {
+            'clinic': ('CLINIC', 'Clinics'),
+            'pharmacy': ('PHARMACY', 'Pharmacies'),
+            'hospitals': ('HOSPITAL', 'Hospitals'),
+            'labs': ('LAB', 'Labs'),
+        }
+        
+        if category_slug not in category_map:
+            return render(request, "404.html")
+            
+        category_code, category_display = category_map[category_slug]
+        tenants = Tenant.objects.filter(category=category_code).order_by("-created_at")
+        
+        context = {
+            "category_name": category_display,
+            "category_slug": category_slug,
+            "tenants": tenants,
+        }
+        return render(request, self.template_name, context)
+
+class PharmacyInventoryView(View):
+    """Pharmacy inventory management view."""
+    template_name = "categories/pharmacy_inventory.html"
+    def get(self, request):
+        return render(request, self.template_name)
+
+class PharmacySalesView(View):
+    """Pharmacy sales/POS view."""
+    template_name = "categories/pharmacy_sales.html"
+    def get(self, request):
+        return render(request, self.template_name)
+
+class PharmacyPrescriptionsView(View):
+    """Pharmacy prescriptions view."""
+    template_name = "categories/pharmacy_prescriptions.html"
+    def get(self, request):
+        return render(request, self.template_name)
+

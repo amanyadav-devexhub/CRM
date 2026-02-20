@@ -20,8 +20,16 @@ class Domain(DomainMixin):
     pass
 
 class Tenant(models.Model):
+    CATEGORY_CHOICES = [
+        ('CLINIC', 'Clinic'),
+        ('PHARMACY', 'Pharmacy'),
+        ('HOSPITAL', 'Hospital'),
+        ('LAB', 'Lab'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='CLINIC')
     subdomain = models.CharField(max_length=100, unique=True)
     email = models.EmailField()
     phone = models.CharField(max_length=15)

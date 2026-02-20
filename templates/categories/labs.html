@@ -1,0 +1,137 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-purple){% endblock %}
+{% block mgmt_gradient %}var(--gradient-purple){% endblock %}
+{% block hub_icon %}biotech{% endblock %}
+{% block hub_name %}LabFlow{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="#" class="nav-item active">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Test Catalog
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">assignment</span>
+        Samples
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">description</span>
+        Reports
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Laboratory Management Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card purple animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Pending Tests</div>
+            <div class="stat-value">34</div>
+            <div class="stat-sub">In queue today</div>
+        </div>
+        <div class="stat-icon purple">
+            <span class="material-icons-round">hourglass_top</span>
+        </div>
+    </div>
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Samples Recv.</div>
+            <div class="stat-value">58</div>
+            <div class="stat-sub">Last 24 hours</div>
+        </div>
+        <div class="stat-icon blue">
+            <span class="material-icons-round">science</span>
+        </div>
+    </div>
+    <div class="stat-card green animate-in">
+        <div class="stat-info">
+            <div class="stat-label">TAT Score</div>
+            <div class="stat-value">98.5%</div>
+            <div class="stat-sub">Within turnaround time</div>
+        </div>
+        <div class="stat-icon green">
+            <span class="material-icons-round">speed</span>
+        </div>
+    </div>
+    <div class="stat-card orange animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Revenue</div>
+            <div class="stat-value">₹65k</div>
+            <div class="stat-sub">Today's bookings</div>
+        </div>
+        <div class="stat-icon orange">
+            <span class="material-icons-round">payments</span>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Recent Test Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Test Requests</h3>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Test Type</th>
+                        <th>Sample Status</th>
+                        <th>Priority</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Alice Smith</td>
+                        <td>Complete Blood Count</td>
+                        <td><span class="badge-tag trial">Collected</span></td>
+                        <td>Routine</td>
+                    </tr>
+                    <tr>
+                        <td>Bob Wilson</td>
+                        <td>RT-PCR</td>
+                        <td><span class="badge-tag expired">Pending</span></td>
+                        <td><span style="color:var(--accent-red)">Urgent</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Lab Process Menu -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Lab Workflows</h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <button class="action-btn">
+                    <span class="material-icons-round">add_task</span>
+                    Enter Results
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">qr_code_2</span>
+                    Label Sample
+                </button>
+                <button class="material-icons-round action-btn">
+                    <span class="material-icons-round">inventory_2</span>
+                    Reagent Stock
+                </button>
+                <button class="action-btn">
+                    <span class="material-icons-round">settings_suggest</span>
+                    Maint. Log
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
