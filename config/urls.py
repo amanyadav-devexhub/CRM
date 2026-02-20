@@ -14,6 +14,8 @@ from apps.tenants.template_views import (
     CategoryIndexView, CategoryClinicView, CategoryPharmacyView,
     CategoryHospitalsView, CategoryLabsView, CategoryListView,
     PharmacyInventoryView, PharmacySalesView, PharmacyPrescriptionsView,
+    ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
+    ClinicDashboardAPIView,
 )
 
 urlpatterns = [
@@ -44,7 +46,14 @@ urlpatterns = [
 
     # Category Pages (standalone management hubs)
     path("categories/", CategoryIndexView.as_view(), name="category-index"),
+
+    # Clinic Flow
     path("categories/clinic/", CategoryClinicView.as_view(), name="category-clinic"),
+    path("categories/clinic/doctors/", ClinicDoctorsView.as_view(), name="clinic-doctors"),
+    path("categories/clinic/appointments/", ClinicAppointmentsView.as_view(), name="clinic-appointments"),
+    path("categories/clinic/patients/", ClinicPatientsView.as_view(), name="clinic-patients"),
+    path("categories/clinic/api/stats/", ClinicDashboardAPIView.as_view(), name="clinic-api-stats"),
+
     # Pharmacy Flow
     path("categories/pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
     path("categories/pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
@@ -52,4 +61,5 @@ urlpatterns = [
     path("categories/pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
     path("categories/labs/", CategoryLabsView.as_view(), name="category-labs"),
 ]
+
 

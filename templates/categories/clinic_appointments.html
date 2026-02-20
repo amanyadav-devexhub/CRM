@@ -1,0 +1,188 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-green){% endblock %}
+{% block mgmt_gradient %}var(--gradient-green){% endblock %}
+{% block hub_icon %}calendar_month{% endblock %}
+{% block hub_name %}ClinicHub{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'clinic-doctors' %}" class="nav-item">
+        <span class="icon material-icons-round">medical_services</span>
+        Doctors
+    </a>
+    <a href="{% url 'clinic-appointments' %}" class="nav-item active">
+        <span class="icon material-icons-round">calendar_month</span>
+        Appointments
+    </a>
+    <a href="{% url 'clinic-patients' %}" class="nav-item">
+        <span class="icon material-icons-round">people</span>
+        Patients
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Appointment Management{% endblock %}
+{% block page_subtitle %}Schedule, manage and track patient appointments.{% endblock %}
+
+{% block page_actions %}
+<div class="search-box"
+    style="margin-right: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 4px 12px;">
+    <span class="material-icons-round" style="font-size: 20px; color: var(--text-muted);">search</span>
+    <input type="text" id="apptSearch" placeholder="Search appointments..."
+        style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px;">
+</div>
+<button class="btn-primary" onclick="openModal()">
+    <span class="material-icons-round">add</span>
+    Book Appointment
+</button>
+{% endblock %}
+
+{% block content %}
+
+{% if success_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ success_message }}", 'success'));</script>
+{% endif %}
+{% if error_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ error_message }}", 'error'));</script>
+{% endif %}
+
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table" id="apptTable">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in appointments %}
+                <tr>
+                    <td style="font-weight: 600; color: white;">{{ a.patient_name }}</td>
+                    <td>Dr. {{ a.doctor.name }}</td>
+                    <td>{{ a.appointment_date|date:"d M Y" }}</td>
+                    <td>{{ a.appointment_time|time:"h:i A" }}</td>
+                    <td>₹{{ a.fee }}</td>
+                    <td>
+                        {% if a.status == 'CONFIRMED' %}
+                        <span class="badge-tag"
+                            style="background: rgba(46, 213, 115, 0.1); color: #2ed573;">Confirmed</span>
+                        {% elif a.status == 'SCHEDULED' %}
+                        <span class="badge-tag"
+                            style="background: rgba(55, 66, 250, 0.1); color: #3742fa;">Scheduled</span>
+                        {% elif a.status == 'IN_PROGRESS' %}
+                        <span class="badge-tag" style="background: rgba(255, 165, 2, 0.1); color: #ffa502;">In
+                            Progress</span>
+                        {% elif a.status == 'COMPLETED' %}
+                        <span class="badge-tag"
+                            style="background: rgba(46, 213, 115, 0.15); color: #2ed573;">Completed</span>
+                        {% elif a.status == 'CANCELLED' %}
+                        <span class="badge-tag"
+                            style="background: rgba(255, 107, 107, 0.1); color: #ff6b6b;">Cancelled</span>
+                        {% else %}
+                        <span class="badge-tag">{{ a.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="icon-btn"><span class="material-icons-round">edit</span></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">No appointments
+                        yet. Click "Book Appointment" to get started.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Book Appointment Modal -->
+<div id="addApptModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 24px; position: relative;">
+        <button onclick="closeModal()"
+            style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+        <h3 style="margin: 0 0 20px 0;">Book New Appointment</h3>
+        <form method="post" action="{% url 'clinic-appointments' %}"
+            style="display: flex; flex-direction: column; gap: 16px;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Patient
+                    Name</label>
+                <input type="text" name="patient_name" required placeholder="e.g. Rahul Verma"
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+            </div>
+            <div class="form-group">
+                <label
+                    style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Doctor</label>
+                <select name="doctor" required
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                    <option value="">— Select Doctor —</option>
+                    {% for d in doctors %}
+                    <option value="{{ d.id }}">Dr. {{ d.name }} ({{ d.specialization }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Date</label>
+                    <input type="date" name="appointment_date" required
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Time</label>
+                    <input type="time" name="appointment_time" required
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Fee
+                    (₹)</label>
+                <input type="number" name="fee" step="0.01" placeholder="500.00"
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+            </div>
+            <div class="form-group">
+                <label
+                    style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Notes</label>
+                <textarea name="notes" rows="2" placeholder="Optional notes..."
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white; resize: vertical;"></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 8px;">
+                <span class="material-icons-round">event_available</span>
+                Book Appointment
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() { document.getElementById('addApptModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('addApptModal').style.display = 'none'; }
+
+    document.getElementById('apptSearch')?.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#apptTable tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

@@ -65,6 +65,8 @@ class User(AbstractUser):
     tenant = models.ForeignKey(
         Tenant,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="users"
     )
     role = models.ForeignKey(
@@ -84,4 +86,6 @@ class User(AbstractUser):
         ).exists()
 
     def __str__(self):
-        return f"{self.username} ({self.tenant.name})"
+        if self.tenant:
+            return f"{self.username} ({self.tenant.name})"
+        return f"{self.username} (Platform Admin)"

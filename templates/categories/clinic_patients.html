@@ -1,0 +1,238 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-green){% endblock %}
+{% block mgmt_gradient %}var(--gradient-green){% endblock %}
+{% block hub_icon %}people{% endblock %}
+{% block hub_name %}ClinicHub{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'clinic-doctors' %}" class="nav-item">
+        <span class="icon material-icons-round">medical_services</span>
+        Doctors
+    </a>
+    <a href="{% url 'clinic-appointments' %}" class="nav-item">
+        <span class="icon material-icons-round">calendar_month</span>
+        Appointments
+    </a>
+    <a href="{% url 'clinic-patients' %}" class="nav-item active">
+        <span class="icon material-icons-round">people</span>
+        Patients
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Patient Directory{% endblock %}
+{% block page_subtitle %}Register, view and manage patient records.{% endblock %}
+
+{% block page_actions %}
+<button class="btn-primary" onclick="openModal()">
+    <span class="material-icons-round">person_add</span>
+    Register Patient
+</button>
+{% endblock %}
+
+{% block content %}
+
+{% if success_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ success_message }}", 'success'));</script>
+{% endif %}
+{% if error_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ error_message }}", 'error'));</script>
+{% endif %}
+
+<!-- Search & Filter Bar -->
+<div class="card" style="margin-bottom: 16px;">
+    <div class="card-body" style="padding: 16px;">
+        <form method="get" action="{% url 'clinic-patients' %}"
+            style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <div
+                style="flex: 1; min-width: 200px; display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px 12px;">
+                <span class="material-icons-round" style="font-size: 20px; color: var(--text-muted);">search</span>
+                <input type="text" name="search" value="{{ search_query }}"
+                    placeholder="Search by name, phone, ID or email..."
+                    style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px; width: 100%;">
+            </div>
+            <select name="gender"
+                style="border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px 12px; color: white; font-size: 14px;">
+                <option value="">All Genders</option>
+                <option value="M" {% if gender_filter == "M" %}selected{% endif %}>Male</option>
+                <option value="F" {% if gender_filter == "F" %}selected{% endif %}>Female</option>
+                <option value="O" {% if gender_filter == "O" %}selected{% endif %}>Other</option>
+            </select>
+            <select name="blood_group"
+                style="border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px 12px; color: white; font-size: 14px;">
+                <option value="">All Blood Groups</option>
+                {% for bg in blood_groups %}
+                <option value="{{ bg }}" {% if blood_filter == bg %}selected{% endif %}>{{ bg }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-primary" style="padding: 10px 20px;">
+                <span class="material-icons-round" style="font-size: 18px;">filter_list</span>
+                Filter
+            </button>
+            {% if search_query or gender_filter or blood_filter %}
+            <a href="{% url 'clinic-patients' %}"
+                style="color: var(--text-muted); font-size: 13px; text-decoration: none;">&times; Clear</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Patient Table -->
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table" id="patientTable">
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Name</th>
+                    <th>Age / Gender</th>
+                    <th>Blood Group</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td style="font-size: 13px; color: var(--accent-blue);">{{ p.patient_id }}</td>
+                    <td>
+                        <div style="font-weight: 600; color: white;">{{ p.first_name }} {{ p.last_name }}</div>
+                    </td>
+                    <td>
+                        <span>{{ p.age|default:"—" }}</span>
+                        <span style="color: var(--text-muted); margin-left: 4px;">/ {{ p.gender|default:"—" }}</span>
+                    </td>
+                    <td>
+                        {% if p.blood_group %}
+                        <span class="badge-tag" style="background: rgba(255, 71, 87, 0.1); color: #ff4757;">
+                            {{ p.blood_group }}</span>
+                        {% else %}
+                        <span style="color: var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.phone|default:"—" }}</td>
+                    <td style="font-size: 13px; color: var(--text-muted);">{{ p.email|default:"—" }}</td>
+                    <td style="display: flex; gap: 4px;">
+                        <a href="{% url 'patient-detail' p.id %}" class="icon-btn" title="View Details">
+                            <span class="material-icons-round">visibility</span>
+                        </a>
+                        <a href="{% url 'patient-edit' p.id %}" class="icon-btn" title="Edit">
+                            <span class="material-icons-round">edit</span>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">
+                        No patients registered yet. Click "Register Patient" to add one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Register Patient Modal -->
+<div id="addPatientModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); overflow-y: auto;">
+    <div class="card" style="width: 100%; max-width: 520px; padding: 24px; position: relative; margin: 40px auto;">
+        <button onclick="closeModal()"
+            style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+        <h3 style="margin: 0 0 20px 0;">Register New Patient</h3>
+        <form method="post" action="{% url 'clinic-patients' %}"
+            style="display: flex; flex-direction: column; gap: 16px;">
+            {% csrf_token %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">First
+                        Name</label>
+                    <input type="text" name="first_name" required placeholder="e.g. Rahul"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Last
+                        Name</label>
+                    <input type="text" name="last_name" required placeholder="e.g. Verma"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Date
+                        of Birth</label>
+                    <input type="date" name="date_of_birth"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Gender</label>
+                    <select name="gender" required
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                        <option value="">— Select —</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="O">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Blood
+                        Group</label>
+                    <select name="blood_group"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                        <option value="">— Select —</option>
+                        {% for bg in blood_groups %}
+                        <option value="{{ bg }}">{{ bg }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Phone</label>
+                    <input type="text" name="phone" required placeholder="+91 98765 43210"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label
+                    style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Email</label>
+                <input type="email" name="email" placeholder="patient@example.com"
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+            </div>
+
+            <div class="form-group">
+                <label
+                    style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Notes</label>
+                <textarea name="notes" rows="2" placeholder="Optional notes about the patient..."
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white; resize: vertical;"></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 8px;">
+                <span class="material-icons-round">person_add</span>
+                Register Patient
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() { document.getElementById('addPatientModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('addPatientModal').style.display = 'none'; }
+</script>
+{% endblock %}

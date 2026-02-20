@@ -59,7 +59,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Total SKUs</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: white;">1,284</h2>
+                <h2 style="font-size: 28px; margin: 4px 0; color: white;">{{ total_skus }}</h2>
             </div>
             <div class="icon-circle"
                 style="background: rgba(46, 213, 115, 0.1); color: #2ed573; padding: 10px; border-radius: 12px;">
@@ -76,7 +76,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Low Stock</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: var(--accent-orange);">42</h2>
+                <h2 style="font-size: 28px; margin: 4px 0; color: var(--accent-orange);">{{ low_stock_count }}</h2>
             </div>
             <div class="icon-circle"
                 style="background: rgba(255, 165, 2, 0.1); color: var(--accent-orange); padding: 10px; border-radius: 12px;">
@@ -92,7 +92,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Expired Soon</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: #ff4757;">15</h2>
+                <h2 style="font-size: 28px; margin: 4px 0; color: #ff4757;">{{ expiring_soon_count }}</h2>
             </div>
             <div class="icon-circle"
                 style="background: rgba(255, 71, 87, 0.1); color: #ff4757; padding: 10px; border-radius: 12px;">
@@ -108,7 +108,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Today's Sales</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: white;">₹12,450</h2>
+                <h2 style="font-size: 28px; margin: 4px 0; color: white;">₹{{ today_sales }}</h2>
             </div>
             <div class="icon-circle"
                 style="background: rgba(55, 66, 250, 0.1); color: #3742fa; padding: 10px; border-radius: 12px;">
@@ -157,56 +157,32 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for m in inventory_highlights %}
                     <tr style="border-bottom: 1px solid var(--border-color);">
                         <td style="padding: 16px 20px;">
-                            <div style="font-weight: 600; color: white;">Paracetamol 500mg</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #PC102</div>
+                            <div style="font-weight: 600; color: white;">{{ m.name }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #{{ m.batch_number }}</div>
                         </td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Analgesic</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">450 Units</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Oct 2026</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">{{ m.category }}
+                        </td>
+                        <td
+                            style="padding: 16px 20px; font-size: 13px;{% if m.stock <= 20 %} color: var(--accent-orange);{% else %} color: var(--text-secondary);{% endif %}">
+                            {{ m.stock }} Units</td>
+                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">{{
+                            m.expiry_date|date:"M Y" }}</td>
                         <td style="padding: 16px 20px;">
-                            <span class="badge-tag active">In Stock</span>
+                            <span
+                                class="badge-tag {% if m.status == 'IN_STOCK' %}active{% elif m.status == 'LOW_STOCK' %}trial{% elif m.status == 'EXPIRED' %}expired{% else %}suspended{% endif %}">
+                                {{ m.get_status_display }}
+                            </span>
                         </td>
                     </tr>
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 16px 20px;">
-                            <div style="font-weight: 600; color: white;">Amoxicillin 250mg</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #AMX88</div>
-                        </td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Antibiotic</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--accent-orange);">12 Units</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Jan 2025</td>
-                        <td style="padding: 16px 20px;">
-                            <span class="badge-tag"
-                                style="background: rgba(255,165,2,0.1); color: var(--accent-orange);">Low Stock</span>
-                        </td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 16px 20px;">
-                            <div style="font-weight: 600; color: white;">Cetirizine Syrup</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #CTZ91</div>
-                        </td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Antihistamine
-                        </td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">85 Bottles</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: #ff4757;">Mar 2024</td>
-                        <td style="padding: 16px 20px;">
-                            <span class="badge-tag expired">Expired</span>
-                        </td>
-                    </tr>
+                    {% empty %}
                     <tr>
-                        <td style="padding: 16px 20px;">
-                            <div style="font-weight: 600; color: white;">Vitamin D3 Drops</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">Batch: #VIT04</div>
-                        </td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Supplement</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">200 Units</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">Dec 2027</td>
-                        <td style="padding: 16px 20px;">
-                            <span class="badge-tag active">In Stock</span>
-                        </td>
+                        <td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No medicines
+                            in inventory yet.</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

@@ -1,0 +1,183 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-green){% endblock %}
+{% block mgmt_gradient %}var(--gradient-green){% endblock %}
+{% block hub_icon %}medical_services{% endblock %}
+{% block hub_name %}ClinicHub{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'clinic-doctors' %}" class="nav-item active">
+        <span class="icon material-icons-round">medical_services</span>
+        Doctors
+    </a>
+    <a href="{% url 'clinic-appointments' %}" class="nav-item">
+        <span class="icon material-icons-round">calendar_month</span>
+        Appointments
+    </a>
+    <a href="{% url 'clinic-patients' %}" class="nav-item">
+        <span class="icon material-icons-round">people</span>
+        Patients
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Doctor Management{% endblock %}
+{% block page_subtitle %}Manage clinic doctors, their specializations and availability.{% endblock %}
+
+{% block page_actions %}
+<div class="search-box"
+    style="margin-right: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 4px 12px;">
+    <span class="material-icons-round" style="font-size: 20px; color: var(--text-muted);">search</span>
+    <input type="text" id="doctorSearch" placeholder="Search doctors..."
+        style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px;">
+</div>
+<button class="btn-primary" onclick="openModal()">
+    <span class="material-icons-round">add</span>
+    Add Doctor
+</button>
+{% endblock %}
+
+{% block content %}
+
+{% if success_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ success_message }}", 'success'));</script>
+{% endif %}
+{% if error_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ error_message }}", 'error'));</script>
+{% endif %}
+
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table" id="doctorTable">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Specialization</th>
+                    <th>Contact</th>
+                    <th>Qualification</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in doctors %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: white;">Dr. {{ d.name }}</div>
+                    </td>
+                    <td><span class="badge-tag" style="background: rgba(46, 213, 115, 0.1); color: #2ed573;">
+                            {{ d.specialization }}</span></td>
+                    <td>
+                        <div style="font-size: 13px;">{{ d.phone|default:"—" }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ d.email|default:"—" }}</div>
+                    </td>
+                    <td>{{ d.qualification|default:"—" }}</td>
+                    <td>
+                        {% if d.is_active %}
+                        <span class="badge-tag"
+                            style="background: rgba(46, 213, 115, 0.1); color: #2ed573;">Active</span>
+                        {% else %}
+                        <span class="badge-tag"
+                            style="background: rgba(255, 107, 107, 0.1); color: #ff6b6b;">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="icon-btn"><span class="material-icons-round">edit</span></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">No doctors added
+                        yet. Click "Add Doctor" to get started.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Doctor Modal -->
+<div id="addDoctorModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 24px; position: relative;">
+        <button onclick="closeModal()"
+            style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+        <h3 style="margin: 0 0 20px 0;">Add New Doctor</h3>
+        <form method="post" action="{% url 'clinic-doctors' %}"
+            style="display: flex; flex-direction: column; gap: 16px;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Doctor
+                    Name</label>
+                <input type="text" name="name" required placeholder="e.g. Sharma"
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Specialization</label>
+                    <select name="specialization"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                        <option value="General">General Practice</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Dermatology">Dermatology</option>
+                        <option value="Orthopedics">Orthopedics</option>
+                        <option value="Pediatrics">Pediatrics</option>
+                        <option value="ENT">ENT</option>
+                        <option value="Neurology">Neurology</option>
+                        <option value="Ophthalmology">Ophthalmology</option>
+                        <option value="Gynecology">Gynecology</option>
+                        <option value="Psychiatry">Psychiatry</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Qualification</label>
+                    <input type="text" name="qualification" placeholder="e.g. MBBS, MD"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Phone</label>
+                    <input type="text" name="phone" placeholder="+91 98765 43210"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Email</label>
+                    <input type="email" name="email" placeholder="dr@clinic.com"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 8px;">
+                <span class="material-icons-round">save</span>
+                Save Doctor
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() { document.getElementById('addDoctorModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('addDoctorModal').style.display = 'none'; }
+
+    document.getElementById('doctorSearch')?.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#doctorTable tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

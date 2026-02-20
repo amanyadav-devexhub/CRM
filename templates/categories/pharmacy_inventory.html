@@ -54,6 +54,14 @@
 {% endblock %}
 
 {% block content %}
+
+{% if success_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ success_message }}", 'success'));</script>
+{% endif %}
+{% if error_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ error_message }}", 'error'));</script>
+{% endif %}
+
 <div class="card">
     <div class="card-body" style="padding: 0;">
         <table class="data-table" id="inventoryTable">
@@ -68,34 +76,27 @@
                 </tr>
             </thead>
             <tbody>
+                {% for m in medicines %}
                 <tr>
                     <td>
-                        <div style="font-weight: 600; color: white;">Paracetamol 500mg</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">SKU: PHA-001</div>
+                        <div style="font-weight: 600; color: white;">{{ m.name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">SKU: {{ m.sku }}</div>
                     </td>
-                    <td><span class="badge-tag"
-                            style="background: rgba(55, 66, 250, 0.1); color: #3742fa;">Analgesic</span></td>
-                    <td>₹25.00</td>
-                    <td>450 Units</td>
-                    <td>Oct 2026</td>
-                    <td>
-                        <button class="icon-btn"><span class="material-icons-round">edit</span></button>
-                    </td>
+                    <td><span class="badge-tag" style="background: rgba(55, 66, 250, 0.1); color: #3742fa;">
+                        {{ m.category }}</span></td>
+                    <td>₹{{ m.price }}</td>
+                    <td{% if m.stock <= 20 %} style="color: var(--accent-orange);" {% endif %}>{{ m.stock }} Units</td>
+                        <td>{{ m.expiry_date|date:"M Y" }}</td>
+                        <td>
+                            <button class="icon-btn"><span class="material-icons-round">edit</span></button>
+                        </td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td>
-                        <div style="font-weight: 600; color: white;">Azithromycin 500mg</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">SKU: PHA-122</div>
-                    </td>
-                    <td><span class="badge-tag"
-                            style="background: rgba(255, 71, 87, 0.1); color: #ff4757;">Antibiotic</span></td>
-                    <td>₹120.00</td>
-                    <td style="color: var(--accent-orange);">12 Units</td>
-                    <td>Jan 2025</td>
-                    <td>
-                        <button class="icon-btn"><span class="material-icons-round">edit</span></button>
-                    </td>
+                    <td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">No medicines in
+                        inventory. Click "Add Stock" to get started.</td>
                 </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -110,26 +111,56 @@
             <span class="material-icons-round">close</span>
         </button>
         <h3 style="margin: 0 0 20px 0;">Add New Medicine Stock</h3>
-        <form onsubmit="saveStock(event)" style="display: flex; flex-direction: column; gap: 16px;">
+        <form method="post" action="{% url 'pharmacy-inventory' %}"
+            style="display: flex; flex-direction: column; gap: 16px;">
+            {% csrf_token %}
             <div class="form-group">
                 <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Medicine
                     Name</label>
-                <input type="text" id="m_name" required placeholder="e.g. Omeprazole"
+                <input type="text" name="name" id="m_name" required placeholder="e.g. Omeprazole"
                     style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                     <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Batch
                         #</label>
-                    <input type="text" id="m_batch" required placeholder="B-2024"
+                    <input type="text" name="batch_number" id="m_batch" required placeholder="B-2024"
                         style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
                 </div>
                 <div class="form-group">
                     <label
                         style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Qty</label>
-                    <input type="number" id="m_qty" required placeholder="100"
+                    <input type="number" name="quantity" id="m_qty" required placeholder="100"
                         style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
                 </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Price
+                        (₹)</label>
+                    <input type="number" name="price" step="0.01" placeholder="25.00"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Category</label>
+                    <select name="category"
+                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
+                        <option value="General">General</option>
+                        <option value="Analgesic">Analgesic</option>
+                        <option value="Antibiotic">Antibiotic</option>
+                        <option value="Antihistamine">Antihistamine</option>
+                        <option value="Supplement">Supplement</option>
+                        <option value="Antacid">Antacid</option>
+                        <option value="Antiviral">Antiviral</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Expiry
+                    Date</label>
+                <input type="date" name="expiry_date"
+                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
             </div>
             <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 8px;">
                 <span class="material-icons-round">save</span>
@@ -142,34 +173,6 @@
 <script>
     function openModal() { document.getElementById('addStockModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('addStockModal').style.display = 'none'; }
-
-    function saveStock(e) {
-        e.preventDefault();
-        const name = document.getElementById('m_name').value;
-        const qty = document.getElementById('m_qty').value;
-        const batch = document.getElementById('m_batch').value;
-
-        // Add row to table (mock)
-        const tbody = document.querySelector('#inventoryTable tbody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <div style="font-weight: 600; color: white;">${name}</div>
-                <div style="font-size: 12px; color: var(--text-muted);">SKU: PHA-NEW</div>
-            </td>
-            <td><span class="badge-tag" style="background: rgba(55, 66, 250, 0.1); color: #3742fa;">General</span></td>
-            <td>₹0.00</td>
-            <td>${qty} Units</td>
-            <td>Dec 2026</td>
-            <td><button class="icon-btn"><span class="material-icons-round">edit</span></button></td>
-        `;
-        tbody.prepend(row);
-
-        closeModal();
-        if (typeof showToast === 'function') showToast(`Successfully added ${name} (Batch ${batch})`);
-
-        e.target.reset();
-    }
 
     document.getElementById('inventorySearch')?.addEventListener('input', function (e) {
         const query = e.target.value.toLowerCase();

@@ -44,6 +44,9 @@ SHARED_APPS = [
     "apps.accounts",
     "apps.core",
     "apps.patients",
+    "apps.pharmacy",
+    "apps.clinical",
+    "apps.appointments",
 ]
 
 TENANT_APPS = [
@@ -124,20 +127,15 @@ DATABASE_ROUTERS = (
 )
 
 
-# Redis Cache
+# Cache (use local memory for dev — switch to Redis in production)
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
-# Use Redis for sessions
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+# Sessions — use DB backend (no Redis required)
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 
 
@@ -201,3 +199,35 @@ REST_FRAMEWORK = {
     ],
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ── Logging ──────────────────────────────────────────────────────────
+# Show every incoming request (method + path + status) in the terminal
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "request_fmt": {
+            "format": "\n🔹 [{asctime}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "request_fmt",
+        },
+    },
+    "loggers": {
+        "django.server": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}

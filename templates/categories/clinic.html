@@ -8,19 +8,19 @@
 {% block hub_nav %}
 <div class="nav-section">
     <div class="nav-section-title">Operations</div>
-    <a href="#" class="nav-item active">
+    <a href="{% url 'category-clinic' %}" class="nav-item active">
         <span class="icon material-icons-round">dashboard</span>
         Dashboard
     </a>
-    <a href="#" class="nav-item">
+    <a href="{% url 'clinic-doctors' %}" class="nav-item">
         <span class="icon material-icons-round">medical_services</span>
         Doctors
     </a>
-    <a href="#" class="nav-item">
+    <a href="{% url 'clinic-appointments' %}" class="nav-item">
         <span class="icon material-icons-round">calendar_month</span>
         Appointments
     </a>
-    <a href="#" class="nav-item">
+    <a href="{% url 'clinic-patients' %}" class="nav-item">
         <span class="icon material-icons-round">people</span>
         Patients
     </a>
@@ -28,13 +28,92 @@
 {% endblock %}
 
 {% block page_title %}Clinic Dashboard{% endblock %}
+{% block page_subtitle %}
+<span style="display: inline-flex; align-items: center; gap: 6px;">
+    Real-time overview
+    <span id="liveIndicator"
+        style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #2ed573;">
+        <span class="live-dot"></span> LIVE
+    </span>
+    <span id="lastUpdate" style="font-size: 11px; color: var(--text-muted); margin-left: 8px;"></span>
+</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2ed573;
+        animation: livePulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes livePulse {
+
+        0%,
+        100% {
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(46, 213, 115, 0.6);
+        }
+
+        50% {
+            opacity: 0.6;
+            box-shadow: 0 0 0 6px rgba(46, 213, 115, 0);
+        }
+    }
+
+    .stat-value {
+        transition: all 0.3s ease;
+    }
+
+    .stat-value.updated {
+        animation: valueFlash 0.5s ease;
+    }
+
+    @keyframes valueFlash {
+        0% {
+            transform: scale(1);
+        }
+
+        30% {
+            transform: scale(1.15);
+            color: #2ed573;
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .appt-row {
+        transition: opacity 0.3s ease;
+    }
+
+    .appt-row.new-row {
+        animation: slideInRow 0.4s ease-out;
+    }
+
+    @keyframes slideInRow {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="stats-grid">
     <div class="stat-card green animate-in">
         <div class="stat-info">
             <div class="stat-label">Active Doctors</div>
-            <div class="stat-value">12</div>
+            <div class="stat-value" id="stat-doctors">{{ active_doctors }}</div>
             <div class="stat-sub">On duty today</div>
         </div>
         <div class="stat-icon green">
@@ -44,7 +123,7 @@
     <div class="stat-card blue animate-in">
         <div class="stat-info">
             <div class="stat-label">Appointments</div>
-            <div class="stat-value">48</div>
+            <div class="stat-value" id="stat-appointments">{{ appointments_today }}</div>
             <div class="stat-sub">Scheduled today</div>
         </div>
         <div class="stat-icon blue">
@@ -53,18 +132,18 @@
     </div>
     <div class="stat-card purple animate-in">
         <div class="stat-info">
-            <div class="stat-label">Wait Time</div>
-            <div class="stat-value">15m</div>
-            <div class="stat-sub">Average today</div>
+            <div class="stat-label">Total Patients</div>
+            <div class="stat-value" id="stat-patients">{{ total_patients }}</div>
+            <div class="stat-sub">Registered</div>
         </div>
         <div class="stat-icon purple">
-            <span class="material-icons-round">schedule</span>
+            <span class="material-icons-round">people</span>
         </div>
     </div>
     <div class="stat-card orange animate-in">
         <div class="stat-info">
             <div class="stat-label">Revenue</div>
-            <div class="stat-value">₹24.5k</div>
+            <div class="stat-value" id="stat-revenue">{{ revenue_today }}</div>
             <div class="stat-sub">Today's collection</div>
         </div>
         <div class="stat-icon orange">
@@ -76,8 +155,10 @@
 <div class="content-grid">
     <!-- Upcoming Appointments -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Upcoming Appointments</h3>
+            <span id="apptCount"
+                style="font-size: 12px; padding: 4px 10px; background: rgba(55,66,250,0.1); color: #3742fa; border-radius: 20px;"></span>
         </div>
         <div class="card-body" style="padding:0">
             <table class="data-table">
@@ -89,19 +170,31 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>10:30 AM</td>
-                        <td>John Doe</td>
-                        <td>Dr. Smith</td>
-                        <td><span class="badge-tag active">Confirmed</span></td>
+                <tbody id="appointmentsBody">
+                    {% for a in upcoming_appointments %}
+                    <tr class="appt-row">
+                        <td>{{ a.appointment_time|time:"h:i A" }}</td>
+                        <td>{{ a.patient_name }}</td>
+                        <td>Dr. {{ a.doctor.name }}</td>
+                        <td>
+                            {% if a.status == 'CONFIRMED' %}
+                            <span class="badge-tag active">Confirmed</span>
+                            {% elif a.status == 'SCHEDULED' %}
+                            <span class="badge-tag trial">Scheduled</span>
+                            {% elif a.status == 'IN_PROGRESS' %}
+                            <span class="badge-tag" style="background: rgba(255,165,2,0.1); color: #ffa502;">In
+                                Progress</span>
+                            {% else %}
+                            <span class="badge-tag">{{ a.get_status_display }}</span>
+                            {% endif %}
+                        </td>
                     </tr>
-                    <tr>
-                        <td>11:15 AM</td>
-                        <td>Jane Roe</td>
-                        <td>Dr. Adams</td>
-                        <td><span class="badge-tag trial">Waiting</span></td>
+                    {% empty %}
+                    <tr class="appt-row" id="emptyRow">
+                        <td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No upcoming
+                            appointments today.</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -114,18 +207,18 @@
         </div>
         <div class="card-body">
             <div class="quick-actions">
-                <button class="action-btn">
-                    <span class="material-icons-round">add</span>
-                    New Patient
-                </button>
-                <button class="action-btn">
+                <a href="{% url 'clinic-patients' %}" class="action-btn" style="text-decoration: none;">
+                    <span class="material-icons-round">people</span>
+                    Patients
+                </a>
+                <a href="{% url 'clinic-doctors' %}" class="action-btn" style="text-decoration: none;">
+                    <span class="material-icons-round">medical_services</span>
+                    Doctors
+                </a>
+                <a href="{% url 'clinic-appointments' %}" class="action-btn" style="text-decoration: none;">
                     <span class="material-icons-round">edit_calendar</span>
-                    Sch. Shift
-                </button>
-                <button class="action-btn">
-                    <span class="material-icons-round">description</span>
-                    Prescriptions
-                </button>
+                    Appointments
+                </a>
                 <button class="action-btn">
                     <span class="material-icons-round">analytics</span>
                     Reports
@@ -134,4 +227,81 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API_URL = '{% url "clinic-api-stats" %}';
+    const POLL_INTERVAL = 5000; // 5 seconds
+
+    // Track previous values for animation
+    let prevStats = {
+        doctors: document.getElementById('stat-doctors').textContent,
+        appointments: document.getElementById('stat-appointments').textContent,
+        patients: document.getElementById('stat-patients').textContent,
+        revenue: document.getElementById('stat-revenue').textContent,
+    };
+
+    function animateValue(el, newVal) {
+        if (el.textContent !== String(newVal)) {
+            el.textContent = newVal;
+            el.classList.add('updated');
+            setTimeout(() => el.classList.remove('updated'), 600);
+        }
+    }
+
+    function getStatusBadge(status, label) {
+        const styles = {
+            'CONFIRMED': 'class="badge-tag active"',
+            'SCHEDULED': 'class="badge-tag trial"',
+            'IN_PROGRESS': 'style="background: rgba(255,165,2,0.1); color: #ffa502;" class="badge-tag"',
+        };
+        return `<span ${styles[status] || 'class="badge-tag"'}>${label}</span>`;
+    }
+
+    async function refreshDashboard() {
+        try {
+            const res = await fetch(API_URL);
+            if (!res.ok) return;
+            const data = await res.json();
+
+            // Update stat cards
+            animateValue(document.getElementById('stat-doctors'), data.active_doctors);
+            animateValue(document.getElementById('stat-appointments'), data.appointments_today);
+            animateValue(document.getElementById('stat-patients'), data.total_patients);
+            animateValue(document.getElementById('stat-revenue'), data.revenue_today);
+
+            // Update appointments table
+            const tbody = document.getElementById('appointmentsBody');
+            const apptCount = document.getElementById('apptCount');
+            apptCount.textContent = `${data.upcoming_appointments.length} upcoming`;
+
+            if (data.upcoming_appointments.length === 0) {
+                tbody.innerHTML = `<tr class="appt-row"><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No upcoming appointments today.</td></tr>`;
+            } else {
+                tbody.innerHTML = data.upcoming_appointments.map(a => `
+                    <tr class="appt-row new-row">
+                        <td>${a.time}</td>
+                        <td>${a.patient}</td>
+                        <td>${a.doctor}</td>
+                        <td>${getStatusBadge(a.status, a.status_label)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            // Update timestamp
+            document.getElementById('lastUpdate').textContent = `Updated ${data.timestamp}`;
+
+        } catch (err) {
+            console.warn('Dashboard refresh failed:', err);
+        }
+    }
+
+    // Initial count badge
+    const initialCount = document.querySelectorAll('#appointmentsBody .appt-row:not(#emptyRow)').length;
+    document.getElementById('apptCount').textContent = `${initialCount} upcoming`;
+
+    // Start polling
+    setInterval(refreshDashboard, POLL_INTERVAL);
+</script>
 {% endblock %}

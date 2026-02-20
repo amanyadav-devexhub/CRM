@@ -57,18 +57,31 @@
                 </tr>
             </thead>
             <tbody>
+                {% for p in prescriptions %}
                 <tr>
-                    <td>20 Feb, 10:45 AM</td>
+                    <td>{{ p.created_at|date:"d M, h:i A" }}</td>
                     <td>
-                        <div style="font-weight: 600; color: white;">John Doe</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">PID: 2881</div>
+                        <div style="font-weight: 600; color: white;">{{ p.patient_name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">PID: {{ p.patient_id_code|default:"—" }}
+                        </div>
                     </td>
-                    <td>Dr. Sarah Smith</td>
-                    <td><span class="badge-tag trial">Pending Review</span></td>
+                    <td>{{ p.doctor_name }}</td>
+                    <td>
+                        <span
+                            class="badge-tag {% if p.status == 'PENDING' %}trial{% elif p.status == 'DISPENSED' %}active{% elif p.status == 'REJECTED' %}expired{% else %}suspended{% endif %}">
+                            {{ p.get_status_display }}
+                        </span>
+                    </td>
                     <td>
                         <button class="btn-outline" style="font-size: 12px; padding: 6px 12px;">Process</button>
                     </td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No prescriptions
+                        to review.</td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
