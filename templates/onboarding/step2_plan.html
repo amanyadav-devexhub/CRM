@@ -1,0 +1,363 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Plan — HealthCRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0e17;
+            --card: #111827;
+            --border: rgba(255, 255, 255, .06);
+            --text: #f1f5f9;
+            --muted: rgba(241, 245, 249, .5);
+            --accent: #3b82f6;
+            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            --green: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            left: -20%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(ellipse, rgba(139, 92, 246, .05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .wizard-container {
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: .5rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .8rem;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .step.active {
+            color: var(--accent);
+        }
+
+        .step.done {
+            color: var(--green);
+        }
+
+        .step .num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 700;
+            border: 2px solid rgba(255, 255, 255, .12);
+        }
+
+        .step.active .num {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, .15);
+            color: var(--accent);
+        }
+
+        .step.done .num {
+            border-color: var(--green);
+            background: rgba(16, 185, 129, .15);
+            color: var(--green);
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .wizard-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+        }
+
+        .wizard-card h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
+        }
+
+        .wizard-card .subtitle {
+            color: var(--muted);
+            font-size: .875rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .error-list {
+            background: rgba(239, 68, 68, .08);
+            border: 1px solid rgba(239, 68, 68, .2);
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            margin-bottom: 1.25rem;
+            list-style: none;
+        }
+
+        .error-list li {
+            font-size: .85rem;
+            color: var(--error);
+            padding: .15rem 0;
+        }
+
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .plan-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .plan-card {
+            padding: 1.5rem 1.25rem;
+            border-radius: 14px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, .08);
+            background: rgba(255, 255, 255, .02);
+            transition: all .2s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .plan-option input:checked+.plan-card {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, .06);
+        }
+
+        .plan-card:hover {
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        .plan-name {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: .25rem;
+        }
+
+        .plan-price {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: .25rem;
+        }
+
+        .plan-price span {
+            font-size: .8rem;
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .plan-tag {
+            display: inline-block;
+            font-size: .65rem;
+            font-weight: 600;
+            padding: .2rem .6rem;
+            border-radius: 99px;
+            margin-bottom: .75rem;
+        }
+
+        .plan-tag.basic {
+            background: rgba(16, 185, 129, .12);
+            color: #34d399;
+        }
+
+        .plan-tag.pro {
+            background: rgba(59, 130, 246, .12);
+            color: #60a5fa;
+        }
+
+        .plan-tag.enterprise {
+            background: rgba(139, 92, 246, .12);
+            color: #a78bfa;
+        }
+
+        .plan-features {
+            list-style: none;
+            text-align: left;
+            flex: 1;
+            font-size: .78rem;
+            color: var(--muted);
+        }
+
+        .plan-features li {
+            padding: .2rem 0;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+        .plan-features li .material-icons-round {
+            font-size: .85rem;
+            color: var(--green);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-back {
+            flex: 1;
+            padding: .85rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, .1);
+            font-size: .95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background .2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .btn-next {
+            flex: 2;
+            padding: .85rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--gradient);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wizard-container">
+        <div class="steps">
+            <div class="step done">
+                <div class="num">✓</div> Organization
+            </div>
+            <div class="step-line"></div>
+            <div class="step active">
+                <div class="num">2</div> Plan
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+                <div class="num">3</div> Confirm
+            </div>
+        </div>
+
+        <div class="wizard-card">
+            <h2>💳 Choose Your Plan</h2>
+            <p class="subtitle">Start with a 14-day free trial on any plan</p>
+
+            {% if errors %}
+            <ul class="error-list">
+                {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <form method="post" action="/onboarding/plan/">
+                {% csrf_token %}
+
+                <div class="plan-grid">
+                    {% for plan in plans %}
+                    <label class="plan-option">
+                        <input type="radio" name="plan_id" value="{{ plan.pk }}" 
+                        {% if selected.plan_id == plan.pk|stringformat:"s" %}checked{% endif %} 
+                        {% if plan.name == "PRO" and not selected.plan_id %}checked{% endif %}>
+                        <div class="plan-card">
+                            <div class="plan-name">{{ plan.get_name_display }}</div>
+                            <div class="plan-price">₹{{ plan.price }}<span>/mo</span></div>
+                            <span
+                                class="plan-tag {% if plan.name == 'BASIC' %}basic{% elif plan.name == 'PRO' %}pro{% else %}enterprise{% endif %}">
+                                {% if plan.name == "BASIC" %}Small Clinics
+                                {% elif plan.name == "PRO" %}Growing Teams
+                                {% else %}Full Power{% endif %}
+                            </span>
+                            <ul class="plan-features">
+                                <li><span class="material-icons-round">check_circle</span> Up to {{ plan.max_doctors }}
+                                    doctors</li>
+                                {% if plan.ai_enabled %}
+                                <li><span class="material-icons-round">check_circle</span> AI Features</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </label>
+                    {% empty %}
+                    <p style="color: var(--muted); grid-column: 1/-1; text-align: center;">No plans configured yet.
+                        Contact admin.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="btn-row">
+                    <a href="/onboarding/" class="btn-back">← Back</a>
+                    <button type="submit" class="btn-next">Review & Confirm →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

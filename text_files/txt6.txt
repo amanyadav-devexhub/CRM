@@ -13,3 +13,6 @@ INDEXING STRATEGY
 PERFORMANCE OPTIMIZATION
 SECURITY MODEL
 
+Credentials : CRMadmin
+admin@healthcrm.com
+admin@1234

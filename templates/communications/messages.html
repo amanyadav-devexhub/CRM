@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Messages{% endblock %}
+{% block nav_communications %}active{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block content %}
+<style>
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.25rem;
+        background: var(--card-bg, #1e2530);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .filter-bar select,
+    .filter-bar input[type="text"] {
+        background: rgba(255, 255, 255, .06);
+        border: 1px solid rgba(255, 255, 255, .1);
+        color: #fff;
+        padding: .55rem 1rem;
+        border-radius: 8px;
+        font-size: .875rem;
+        min-width: 140px;
+    }
+
+    .filter-bar select option {
+        background: #1e2530;
+    }
+
+    .filter-bar .btn-filter {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff;
+        border: none;
+        padding: .55rem 1.25rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: .875rem;
+    }
+
+    .filter-bar .btn-clear {
+        background: transparent;
+        color: rgba(255, 255, 255, .5);
+        border: 1px solid rgba(255, 255, 255, .12);
+        padding: .55rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: .875rem;
+    }
+
+    .msg-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .msg-table th {
+        text-align: left;
+        padding: .75rem 1rem;
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: rgba(255, 255, 255, .4);
+        border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .msg-table td {
+        padding: .85rem 1rem;
+        font-size: .875rem;
+        color: rgba(255, 255, 255, .8);
+        border-bottom: 1px solid rgba(255, 255, 255, .04);
+    }
+
+    .msg-table tr:hover {
+        background: rgba(255, 255, 255, .02);
+    }
+
+    .channel-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .2rem .6rem;
+        border-radius: 6px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .channel-whatsapp {
+        background: rgba(37, 211, 102, .15);
+        color: #25d366;
+    }
+
+    .channel-sms {
+        background: rgba(59, 130, 246, .15);
+        color: #60a5fa;
+    }
+
+    .channel-email {
+        background: rgba(139, 92, 246, .15);
+        color: #a78bfa;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: .2rem .65rem;
+        border-radius: 99px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .status-queued {
+        background: rgba(245, 158, 11, .15);
+        color: #fbbf24;
+    }
+
+    .status-sent {
+        background: rgba(59, 130, 246, .15);
+        color: #60a5fa;
+    }
+
+    .status-delivered {
+        background: rgba(16, 185, 129, .15);
+        color: #34d399;
+    }
+
+    .status-failed {
+        background: rgba(239, 68, 68, .15);
+        color: #f87171;
+    }
+
+    .status-read {
+        background: rgba(139, 92, 246, .15);
+        color: #a78bfa;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, .35);
+    }
+
+    .empty-state .material-icons-round {
+        font-size: 3rem;
+        margin-bottom: .5rem;
+        display: block;
+    }
+
+    .result-count {
+        font-size: .85rem;
+        color: rgba(255, 255, 255, .4);
+        margin-bottom: 1rem;
+    }
+
+    .panel {
+        background: var(--card-bg, #1e2530);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .breadcrumb {
+        font-size: .85rem;
+        color: rgba(255, 255, 255, .4);
+        margin-bottom: 1.25rem;
+    }
+
+    .breadcrumb a {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="breadcrumb">
+    <a href="/communications/">Communications</a> &nbsp;/&nbsp; Messages
+</div>
+
+<!-- ── Filters ── -->
+<form class="filter-bar" method="get" action="">
+    <input type="text" name="search" placeholder="Search patient or subject…" value="{{ search_query }}">
+    <select name="channel">
+        <option value="">All Channels</option>
+        {% for value, label in channels %}
+        <option value="{{ value }}" {% if channel_filter==value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="status">
+        <option value="">All Statuses</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status_filter==value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter">Filter</button>
+    <a href="/communications/messages/" class="btn-clear">Clear</a>
+</form>
+
+<div class="result-count">{{ total_count }} message{{ total_count|pluralize }}</div>
+
+<!-- ── Messages Table ── -->
+<div class="panel">
+    <table class="msg-table">
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Channel</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Sent</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg in messages %}
+            <tr>
+                <td><strong>{{ msg.patient.full_name }}</strong></td>
+                <td><span class="channel-badge channel-{{ msg.channel }}">{{ msg.get_channel_display }}</span></td>
+                <td>{{ msg.subject|default:"—"|truncatechars:40 }}</td>
+                <td><span class="status-badge status-{{ msg.status }}">{{ msg.get_status_display }}</span></td>
+                <td>{{ msg.sent_at|date:"M d, H:i"|default:"—" }}</td>
+                <td>{{ msg.created_at|date:"M d, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state">
+                        <span class="material-icons-round">mail_outline</span>
+                        <p>No messages found</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notification Center{% endblock %}
+
+{% block content %}
+<style>
+    .notif-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .notif-header .unread-badge {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+        padding: .35rem .9rem;
+        border-radius: 99px;
+        font-size: .85rem;
+        font-weight: 600;
+    }
+
+    .notif-header .btn-mark-all {
+        background: rgba(59, 130, 246, .12);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, .25);
+        padding: .45rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: .85rem;
+        font-weight: 500;
+        transition: background .2s;
+    }
+
+    .notif-header .btn-mark-all:hover {
+        background: rgba(59, 130, 246, .2);
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.25rem;
+        background: var(--card-bg, #1e2530);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .filter-bar select {
+        background: rgba(255, 255, 255, .06);
+        border: 1px solid rgba(255, 255, 255, .1);
+        color: #fff;
+        padding: .55rem 1rem;
+        border-radius: 8px;
+        font-size: .875rem;
+        min-width: 160px;
+    }
+
+    .filter-bar select option {
+        background: #1e2530;
+    }
+
+    .filter-bar .btn-filter {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff;
+        border: none;
+        padding: .55rem 1.25rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: .875rem;
+    }
+
+    .filter-bar .btn-clear {
+        background: transparent;
+        color: rgba(255, 255, 255, .5);
+        border: 1px solid rgba(255, 255, 255, .12);
+        padding: .55rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: .875rem;
+    }
+
+    .notif-list {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        background: var(--card-bg, #1e2530);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        border: 1px solid rgba(255, 255, 255, .06);
+        cursor: pointer;
+        transition: background .15s, transform .15s;
+    }
+
+    .notif-item:hover {
+        background: rgba(255, 255, 255, .03);
+        transform: translateX(2px);
+    }
+
+    .notif-item.unread {
+        border-left: 3px solid #3b82f6;
+    }
+
+    .notif-item.read {
+        opacity: .65;
+    }
+
+    .notif-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .notif-icon-wrap .material-icons-round {
+        font-size: 1.3rem;
+    }
+
+    .icon-appointment {
+        background: rgba(59, 130, 246, .15);
+        color: #60a5fa;
+    }
+
+    .icon-billing {
+        background: rgba(16, 185, 129, .15);
+        color: #34d399;
+    }
+
+    .icon-lab {
+        background: rgba(139, 92, 246, .15);
+        color: #a78bfa;
+    }
+
+    .icon-system {
+        background: rgba(148, 163, 184, .15);
+        color: #94a3b8;
+    }
+
+    .icon-campaign {
+        background: rgba(245, 158, 11, .15);
+        color: #fbbf24;
+    }
+
+    .icon-feedback {
+        background: rgba(236, 72, 153, .15);
+        color: #f472b6;
+    }
+
+    .notif-body {
+        flex: 1;
+    }
+
+    .notif-title {
+        font-weight: 600;
+        color: #fff;
+        font-size: .95rem;
+        margin-bottom: .2rem;
+    }
+
+    .notif-text {
+        color: rgba(255, 255, 255, .55);
+        font-size: .85rem;
+        line-height: 1.4;
+    }
+
+    .notif-time {
+        font-size: .75rem;
+        color: rgba(255, 255, 255, .3);
+        margin-top: .35rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, .35);
+    }
+
+    .empty-state .material-icons-round {
+        font-size: 3rem;
+        margin-bottom: .5rem;
+        display: block;
+    }
+
+    .result-count {
+        font-size: .85rem;
+        color: rgba(255, 255, 255, .4);
+        margin-bottom: 1rem;
+    }
+</style>
+
+<!-- ── Header ── -->
+<div class="notif-header">
+    <div>
+        {% if unread_count > 0 %}
+        <span class="unread-badge">{{ unread_count }} unread</span>
+        {% endif %}
+    </div>
+    {% if unread_count > 0 %}
+    <button class="btn-mark-all" onclick="markAllRead()">
+        <span class="material-icons-round"
+            style="font-size:.9rem; vertical-align:middle; margin-right:.3rem;">done_all</span>
+        Mark all as read
+    </button>
+    {% endif %}
+</div>
+
+<!-- ── Filters ── -->
+<form class="filter-bar" method="get" action="">
+    <select name="type">
+        <option value="">All Types</option>
+        {% for value, label in types %}
+        <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter">Filter</button>
+    <a href="/notifications/" class="btn-clear">Clear</a>
+</form>
+
+<div class="result-count">{{ total_count }} notification{{ total_count|pluralize }}</div>
+
+<!-- ── Notification List ── -->
+<div class="notif-list">
+    {% for notif in notifications %}
+    <div class="notif-item {% if notif.is_read %}read{% else %}unread{% endif %}" 
+    {% if notif.action_url %}onclick="window.location='{{ notif.action_url }}'" {% endif %}>
+        <div class="notif-icon-wrap icon-{{ notif.type }}">
+            <span class="material-icons-round">
+                {% if notif.type == "appointment" %}calendar_month
+                {% elif notif.type == "billing" %}receipt_long
+                {% elif notif.type == "lab" %}biotech
+                {% elif notif.type == "campaign" %}campaign
+                {% elif notif.type == "feedback" %}star
+                {% else %}notifications
+                {% endif %}
+            </span>
+        </div>
+        <div class="notif-body">
+            <div class="notif-title">{{ notif.title }}</div>
+            <div class="notif-text">{{ notif.body|truncatechars:120 }}</div>
+            <div class="notif-time">{{ notif.created_at|timesince }} ago</div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <span class="material-icons-round">notifications_none</span>
+        <p>No notifications</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function markAllRead() {
+        fetch('/api/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+            }
+        }).then(r => r.json()).then(() => location.reload());
+    }
+</script>
+{% endblock %}

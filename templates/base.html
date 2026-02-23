@@ -19,6 +19,7 @@
         .sidebar-brand h2 {
             background: linear-gradient(135deg, #34d399, #6ee7b7);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -99,9 +100,13 @@
                         <span class="icon material-icons-round">bar_chart</span>
                         Analytics
                     </a>
-                    <a href="#" class="nav-item {% block nav_communications %}{% endblock %}">
+                    <a href="/communications/" class="nav-item {% block nav_communications %}{% endblock %}">
                         <span class="icon material-icons-round">chat</span>
                         Communications
+                    </a>
+                    <a href="/notifications/" class="nav-item {% block nav_notifications %}{% endblock %}">
+                        <span class="icon material-icons-round">notifications</span>
+                        Notifications
                     </a>
                     <a href="#" class="nav-item {% block nav_settings %}{% endblock %}">
                         <span class="icon material-icons-round">settings</span>
@@ -127,17 +132,19 @@
                         <span class="icon material-icons-round">search</span>
                         <input type="text" placeholder="Search patients, appointments…">
                     </div>
-                    <button class="topbar-btn" title="Notifications">
+                    <a href="/notifications/" class="topbar-btn" title="Notifications" style="text-decoration:none;">
                         <span class="material-icons-round">notifications</span>
-                        <span class="dot"></span>
-                    </button>
+                    </a>
                     <div class="user-pill">
-                        <div class="user-avatar" style="background: var(--gradient-green);">S</div>
+                        <div class="user-avatar" style="background: var(--gradient-green);">{% firstof request.user.username.0 'S' %}</div>
                         <div class="user-info">
-                            <div class="name">Staff</div>
-                            <div class="role">Sub Admin</div>
+                            <div class="name">{{ request.user.username|default:'Staff' }}</div>
+                            <div class="role">{% if request.user.is_superuser %}Admin View{% else %}Sub Admin{% endif %}</div>
                         </div>
                     </div>
+                    <a href="/logout/" class="topbar-btn" title="Logout" style="text-decoration:none;">
+                        <span class="material-icons-round">logout</span>
+                    </a>
                 </div>
             </header>
 
