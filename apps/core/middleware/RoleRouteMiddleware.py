@@ -27,7 +27,6 @@ class RoleRouteMiddleware:
     # Routes that require SuperAdmin (user.is_superuser, user.tenant is None)
     SUPERADMIN_PREFIXES = (
         "/admin-dashboard/",
-        "/categories/",
     )
 
     def __init__(self, get_response):

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 
 from .serializers import TenantCreateSerializer
@@ -149,13 +149,35 @@ class AdminDashboardView(View):
 # ──────────────────────────────────────────────
 class SubAdminDashboardView(View):
     """
-    Tenant-level dashboard: patients, appointments, labs, revenue
-    for the hospital/clinic/pharmacy.
+    Tenant-level dashboard: renders category-specific dashboard
+    (clinic, pharmacy, lab, hospital) based on user's tenant category.
     """
-    template_name = "dashboard/index.html"
+
+    CATEGORY_TEMPLATES = {
+        "CLINIC": "dashboard/index.html",
+        "PHARMACY": "dashboard/pharmacy_dashboard.html",
+        "LAB": "dashboard/lab_dashboard.html",
+        "HOSPITAL": "dashboard/index.html",  # fallback until hospital dashboard exists
+    }
 
     def get(self, request):
-        # Patient stats (tenant-level)
+        tenant = getattr(request.user, "tenant", None)
+        tenant_category = tenant.category if tenant else "CLINIC"
+
+        template = self.CATEGORY_TEMPLATES.get(tenant_category, "dashboard/index.html")
+
+        # Build context based on category
+        if tenant_category == "PHARMACY":
+            context = self._pharmacy_context(tenant)
+        elif tenant_category == "LAB":
+            context = self._lab_context(tenant)
+        else:
+            context = self._clinic_context(tenant)
+
+        return render(request, template, context)
+
+    def _clinic_context(self, tenant):
+        """Clinic / Hospital dashboard context."""
         try:
             from apps.patients.models import Patient
             patient_count = Patient.objects.count()
@@ -164,25 +186,71 @@ class SubAdminDashboardView(View):
             patient_count = 0
             recent_patients = []
 
-        # Appointments today (placeholder — appointments app not built yet)
-        today_appointments = 0
+        show_lab_widget = tenant.has_feature("lab") if tenant else False
+        show_pharmacy_widget = tenant.has_feature("pharmacy") if tenant else False
+        show_ai_widget = tenant.has_feature("ai_notes") if tenant else False
+        show_analytics_widget = tenant.has_feature("analytics") if tenant else False
 
-        # Pending lab results (placeholder — labs app not built yet)
-        pending_labs = 0
-
-        # Monthly revenue (placeholder — billing app not built yet)
-        monthly_revenue = 0
-
-        # Get tenant category (mock logic for now since we're in template_views context)
-        # In a real scenario, this would come from the current tenant object
-        tenant_category = "CLINIC"  # Default fallback
-        
-        context = {
+        return {
             "patient_count": patient_count,
             "recent_patients": recent_patients,
-            "today_appointments": today_appointments,
-            "pending_labs": pending_labs,
-            "monthly_revenue": monthly_revenue,
-            "tenant_category": tenant_category,
+            "today_appointments": 0,
+            "pending_labs": 0,
+            "monthly_revenue": 0,
+            "tenant_category": tenant.category if tenant else "CLINIC",
+            "show_lab_widget": show_lab_widget,
+            "show_pharmacy_widget": show_pharmacy_widget,
+            "show_ai_widget": show_ai_widget,
+            "show_analytics_widget": show_analytics_widget,
         }
-        return render(request, self.template_name, context)
+
+    def _pharmacy_context(self, tenant):
+        """Pharmacy dashboard context."""
+        from django.utils import timezone as tz
+        from django.db.models import Sum
+
+        try:
+            from apps.pharmacy.models import Medicine, Sale
+            today = tz.now().date()
+            thirty_days = today + tz.timedelta(days=30)
+
+            medicines = Medicine.objects.all()
+            total_skus = medicines.count()
+            low_stock_count = medicines.filter(status='LOW_STOCK').count()
+            expired_count = medicines.filter(status='EXPIRED').count()
+            expiring_soon_count = medicines.filter(
+                expiry_date__lte=thirty_days, expiry_date__gt=today
+            ).count()
+
+            today_sales = Sale.objects.filter(
+                created_at__date=today
+            ).aggregate(total=Sum('grand_total'))['total'] or 0
+
+            inventory_highlights = medicines[:5]
+        except Exception:
+            total_skus = 0
+            low_stock_count = 0
+            expired_count = 0
+            expiring_soon_count = 0
+            today_sales = 0
+            inventory_highlights = []
+
+        return {
+            "total_skus": total_skus,
+            "low_stock_count": low_stock_count,
+            "expired_count": expired_count,
+            "expiring_soon_count": expiring_soon_count,
+            "today_sales": today_sales,
+            "inventory_highlights": inventory_highlights,
+        }
+
+    def _lab_context(self, tenant):
+        """Lab dashboard context."""
+        return {
+            "pending_tests": 0,
+            "samples_received": 0,
+            "tat_score": "—",
+            "revenue_today": "₹0",
+            "test_requests": [],
+        }
+

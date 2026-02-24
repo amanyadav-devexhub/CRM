@@ -9,8 +9,7 @@
     style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
     <div>
         <h2 style="font-size:22px; font-weight:700;">Patient Registry</h2>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">{{ patients|length }} patient{{
-            patients|length|pluralize }} registered</p>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">{{ patients|length }} patient{{ patients|length|pluralize }} registered</p>
     </div>
     <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
         <span class="icon material-icons-round">person_add</span>

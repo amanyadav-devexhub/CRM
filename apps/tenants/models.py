@@ -84,7 +84,7 @@ class TenantSubscription(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def is_active(self):
-        return self.status == "ACTIVE" and self.end_date > timezone.now()
+        return self.status in ("ACTIVE", "TRIAL") and self.end_date > timezone.now()
 
 
 
@@ -166,10 +166,10 @@ def has_feature(self, feature_code):
     except Feature.DoesNotExist:
         return False
 
-    # 2️⃣ Tenant override
+    # 2️⃣ Tenant override (by feature_name CharField)
     override = TenantFeature.objects.filter(
         tenant=self,
-        feature=feature
+        feature_name=feature_code
     ).first()
 
     if override:
@@ -182,3 +182,6 @@ def has_feature(self, feature_code):
 
     cache.set(cache_key, result, 300)  # cache 5 min
     return result
+
+# Attach to Tenant model
+Tenant.has_feature = has_feature

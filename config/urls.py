@@ -27,6 +27,9 @@ from apps.accounts.auth_views import (
     RegisterView, OTPVerifyView, ResendOTPView,
     LoginView, LogoutView,
 )
+from apps.accounts.jwt_views import (
+    JWTTokenObtainView, JWTTokenRefreshView, JWTTokenVerifyView,
+)
 from apps.accounts.onboarding_views import (
     OnboardingStep1View, OnboardingStep2View, OnboardingStep3View,
 )
@@ -52,6 +55,11 @@ urlpatterns = [
     path("api/patients/", include("apps.patients.urls")),
     path("api/communications/", include("apps.communications.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
+
+    # ── JWT Auth Endpoints (programmatic API access) ──
+    path("api/auth/token/", JWTTokenObtainView.as_view(), name="token-obtain"),
+    path("api/auth/token/refresh/", JWTTokenRefreshView.as_view(), name="token-refresh"),
+    path("api/auth/token/verify/", JWTTokenVerifyView.as_view(), name="token-verify"),
 
     # ── Admin Dashboard (Platform Owner / SuperAdmin) ──
     path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),

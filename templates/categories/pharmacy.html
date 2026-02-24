@@ -1,5 +1,7 @@
 {% extends "categories/base_mgmt.html" %}
 
+{% block mgmt_color %}var(--accent-orange){% endblock %}
+{% block mgmt_gradient %}linear-gradient(135deg, #f59e0b, #ef4444){% endblock %}
 {% block hub_icon %}medication{% endblock %}
 {% block hub_name %}PharmTrack{% endblock %}
 
@@ -38,148 +40,121 @@
 {% endblock %}
 
 {% block page_title %}Pharmacy Dashboard{% endblock %}
-{% block page_subtitle %}Welcome back, PharmTrack Manager. Here's your inventory overview.{% endblock %}
+{% block page_subtitle %}
+<span style="display: inline-flex; align-items: center; gap: 6px;">
+    Real-time inventory overview
+    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #f59e0b;">
+        <span class="status-dot" style="width:8px;height:8px;border-radius:50%;background:#f59e0b;animation:livePulse 1.5s ease-in-out infinite;"></span> LIVE
+    </span>
+</span>
+{% endblock %}
 
-{% block page_actions %}
-<button class="btn-outline">
-    <span class="material-icons-round">download</span>
-    Export Data
-</button>
-<button class="btn-primary"
-    onclick="const form = document.getElementById('add-medicine-form'); if(form) window.scrollTo({top: form.offsetTop - 100, behavior: 'smooth'});">
-    <span class="material-icons-round">add</span>
-    New Entry
-</button>
+{% block extra_css %}
+<style>
+    @keyframes livePulse {
+        0%, 100% { opacity:1; box-shadow:0 0 0 0 rgba(245,158,11,0.6); }
+        50% { opacity:0.6; box-shadow:0 0 0 6px rgba(245,158,11,0); }
+    }
+    .stat-value { transition: all 0.3s ease; }
+    .stat-value.updated { animation: valueFlash 0.5s ease; }
+    @keyframes valueFlash {
+        0% { transform: scale(1); }
+        30% { transform: scale(1.15); color: #f59e0b; }
+        100% { transform: scale(1); }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<!-- Stats Row -->
-<div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px;">
-    <div class="card stat-card" style="padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Total SKUs</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: white;">{{ total_skus }}</h2>
-            </div>
-            <div class="icon-circle"
-                style="background: rgba(46, 213, 115, 0.1); color: #2ed573; padding: 10px; border-radius: 12px;">
-                <span class="material-icons-round">inventory</span>
-            </div>
+<div class="stats-grid">
+    <div class="stat-card green animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Total SKUs</div>
+            <div class="stat-value">{{ total_skus }}</div>
+            <div class="stat-sub">Medicines in stock</div>
         </div>
-        <div style="margin-top: 12px; font-size: 12px; color: #2ed573;">
-            <span class="material-icons-round" style="font-size: 14px; vertical-align: middle;">arrow_upward</span>
-            +12 this week
+        <div class="stat-icon green">
+            <span class="material-icons-round">inventory</span>
         </div>
     </div>
-
-    <div class="card stat-card" style="padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Low Stock</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: var(--accent-orange);">{{ low_stock_count }}</h2>
-            </div>
-            <div class="icon-circle"
-                style="background: rgba(255, 165, 2, 0.1); color: var(--accent-orange); padding: 10px; border-radius: 12px;">
-                <span class="material-icons-round">warning</span>
-            </div>
+    <div class="stat-card orange animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Low Stock</div>
+            <div class="stat-value">{{ low_stock_count }}</div>
+            <div class="stat-sub">Needs reorder</div>
         </div>
-        <div style="margin-top: 12px; font-size: 12px; color: var(--accent-orange);">
-            Requires immediate reorder
+        <div class="stat-icon orange">
+            <span class="material-icons-round">warning</span>
         </div>
     </div>
-
-    <div class="card stat-card" style="padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Expired Soon</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: #ff4757;">{{ expiring_soon_count }}</h2>
-            </div>
-            <div class="icon-circle"
-                style="background: rgba(255, 71, 87, 0.1); color: #ff4757; padding: 10px; border-radius: 12px;">
-                <span class="material-icons-round">event_busy</span>
-            </div>
+    <div class="stat-card purple animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Expiring Soon</div>
+            <div class="stat-value">{{ expiring_soon_count }}</div>
+            <div class="stat-sub">Within 30 days</div>
         </div>
-        <div style="margin-top: 12px; font-size: 12px; color: #ff4757;">
-            Within next 30 days
+        <div class="stat-icon purple">
+            <span class="material-icons-round">event_busy</span>
         </div>
     </div>
-
-    <div class="card stat-card" style="padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <span style="color: var(--text-secondary); font-size: 13px; font-weight: 500;">Today's Sales</span>
-                <h2 style="font-size: 28px; margin: 4px 0; color: white;">₹{{ today_sales }}</h2>
-            </div>
-            <div class="icon-circle"
-                style="background: rgba(55, 66, 250, 0.1); color: #3742fa; padding: 10px; border-radius: 12px;">
-                <span class="material-icons-round">payments</span>
-            </div>
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Today's Sales</div>
+            <div class="stat-value">₹{{ today_sales }}</div>
+            <div class="stat-sub">Revenue collected</div>
         </div>
-        <div style="margin-top: 12px; font-size: 12px; color: #3742fa;">
-            <span class="material-icons-round" style="font-size: 14px; vertical-align: middle;">trending_up</span>
-            8% vs yesterday
+        <div class="stat-icon blue">
+            <span class="material-icons-round">payments</span>
         </div>
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-    <!-- Inventory Table -->
+<div class="content-grid">
+    <!-- Inventory Highlights -->
     <div class="card">
-        <div class="card-header"
-            style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px; color: white;">
-                <span class="material-icons-round" style="color: var(--text-secondary);">list_alt</span>
-                Inventory Highlights
-            </h3>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Inventory Highlights</h3>
             <a href="{% url 'pharmacy-inventory' %}"
-                style="font-size: 13px; color: #3742fa; text-decoration: none; font-weight: 500;">View All
-                Inventory</a>
+                style="font-size: 13px; color: #3742fa; text-decoration: none; font-weight: 500;">View All →</a>
         </div>
-        <div class="card-body" style="padding: 0;">
-            <table class="data-table" style="width: 100%; border-collapse: collapse;">
-                <thead style="background: rgba(255,255,255,0.02); text-align: left;">
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <th
-                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
-                            Medicine Name</th>
-                        <th
-                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
-                            Category</th>
-                        <th
-                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
-                            Stock</th>
-                        <th
-                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
-                            Expiry</th>
-                        <th
-                            style="padding: 14px 20px; font-size: 12px; color: var(--text-muted); text-transform: uppercase;">
-                            Status</th>
+                        <th>Medicine</th>
+                        <th>Category</th>
+                        <th>Stock</th>
+                        <th>Expiry</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for m in inventory_highlights %}
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 16px 20px;">
-                            <div style="font-weight: 600; color: white;">{{ m.name }}</div>
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">{{ m.name }}</div>
                             <div style="font-size: 12px; color: var(--text-muted);">Batch: #{{ m.batch_number }}</div>
                         </td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">{{ m.category }}
+                        <td>{{ m.category }}</td>
+                        <td{% if m.stock <= 20 %} style="color: var(--accent-orange); font-weight: 600;"{% endif %}>
+                            {{ m.stock }} Units
                         </td>
-                        <td
-                            style="padding: 16px 20px; font-size: 13px;{% if m.stock <= 20 %} color: var(--accent-orange);{% else %} color: var(--text-secondary);{% endif %}">
-                            {{ m.stock }} Units</td>
-                        <td style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary);">{{
-                            m.expiry_date|date:"M Y" }}</td>
-                        <td style="padding: 16px 20px;">
-                            <span
-                                class="badge-tag {% if m.status == 'IN_STOCK' %}active{% elif m.status == 'LOW_STOCK' %}trial{% elif m.status == 'EXPIRED' %}expired{% else %}suspended{% endif %}">
-                                {{ m.get_status_display }}
-                            </span>
+                        <td>{{ m.expiry_date|date:"M Y" }}</td>
+                        <td>
+                            {% if m.status == 'IN_STOCK' %}
+                            <span class="badge-tag active">In Stock</span>
+                            {% elif m.status == 'LOW_STOCK' %}
+                            <span class="badge-tag trial">Low Stock</span>
+                            {% elif m.status == 'EXPIRED' %}
+                            <span class="badge-tag expired">Expired</span>
+                            {% else %}
+                            <span class="badge-tag">{{ m.get_status_display }}</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No medicines
+                        <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No medicines
                             in inventory yet.</td>
                     </tr>
                     {% endfor %}
@@ -188,63 +163,29 @@
         </div>
     </div>
 
-    <!-- Side Panel: Add Entry Form & Alerts -->
-    <div style="display: flex; flex-direction: column; gap: 24px;">
-        <div class="card" id="add-medicine-form">
-            <div class="card-header" style="padding: 20px; border-bottom: 1px solid var(--border-color);">
-                <h3 style="margin:0; font-size: 16px; color: white;">Quick Inventory Entry</h3>
-            </div>
-            <div class="card-body" style="padding: 20px;">
-                <form onsubmit="return false;" style="display: flex; flex-direction: column; gap: 16px;">
-                    <div class="form-group">
-                        <label
-                            style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Medicine
-                            Name</label>
-                        <input type="text" placeholder="e.g. Ibuprofen"
-                            style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                        <div class="form-group">
-                            <label
-                                style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Batch
-                                Number</label>
-                            <input type="text" placeholder="#B-101"
-                                style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
-                        </div>
-                        <div class="form-group">
-                            <label
-                                style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Quantity</label>
-                            <input type="number" placeholder="50"
-                                style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label
-                            style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Expiry
-                            Date</label>
-                        <input type="month"
-                            style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; color: white;">
-                    </div>
-                    <button class="btn-primary" style="width: 100%; padding: 12px;">
-                        <span class="material-icons-round">save</span>
-                        Add to Stock
-                    </button>
-                    <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 4px;">Form data
-                        is for demonstration only</p>
-                </form>
-            </div>
+    <!-- Management Tools -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Management Tools</h3>
         </div>
-
-        <div class="card"
-            style="background: linear-gradient(135deg, rgba(55,66,250,0.05) 0%, rgba(55,66,250,0.02) 100%); border: 1px dashed rgba(55,66,250,0.3);">
-            <div class="card-body" style="padding: 20px; text-align: center;">
-                <div class="icon" style="color: #3742fa; font-size: 40px; margin-bottom: 12px;">
-                    <span class="material-icons-round" style="font-size: 40px;">rocket_launch</span>
-                </div>
-                <h4 style="margin: 0 0 8px 0; color: white;">Smart POS coming soon</h4>
-                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">Integrated billing with
-                    barcode scanning and automated tax calculation.</p>
-                <button class="btn-outline" style="font-size: 11px; padding: 8px 16px;">Early Access</button>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="{% url 'pharmacy-inventory' %}" class="action-btn" style="text-decoration: none;">
+                    <span class="material-icons-round">inventory_2</span>
+                    Inventory
+                </a>
+                <a href="{% url 'pharmacy-sales' %}" class="action-btn" style="text-decoration: none;">
+                    <span class="material-icons-round">point_of_sale</span>
+                    Sales & POS
+                </a>
+                <a href="{% url 'pharmacy-prescriptions' %}" class="action-btn" style="text-decoration: none;">
+                    <span class="material-icons-round">receipt_long</span>
+                    Prescriptions
+                </a>
+                <button class="action-btn">
+                    <span class="material-icons-round">analytics</span>
+                    Reports
+                </button>
             </div>
         </div>
     </div>
