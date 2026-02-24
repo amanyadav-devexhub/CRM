@@ -1,0 +1,161 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--dark-blue){% endblock %}
+{% block mgmt_gradient %}linear-gradient(135deg, #1e293b 0%, #0f172a 100%){% endblock %}
+{% block hub_icon %}medication{% endblock %}
+{% block hub_name %}Enterprise Control{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Enterprise Layer</div>
+    <a href="{% url 'category-hospitals' %}" class="nav-item {% if request.resolver_match.url_name == 'category-hospitals' %}active{% endif %}">
+        <span class="icon material-icons-round">dashboard</span>
+        Executive Dashboard
+    </a>
+    <a href="{% url 'hospital-departments' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-departments' %}active{% endif %}">
+        <span class="icon material-icons-round">account_balance</span>
+        Departments
+    </a>
+    <a href="{% url 'hospital-wards' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-wards' %}active{% endif %}">
+        <span class="icon material-icons-round">domain</span>
+        Ward Management
+    </a>
+    <a href="{% url 'hospital-beds' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-beds' %}active{% endif %}">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="{% url 'hospital-staffing' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-staffing' %}active{% endif %}">
+        <span class="icon material-icons-round">groups</span>
+        Staffing Control
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-insurance' %}active{% endif %}">
+        <span class="icon material-icons-round">receipt_long</span>
+        Revenue Cycle
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'hospital-er-console' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-er-console' %}active{% endif %}">
+        <span class="icon material-icons-round">emergency</span>
+        ER Board
+    </a>
+    <a href="{% url 'hospital-admissions' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-admissions' or request.resolver_match.url_name == 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">login</span>
+        IPD Admissions
+    </a>
+    <a href="{% url 'hospital-patients' %}" class="nav-item {% if 'patient' in request.resolver_match.url_name and request.resolver_match.url_name != 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">personal_injury</span>
+        Patients
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Standalone Panels</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">stethoscope</span>
+        Clinic Panel
+    </a>
+    <a href="/categories/labs/" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Laboratory
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">local_pharmacy</span>
+        Pharmacy
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Hospital Departments{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Departments</h3>
+            <button class="btn-primary" onclick="document.getElementById('add-dept-modal').style.display='flex'">
+                <span class="material-icons-round">add</span> Add Department
+            </button>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Department Name</th>
+                        <th>Head of Department</th>
+                        <th>Total Beds</th>
+                        <th>Occupied Beds</th>
+                        <th>Revenue Tracking</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept in departments %}
+                    <tr>
+                        <td><strong>{{ dept.name }}</strong><br><small style="color:var(--text-muted)">{{
+                                dept.description|truncatechars:50 }}</small></td>
+                        <td>{% if dept.head_of_department %}Dr. {{ dept.head_of_department.name }}{% else %}Not
+                            Assigned{% endif %}</td>
+                        <td>{{ dept.total_beds }}</td>
+                        <td>{{ dept.occupied_beds }}</td>
+                        <td>
+                            {% if dept.revenue_tracking %}
+                            <span class="badge-tag active">Enabled</span>
+                            {% else %}
+                            <span class="badge-tag expired">Disabled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:2rem;">No departments defined. Start by adding
+                            one.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Department Modal -->
+<div id="add-dept-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:500px;">
+        <div class="card-header">
+            <h3>New Department</h3>
+            <button onclick="document.getElementById('add-dept-modal').style.display='none'"
+                style="background:none; border:none; cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display:grid; gap:1.2rem;">
+                    <div class="form-group">
+                        <label>Department Name</label>
+                        <input type="text" name="name" class="form-control" required placeholder="e.g. Cardiology">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" class="form-control" placeholder="Brief description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Head of Department (Optional)</label>
+                        <select name="head_of_department" class="form-control">
+                            <option value="">-- Select Doctor --</option>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">Dr. {{ d.name }} ({{ d.specialization }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="checkbox" name="revenue_tracking" id="revenue_tracking" checked>
+                        <label for="revenue_tracking" style="margin:0;">Enable Revenue Tracking</label>
+                    </div>
+                    <button type="submit" class="btn-primary">Create Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

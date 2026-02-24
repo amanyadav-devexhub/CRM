@@ -12,7 +12,7 @@ from apps.patients.template_views import (
 from apps.tenants.template_views import (
     TenantCreatePageView,
     CategoryIndexView, CategoryClinicView, CategoryPharmacyView,
-    CategoryHospitalsView, CategoryLabsView, CategoryListView,
+    CategoryListView,
     PharmacyInventoryView, PharmacySalesView, PharmacyPrescriptionsView,
     ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
     ClinicDashboardAPIView,
@@ -54,12 +54,14 @@ urlpatterns = [
     path("categories/clinic/patients/", ClinicPatientsView.as_view(), name="clinic-patients"),
     path("categories/clinic/api/stats/", ClinicDashboardAPIView.as_view(), name="clinic-api-stats"),
 
-    # Pharmacy Flow
+    # Hospital Flow
+    path("categories/hospital/", include("apps.hospitals.urls")),
     path("categories/pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
     path("categories/pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
     path("categories/pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
     path("categories/pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
-    path("categories/labs/", CategoryLabsView.as_view(), name="category-labs"),
+    # Labs Flow
+    path("categories/labs/", include("apps.labs.urls")),
 ]
 
 

@@ -47,6 +47,14 @@ SHARED_APPS = [
     "apps.pharmacy",
     "apps.clinical",
     "apps.appointments",
+    "apps.labs",
+    "apps.billing",
+    "apps.communications",
+    "apps.analytics",
+    "apps.ai",
+    "apps.notifications",
+    "apps.utils",
+    "apps.hospitals",
 ]
 
 TENANT_APPS = [
@@ -64,7 +72,8 @@ TENANT_APPS = [
     "apps.analytics",
     "apps.ai",
     "apps.notifications",
-    "apps.utils"
+    "apps.utils",
+    "apps.hospitals"
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [

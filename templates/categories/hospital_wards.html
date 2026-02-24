@@ -1,0 +1,159 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-blue){% endblock %}
+{% block mgmt_gradient %}var(--gradient-blue){% endblock %}
+{% block hub_icon %}domain{% endblock %}
+{% block hub_name %}Enterprise Control{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Enterprise Layer</div>
+    <a href="{% url 'category-hospitals' %}" class="nav-item {% if request.resolver_match.url_name == 'category-hospitals' %}active{% endif %}">
+        <span class="icon material-icons-round">dashboard</span>
+        Executive Dashboard
+    </a>
+    <a href="{% url 'hospital-departments' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-departments' %}active{% endif %}">
+        <span class="icon material-icons-round">account_balance</span>
+        Departments
+    </a>
+    <a href="{% url 'hospital-wards' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-wards' %}active{% endif %}">
+        <span class="icon material-icons-round">domain</span>
+        Ward Management
+    </a>
+    <a href="{% url 'hospital-beds' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-beds' %}active{% endif %}">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="{% url 'hospital-staffing' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-staffing' %}active{% endif %}">
+        <span class="icon material-icons-round">groups</span>
+        Staffing Control
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-insurance' %}active{% endif %}">
+        <span class="icon material-icons-round">receipt_long</span>
+        Revenue Cycle
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'hospital-er-console' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-er-console' %}active{% endif %}">
+        <span class="icon material-icons-round">emergency</span>
+        ER Board
+    </a>
+    <a href="{% url 'hospital-admissions' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-admissions' or request.resolver_match.url_name == 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">login</span>
+        IPD Admissions
+    </a>
+    <a href="{% url 'hospital-patients' %}" class="nav-item {% if 'patient' in request.resolver_match.url_name and request.resolver_match.url_name != 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">personal_injury</span>
+        Patients
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Standalone Panels</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">stethoscope</span>
+        Clinic Panel
+    </a>
+    <a href="/categories/labs/" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Laboratory
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">local_pharmacy</span>
+        Pharmacy
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Hospital Ward Hierarchy{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Wards List</h3>
+            <button class="btn-primary" onclick="document.getElementById('add-ward-modal').style.display='flex'">
+                <span class="material-icons-round">add_business</span> Add Ward
+            </button>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ward Name</th>
+                        <th>Department</th>
+                        <th>Type</th>
+                        <th>Occupancy</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ward in wards %}
+                    <tr>
+                        <td><strong>{{ ward.name }}</strong></td>
+                        <td>{{ ward.department.name }}</td>
+                        <td>{{ ward.ward_type }}</td>
+                        <td>{{ ward.occupied_beds }} / {{ ward.total_beds }} Beds</td>
+                        <td>
+                            {% if ward.occupied_beds == ward.total_beds and ward.total_beds > 0 %}
+                            <span class="badge-tag expired">Full</span>
+                            {% else %}
+                            <span class="badge-tag active">Available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:2rem;">No wards defined. Start by adding a
+                            ward.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Ward Modal -->
+<div id="add-ward-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:500px;">
+        <div class="card-header">
+            <h3>New Enterprise Ward</h3>
+            <button onclick="document.getElementById('add-ward-modal').style.display='none'"
+                style="background:none; border:none; cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display:grid; gap:1.2rem;">
+                    <div class="form-group">
+                        <label>Ward Name</label>
+                        <input type="text" name="name" class="form-control" required placeholder="e.g. South Wing ICU">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select name="department_id" class="form-control" required>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ward Type</label>
+                        <select name="ward_type" class="form-control">
+                            <option value="GENERAL">General Ward</option>
+                            <option value="ICU">ICU</option>
+                            <option value="PRIVATE">Private Suite</option>
+                            <option value="SEMI_PRIVATE">Semi-Private</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Create Ward</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

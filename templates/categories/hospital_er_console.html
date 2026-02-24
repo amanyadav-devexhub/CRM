@@ -1,0 +1,158 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-red){% endblock %}
+{% block mgmt_gradient %}var(--gradient-red){% endblock %}
+{% block hub_icon %}emergency{% endblock %}
+{% block hub_name %}Enterprise Control{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Enterprise Layer</div>
+    <a href="{% url 'category-hospitals' %}" class="nav-item {% if request.resolver_match.url_name == 'category-hospitals' %}active{% endif %}">
+        <span class="icon material-icons-round">dashboard</span>
+        Executive Dashboard
+    </a>
+    <a href="{% url 'hospital-departments' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-departments' %}active{% endif %}">
+        <span class="icon material-icons-round">account_balance</span>
+        Departments
+    </a>
+    <a href="{% url 'hospital-wards' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-wards' %}active{% endif %}">
+        <span class="icon material-icons-round">domain</span>
+        Ward Management
+    </a>
+    <a href="{% url 'hospital-beds' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-beds' %}active{% endif %}">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="{% url 'hospital-staffing' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-staffing' %}active{% endif %}">
+        <span class="icon material-icons-round">groups</span>
+        Staffing Control
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-insurance' %}active{% endif %}">
+        <span class="icon material-icons-round">receipt_long</span>
+        Revenue Cycle
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'hospital-er-console' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-er-console' %}active{% endif %}">
+        <span class="icon material-icons-round">emergency</span>
+        ER Board
+    </a>
+    <a href="{% url 'hospital-admissions' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-admissions' or request.resolver_match.url_name == 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">login</span>
+        IPD Admissions
+    </a>
+    <a href="{% url 'hospital-patients' %}" class="nav-item {% if 'patient' in request.resolver_match.url_name and request.resolver_match.url_name != 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">personal_injury</span>
+        Patients
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Standalone Panels</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">stethoscope</span>
+        Clinic Panel
+    </a>
+    <a href="/categories/labs/" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Laboratory
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">local_pharmacy</span>
+        Pharmacy
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Emergency Room Console{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Triage Board</h3>
+            <button class="btn-primary" style="background:var(--accent-red);"
+                onclick="document.getElementById('er-arrival-modal').style.display='flex'">
+                <span class="material-icons-round">emergency</span> New Arrival
+            </button>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Urgency</th>
+                        <th>Patient Name</th>
+                        <th>Complaint</th>
+                        <th>Arrival</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in er_cases %}
+                    <tr>
+                        <td>
+                            <span class="badge-tag"
+                                style="background: {% if case.triage_level == 1 %}#ef4444{% elif case.triage_level == 2 %}#f59e0b{% else %}#3b82f6{% endif %}; color:white;">
+                                L{{ case.triage_level }} - {{ case.get_triage_level_display }}
+                            </span>
+                        </td>
+                        <td><strong>{{ case.patient_name }}</strong></td>
+                        <td>{{ case.chief_complaint }}</td>
+                        <td>{{ case.arrival_time|timesince }} ago</td>
+                        <td><span class="badge-tag trial">{{ case.status }}</span></td>
+                        <td>
+                            <button class="btn-text">Assign Dr.</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:2rem;">No active ER cases.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ER Arrival Modal -->
+<div id="er-arrival-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:500px;">
+        <div class="card-header">
+            <h3>Log ER Arrival</h3>
+            <button onclick="document.getElementById('er-arrival-modal').style.display='none'"
+                style="background:none; border:none; cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display:grid; gap:1.2rem;">
+                    <div class="form-group">
+                        <label>Patient Name (or John/Jane Doe)</label>
+                        <input type="text" name="patient_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Triage Level</label>
+                        <select name="triage_level" class="form-control">
+                            {% for val, label in triage_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Chief Complaint</label>
+                        <textarea name="complaint" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="background:var(--accent-red);">Register &
+                        Triage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

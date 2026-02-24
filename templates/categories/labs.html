@@ -8,17 +8,20 @@
 {% block hub_nav %}
 <div class="nav-section">
     <div class="nav-section-title">Operations</div>
-    <a href="#" class="nav-item active">
+    <a href="{% url 'labs-hub' %}"
+        class="nav-item {% if request.resolver_match.url_name == 'labs-hub' %}active{% endif %}">
         <span class="icon material-icons-round">dashboard</span>
         Dashboard
     </a>
-    <a href="#" class="nav-item">
+    <a href="{% url 'lab-test-catalog' %}"
+        class="nav-item {% if request.resolver_match.url_name == 'lab-test-catalog' %}active{% endif %}">
         <span class="icon material-icons-round">biotech</span>
         Test Catalog
     </a>
-    <a href="#" class="nav-item">
+    <a href="{% url 'lab-order-list' %}"
+        class="nav-item {% if request.resolver_match.url_name == 'lab-order-list' %}active{% endif %}">
         <span class="icon material-icons-round">assignment</span>
-        Samples
+        Orders
     </a>
     <a href="#" class="nav-item">
         <span class="icon material-icons-round">description</span>
@@ -34,7 +37,7 @@
     <div class="stat-card purple animate-in">
         <div class="stat-info">
             <div class="stat-label">Pending Tests</div>
-            <div class="stat-value">34</div>
+            <div class="stat-value">{{ pending_tests }}</div>
             <div class="stat-sub">In queue today</div>
         </div>
         <div class="stat-icon purple">
@@ -44,8 +47,8 @@
     <div class="stat-card blue animate-in">
         <div class="stat-info">
             <div class="stat-label">Samples Recv.</div>
-            <div class="stat-value">58</div>
-            <div class="stat-sub">Last 24 hours</div>
+            <div class="stat-value">{{ samples_received }}</div>
+            <div class="stat-sub">Today</div>
         </div>
         <div class="stat-icon blue">
             <span class="material-icons-round">science</span>
@@ -54,7 +57,7 @@
     <div class="stat-card green animate-in">
         <div class="stat-info">
             <div class="stat-label">TAT Score</div>
-            <div class="stat-value">98.5%</div>
+            <div class="stat-value">{{ tat_score }}</div>
             <div class="stat-sub">Within turnaround time</div>
         </div>
         <div class="stat-icon green">
@@ -64,8 +67,8 @@
     <div class="stat-card orange animate-in">
         <div class="stat-info">
             <div class="stat-label">Revenue</div>
-            <div class="stat-value">₹65k</div>
-            <div class="stat-sub">Today's bookings</div>
+            <div class="stat-value">{{ revenue_today }}</div>
+            <div class="stat-sub">Today's completed</div>
         </div>
         <div class="stat-icon orange">
             <span class="material-icons-round">payments</span>
@@ -78,30 +81,48 @@
     <div class="card">
         <div class="card-header">
             <h3>Recent Test Requests</h3>
+            <a href="{% url 'lab-order-list' %}" class="btn-text">View All</a>
         </div>
         <div class="card-body" style="padding:0">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>Patient</th>
-                        <th>Test Type</th>
-                        <th>Sample Status</th>
+                        <th>Status</th>
                         <th>Priority</th>
+                        <th>Ordered At</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for order in test_requests %}
                     <tr>
-                        <td>Alice Smith</td>
-                        <td>Complete Blood Count</td>
-                        <td><span class="badge-tag trial">Collected</span></td>
-                        <td>Routine</td>
+                        <td>{{ order.patient.full_name }}</td>
+                        <td>
+                            <span
+                                class="badge-tag {% if order.status == 'COMPLETED' %}active{% elif order.status == 'PENDING' %}expired{% else %}trial{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if order.priority == 'URGENT' or order.priority == 'STAT' %}
+                            <span style="color:var(--accent-red)">{{ order.get_priority_display }}</span>
+                            {% else %}
+                            {{ order.get_priority_display }}
+                            {% endif %}
+                        </td>
+                        <td>{{ order.ordered_at|date:"M d, H:i" }}</td>
+                        <td>
+                            <a href="{% url 'lab-order-entry' order.id %}" class="material-icons-round"
+                                style="color:var(--accent-purple); text-decoration:none;">edit_note</a>
+                        </td>
                     </tr>
+                    {% empty %}
                     <tr>
-                        <td>Bob Wilson</td>
-                        <td>RT-PCR</td>
-                        <td><span class="badge-tag expired">Pending</span></td>
-                        <td><span style="color:var(--accent-red)">Urgent</span></td>
+                        <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">No recent
+                            requests found.</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -114,15 +135,15 @@
         </div>
         <div class="card-body">
             <div class="quick-actions">
-                <button class="action-btn">
+                <a href="{% url 'lab-order-list' %}" class="action-btn" style="text-decoration:none;">
                     <span class="material-icons-round">add_task</span>
-                    Enter Results
-                </button>
+                    New Order
+                </a>
+                <a href="{% url 'lab-test-catalog' %}" class="action-btn" style="text-decoration:none;">
+                    <span class="material-icons-round">biotech</span>
+                    Manage Catalog
+                </a>
                 <button class="action-btn">
-                    <span class="material-icons-round">qr_code_2</span>
-                    Label Sample
-                </button>
-                <button class="material-icons-round action-btn">
                     <span class="material-icons-round">inventory_2</span>
                     Reagent Stock
                 </button>

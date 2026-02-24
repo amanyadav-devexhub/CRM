@@ -1,0 +1,221 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-green){% endblock %}
+{% block mgmt_gradient %}var(--gradient-green){% endblock %}
+{% block hub_icon %}receipt_long{% endblock %}
+{% block hub_name %}Enterprise Control{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Enterprise Layer</div>
+    <a href="{% url 'category-hospitals' %}" class="nav-item {% if request.resolver_match.url_name == 'category-hospitals' %}active{% endif %}">
+        <span class="icon material-icons-round">dashboard</span>
+        Executive Dashboard
+    </a>
+    <a href="{% url 'hospital-departments' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-departments' %}active{% endif %}">
+        <span class="icon material-icons-round">account_balance</span>
+        Departments
+    </a>
+    <a href="{% url 'hospital-wards' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-wards' %}active{% endif %}">
+        <span class="icon material-icons-round">domain</span>
+        Ward Management
+    </a>
+    <a href="{% url 'hospital-beds' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-beds' %}active{% endif %}">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="{% url 'hospital-staffing' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-staffing' %}active{% endif %}">
+        <span class="icon material-icons-round">groups</span>
+        Staffing Control
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-insurance' %}active{% endif %}">
+        <span class="icon material-icons-round">receipt_long</span>
+        Revenue Cycle
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'hospital-er-console' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-er-console' %}active{% endif %}">
+        <span class="icon material-icons-round">emergency</span>
+        ER Board
+    </a>
+    <a href="{% url 'hospital-admissions' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-admissions' or request.resolver_match.url_name == 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">login</span>
+        IPD Admissions
+    </a>
+    <a href="{% url 'hospital-patients' %}" class="nav-item {% if 'patient' in request.resolver_match.url_name and request.resolver_match.url_name != 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">personal_injury</span>
+        Patients
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Standalone Panels</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">stethoscope</span>
+        Clinic Panel
+    </a>
+    <a href="/categories/labs/" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Laboratory
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">local_pharmacy</span>
+        Pharmacy
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Insurance Claims & Corporate Accounts{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <!-- Claims Table -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Active Insurance Claims</h3>
+            <button class="btn-primary" style="background:var(--accent-green);"
+                onclick="document.getElementById('add-claim-modal').style.display='flex'">
+                <span class="material-icons-round">add</span> Add Claim
+            </button>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Provider</th>
+                        <th>Policy #</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for claim in claims %}
+                    <tr>
+                        <td><strong>{{ claim.admission.patient.full_name }}</strong></td>
+                        <td>{{ claim.corporate_account.name }}</td>
+                        <td><code>{{ claim.policy_number }}</code></td>
+                        <td>₹{{ claim.requested_amount }}</td>
+                        <td>
+                            <span
+                                class="badge-tag {% if claim.status == 'APPROVED' %}active{% elif claim.status == 'REJECTED' %}expired{% else %}trial{% endif %}">
+                                {{ claim.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:2rem;">No active claims.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Corporate Accounts -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Corporate Providers</h3>
+            <button class="btn-primary" style="background:var(--accent-green);"
+                onclick="document.getElementById('add-corp-modal').style.display='flex'">
+                <span class="material-icons-round">add</span>
+            </button>
+        </div>
+        <div class="card-body" style="padding:0">
+            <ul style="list-style:none; padding:0; margin:0">
+                {% for acc in corporate_accounts %}
+                <li style="padding:1rem; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between;">
+                    <div>
+                        <div style="font-weight:600;">{{ acc.name }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">Limit: ₹{{ acc.credit_limit }}</div>
+                    </div>
+                    {% if acc.active %}
+                    <span class="badge-tag active" style="height:fit-content">Active</span>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <li style="padding:2rem; text-align:center;">No providers listed.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Add Corp Modal -->
+<div id="add-corp-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:400px;">
+        <div class="card-header">
+            <h3>Add New Provider</h3>
+            <button onclick="document.getElementById('add-corp-modal').style.display='none'"
+                style="background:none; border:none; cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Credit Limit</label>
+                    <input type="number" name="credit_limit" class="form-control" value="0">
+                </div>
+                <button type="submit" class="btn-primary"
+                    style="background:var(--accent-green); margin-top:1rem; width:100%;">Register Provider</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Claim Modal -->
+<div id="add-claim-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:500px;">
+        <div class="card-header">
+            <h3>Add New Claim</h3>
+            <button onclick="document.getElementById('add-claim-modal').style.display='none'"
+                style="background:none; border:none; cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="create_claim" value="1">
+                <div style="display:grid; gap:1.2rem;">
+                    <div class="form-group">
+                        <label>Select Admission</label>
+                        <select name="admission_id" class="form-control" required>
+                            {% for adm in admissions %}
+                            <option value="{{ adm.id }}">{{ adm.patient.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Corporate Account</label>
+                        <select name="corporate_account_id" class="form-control" required>
+                            {% for acc in corporate_accounts %}
+                            <option value="{{ acc.id }}">{{ acc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Policy Number</label>
+                        <input type="text" name="policy_number" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Requested Amount</label>
+                        <input type="number" name="requested_amount" class="form-control" value="0">
+                    </div>
+                    <button type="submit" class="btn-primary" style="background:var(--accent-green);">Submit
+                        Claim</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

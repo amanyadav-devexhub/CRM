@@ -1,0 +1,135 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-purple){% endblock %}
+{% block mgmt_gradient %}var(--gradient-purple){% endblock %}
+{% block hub_icon %}biotech{% endblock %}
+{% block hub_name %}LabFlow{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'labs-hub' %}" class="nav-item">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'lab-test-catalog' %}" class="nav-item active">
+        <span class="icon material-icons-round">biotech</span>
+        Test Catalog
+    </a>
+    <a href="{% url 'lab-order-list' %}" class="nav-item">
+        <span class="icon material-icons-round">assignment</span>
+        Orders
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">description</span>
+        Reports
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Laboratory Test Catalog{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <!-- Test List -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Available Tests</h3>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="document.getElementById('add-test-modal').style.display='flex'">
+                    <span class="material-icons-round">add</span> Add Test
+                </button>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Code</th>
+                        <th>Category</th>
+                        <th>Ref. Range</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                    <tr>
+                        <td><strong>{{ test.name }}</strong></td>
+                        <td><code>{{ test.code }}</code></td>
+                        <td>{{ test.category }}</td>
+                        <td>{{ test.reference_range }}</td>
+                        <td>₹{{ test.price }}</td>
+                        <td>
+                            <span class="badge-tag {% if test.is_active %}active{% else %}expired{% endif %}">
+                                {% if test.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted)">No tests found
+                            in catalog.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Test Modal (Simple Overlay) -->
+    <div id="add-test-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+        <div class="card" style="width:100%; max-width:500px; animation: slideUp 0.3s ease-out;">
+            <div class="card-header">
+                <h3>Add New Test</h3>
+                <button onclick="document.getElementById('add-test-modal').style.display='none'"
+                    style="background:none; border:none; cursor:pointer;">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div style="display:grid; gap:1rem;">
+                        <div class="form-group">
+                            <label>Test Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. CBC" required>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div class="form-group">
+                                <label>Code</label>
+                                <input type="text" name="code" class="form-control" placeholder="CBC001" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <input type="text" name="category" class="form-control" placeholder="Hematology">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div class="form-group">
+                                <label>Price (₹)</label>
+                                <input type="number" name="price" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ref. Range</label>
+                                <input type="text" name="reference_range" class="form-control" placeholder="12-16 g/dL">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top:0.5rem;">Save Test</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if success_message %}
+<div class="alert success animate-in"
+    style="position:fixed; bottom:2rem; right:2rem; background:var(--accent-green); color:white; padding:1rem 2rem; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); z-index:1001;">
+    {{ success_message }}
+</div>
+<script>setTimeout(() => document.querySelector('.alert').remove(), 3000);</script>
+{% endif %}
+{% endblock %}

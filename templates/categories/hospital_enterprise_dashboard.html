@@ -1,0 +1,183 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--dark-blue){% endblock %}
+{% block mgmt_gradient %}linear-gradient(135deg, #1e293b 0%, #0f172a 100%){% endblock %}
+{% block hub_icon %}apartment{% endblock %}
+{% block hub_name %}Enterprise Control{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Enterprise Layer</div>
+    <a href="{% url 'category-hospitals' %}" class="nav-item {% if request.resolver_match.url_name == 'category-hospitals' %}active{% endif %}">
+        <span class="icon material-icons-round">dashboard</span>
+        Executive Dashboard
+    </a>
+    <a href="{% url 'hospital-departments' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-departments' %}active{% endif %}">
+        <span class="icon material-icons-round">account_balance</span>
+        Departments
+    </a>
+    <a href="{% url 'hospital-wards' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-wards' %}active{% endif %}">
+        <span class="icon material-icons-round">domain</span>
+        Ward Management
+    </a>
+    <a href="{% url 'hospital-beds' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-beds' %}active{% endif %}">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="{% url 'hospital-staffing' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-staffing' %}active{% endif %}">
+        <span class="icon material-icons-round">groups</span>
+        Staffing Control
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-insurance' %}active{% endif %}">
+        <span class="icon material-icons-round">receipt_long</span>
+        Revenue Cycle
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'hospital-er-console' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-er-console' %}active{% endif %}">
+        <span class="icon material-icons-round">emergency</span>
+        ER Board
+    </a>
+    <a href="{% url 'hospital-admissions' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-admissions' or request.resolver_match.url_name == 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">login</span>
+        IPD Admissions
+    </a>
+    <a href="{% url 'hospital-patients' %}" class="nav-item {% if 'patient' in request.resolver_match.url_name and request.resolver_match.url_name != 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">personal_injury</span>
+        Patients
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Standalone Panels</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">stethoscope</span>
+        Clinic Panel
+    </a>
+    <a href="/categories/labs/" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Laboratory
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">local_pharmacy</span>
+        Pharmacy
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}{{ hospital.name|default:"Hospital Enterprise Board" }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <a href="{% url 'hospital-admissions' %}" class="stat-card blue animate-in"
+        style="text-decoration:none; color:inherit;">
+        <div class="stat-info">
+            <div class="stat-label">Total IPD</div>
+            <div class="stat-value">{{ total_admissions }}</div>
+            <div class="stat-sub">{{ critical_patients }} critical cases</div>
+        </div>
+        <div class="stat-icon blue"><span class="material-icons-round">hotel</span></div>
+    </a>
+    <a href="{% url 'labs-hub' %}" class="stat-card orange animate-in" style="text-decoration:none; color:inherit;">
+        <div class="stat-info">
+            <div class="stat-label">Lab Backlog</div>
+            <div class="stat-value">{{ pending_lab_reports }}</div>
+            <div class="stat-sub">Pending reports across all depts</div>
+        </div>
+        <div class="stat-icon orange"><span class="material-icons-round">biotech</span></div>
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="stat-card red animate-in"
+        style="--accent-red: #ef4444; text-decoration:none; color:inherit;">
+        <div class="stat-info">
+            <div class="stat-label">Pharmacy Alerts</div>
+            <div class="stat-value">{{ low_stock_alerts }}</div>
+            <div class="stat-sub">Medications near stock-out</div>
+        </div>
+        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;"><span
+                class="material-icons-round">inventory</span></div>
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="stat-card green animate-in"
+        style="text-decoration:none; color:inherit;">
+        <div class="stat-info">
+            <div class="stat-label">Insurance Pending</div>
+            <div class="stat-value">{{ pending_claims }}</div>
+            <div class="stat-sub">Claims requiring approval</div>
+        </div>
+        <div class="stat-icon green"><span class="material-icons-round">account_balance_wallet</span></div>
+    </a>
+</div>
+
+<div class="content-grid">
+    <!-- Department Overview -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Departmental Bed Occupancy</h3>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Head of Dept</th>
+                        <th>Beds (Occ/Total)</th>
+                        <th>Occupancy Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept in departments %}
+                    <tr>
+                        <td><strong>{{ dept.name }}</strong></td>
+                        <td>Dr. {{ dept.head_of_department.name|default:"TBA" }}</td>
+                        <td>{{ dept.occupied_beds }} / {{ dept.total_beds }}</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:0.8rem;">
+                                <div
+                                    style="flex:1; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden;">
+                                    <div
+                                        style="width: {% if dept.total_beds > 0 %}{% widthratio dept.occupied_beds dept.total_beds 100 %}{% else %}0{% endif %}%; height:100%; background:var(--accent-blue);">
+                                    </div>
+                                </div>
+                                <span style="font-size:0.85rem; font-weight:600;">{% if dept.total_beds > 0 %}{%
+                                    widthratio dept.occupied_beds dept.total_beds 100 %}{% else %}0{% endif %}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:2rem;">No departments configured.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent ER Cases -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Live ER Feed</h3>
+            <a href="{% url 'hospital-er-console' %}" class="btn-text">View Board</a>
+        </div>
+        <div class="card-body" style="padding:0">
+            <ul style="list-style:none; padding:0; margin:0">
+                {% for case in recent_cases %}
+                <li
+                    style="padding:1rem; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600;">{{ case.patient_name }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">{{ case.chief_complaint|truncatechars:30
+                            }}</div>
+                    </div>
+                    <span class="badge-tag"
+                        style="background:{% if case.triage_level == 1 %}#ef4444{% elif case.triage_level == 2 %}#f59e0b{% else %}#3b82f6{% endif %}; color:white;">
+                        L{{ case.triage_level }}
+                    </span>
+                </li>
+                {% empty %}
+                <li style="padding:2rem; text-align:center; color:var(--text-muted);">Clear ER status</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
