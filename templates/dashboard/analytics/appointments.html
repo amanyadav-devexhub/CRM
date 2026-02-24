@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block nav_analytics %}active{% endblock %}
+{% block page_title %}Appointment Analytics{% endblock %}
+
+{% block content %}
+
+<div class="page-actions" style="margin-bottom:1.5rem;">
+    <a href="/dashboard/analytics/" class="btn-back">
+        <span class="material-icons-round">arrow_back</span> Back to Analytics
+    </a>
+</div>
+
+<div class="content-grid equal">
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">donut_large</span> By Status</h3>
+        </div>
+        <div class="card-body">
+            {% if status_breakdown %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sb in status_breakdown %}
+                    <tr>
+                        <td><span class="status-pill {{ sb.status|lower }}">{{ sb.status }}</span></td>
+                        <td><strong>{{ sb.count }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-text">No appointment data.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">pie_chart</span> By Type</h3>
+        </div>
+        <div class="card-body">
+            {% if type_breakdown %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tb in type_breakdown %}
+                    <tr>
+                        <td><span class="type-pill {{ tb.appointment_type|lower }}">{{ tb.appointment_type }}</span></td>
+                        <td><strong>{{ tb.count }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-text">No appointment data.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; overflow: hidden; }
+    .card-header { padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,.05); display: flex; align-items: center; gap: .75rem; }
+    .card-header h3 { font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+    .card-header .icon { color: #3b82f6; }
+    .card-body { padding: 1.25rem; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { text-align: left; padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.06); font-size: .75rem; color: rgba(241,245,249,.4); text-transform: uppercase; }
+    .data-table td { padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.03); font-size: .85rem; }
+    
+    .status-pill, .type-pill { padding: .25rem .6rem; border-radius: 6px; font-size: .75rem; font-weight: 600; text-transform: capitalize; }
+    .status-pill.scheduled, .type-pill.scheduled { background: rgba(59,130,246,.15); color: #60a5fa; }
+    .status-pill.completed { background: rgba(16,185,129,.15); color: #10b981; }
+    .status-pill.no_show, .status-pill.cancelled { background: rgba(239,68,68,.15); color: #ef4444; }
+    .type-pill.walk_in { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .type-pill.tele_consult { background: rgba(139,92,246,.15); color: #8b5cf6; }
+
+    .empty-text { color: rgba(241,245,249,.4); font-size: .85rem; }
+    .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: rgba(241,245,249,.5); text-decoration: none; }
+    .btn-back:hover { color: #3b82f6; }
+</style>
+
+{% endblock %}

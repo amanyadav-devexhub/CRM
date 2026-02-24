@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block nav_settings %}active{% endblock %}
+{% block page_title %}Settings <span>/ Organization Configuration</span>{% endblock %}
+
+{% block content %}
+
+{% if saved %}
+<div class="alert-banner success">
+    <span class="material-icons-round">check_circle</span>
+    Settings saved successfully!
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="settings-form">
+    {% csrf_token %}
+
+    <!-- ═══ Basic Info ═══ -->
+    <div class="settings-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon">business</span>
+            <div>
+                <h3>Basic Clinic Info</h3>
+                <p>Your clinic's identity and contact details</p>
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="clinic_name">Clinic Name</label>
+                <input type="text" id="clinic_name" name="clinic_name"
+                       value="{{ settings.clinic_name }}" placeholder="My Clinic">
+            </div>
+            <div class="form-group">
+                <label for="contact_phone">Contact Phone</label>
+                <input type="tel" id="contact_phone" name="contact_phone"
+                       value="{{ settings.contact_phone }}" placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group">
+                <label for="contact_email">Contact Email</label>
+                <input type="email" id="contact_email" name="contact_email"
+                       value="{{ settings.contact_email }}" placeholder="clinic@example.com">
+            </div>
+            <div class="form-group">
+                <label for="gst_number">GST / Tax Number</label>
+                <input type="text" id="gst_number" name="gst_number"
+                       value="{{ settings.gst_number }}" placeholder="29ABCDE1234F1ZH">
+            </div>
+            <div class="form-group">
+                <label for="registration_number">Registration Number</label>
+                <input type="text" id="registration_number" name="registration_number"
+                       value="{{ settings.registration_number }}" placeholder="REG-12345">
+            </div>
+            <div class="form-group full-width">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="3"
+                          placeholder="123, Main Street, City, State, PIN">{{ settings.address }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="logo">Clinic Logo</label>
+                <input type="file" id="logo" name="logo" accept="image/*">
+                {% if settings.logo %}
+                <span class="current-file">Current: {{ settings.logo.name }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Localization ═══ -->
+    <div class="settings-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon">language</span>
+            <div>
+                <h3>Localization</h3>
+                <p>Regional settings for your clinic</p>
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="timezone">Timezone</label>
+                <select id="timezone" name="timezone">
+                    <option value="Asia/Kolkata" {% if settings.timezone == "Asia/Kolkata" %}selected{% endif %}>Asia/Kolkata (IST)</option>
+                    <option value="UTC" {% if settings.timezone == "UTC" %}selected{% endif %}>UTC</option>
+                    <option value="America/New_York" {% if settings.timezone == "America/New_York" %}selected{% endif %}>America/New_York (EST)</option>
+                    <option value="Europe/London" {% if settings.timezone == "Europe/London" %}selected{% endif %}>Europe/London (GMT)</option>
+                    <option value="Asia/Dubai" {% if settings.timezone == "Asia/Dubai" %}selected{% endif %}>Asia/Dubai (GST)</option>
+                    <option value="Asia/Singapore" {% if settings.timezone == "Asia/Singapore" %}selected{% endif %}>Asia/Singapore (SGT)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="currency">Currency</label>
+                <select id="currency" name="currency">
+                    <option value="INR" {% if settings.currency == "INR" %}selected{% endif %}>₹ INR (Indian Rupee)</option>
+                    <option value="USD" {% if settings.currency == "USD" %}selected{% endif %}>$ USD (US Dollar)</option>
+                    <option value="EUR" {% if settings.currency == "EUR" %}selected{% endif %}>€ EUR (Euro)</option>
+                    <option value="GBP" {% if settings.currency == "GBP" %}selected{% endif %}>£ GBP (British Pound)</option>
+                    <option value="AED" {% if settings.currency == "AED" %}selected{% endif %}>د.إ AED (UAE Dirham)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="language">Language</label>
+                <select id="language" name="language">
+                    <option value="en" {% if settings.language == "en" %}selected{% endif %}>English</option>
+                    <option value="hi" {% if settings.language == "hi" %}selected{% endif %}>Hindi</option>
+                    <option value="ta" {% if settings.language == "ta" %}selected{% endif %}>Tamil</option>
+                    <option value="te" {% if settings.language == "te" %}selected{% endif %}>Telugu</option>
+                    <option value="bn" {% if settings.language == "bn" %}selected{% endif %}>Bengali</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date_format">Date Format</label>
+                <select id="date_format" name="date_format">
+                    <option value="DD/MM/YYYY" {% if settings.date_format == "DD/MM/YYYY" %}selected{% endif %}>DD/MM/YYYY</option>
+                    <option value="MM/DD/YYYY" {% if settings.date_format == "MM/DD/YYYY" %}selected{% endif %}>MM/DD/YYYY</option>
+                    <option value="YYYY-MM-DD" {% if settings.date_format == "YYYY-MM-DD" %}selected{% endif %}>YYYY-MM-DD</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Working Hours ═══ -->
+    <div class="settings-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon">schedule</span>
+            <div>
+                <h3>Working Hours</h3>
+                <p>Set your clinic's operating schedule</p>
+            </div>
+        </div>
+        <div class="working-hours-grid" id="workingHoursGrid">
+            <!-- Populated by JavaScript -->
+        </div>
+        <input type="hidden" name="working_hours" id="workingHoursInput">
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label class="toggle-label">
+                <input type="checkbox" name="emergency_available" {% if settings.emergency_available %}checked{% endif %}>
+                <span class="toggle-text">Emergency services available 24/7</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- ═══ Save Button ═══ -->
+    <div class="settings-actions">
+        <button type="submit" class="btn-save">
+            <span class="material-icons-round">save</span>
+            Save Settings
+        </button>
+    </div>
+
+    <input type="hidden" name="holidays" id="holidaysInput" value='{{ settings.holidays|safe }}'>
+</form>
+
+<style>
+    .alert-banner { padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; font-weight: 500; animation: slideDown .3s ease; }
+    .alert-banner.success { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.2); color: #10b981; }
+    @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .settings-form { max-width: 900px; }
+    .settings-section { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.5rem; }
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .section-icon { font-size: 1.75rem; padding: .6rem; border-radius: 12px; background: rgba(59,130,246,.1); color: #3b82f6; }
+    .section-header h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .15rem; }
+    .section-header p { font-size: .8rem; color: rgba(241,245,249,.5); }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label { display: block; font-size: .825rem; font-weight: 500; color: rgba(241,245,249,.6); margin-bottom: .4rem; }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%; padding: .65rem .9rem; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04);
+        color: #f1f5f9; font-size: .875rem; font-family: inherit; transition: border-color .2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    }
+    .form-group select option { background: #111827; }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-group input[type="file"] { padding: .5rem; }
+    .current-file { font-size: .75rem; color: rgba(241,245,249,.4); display: block; margin-top: .3rem; }
+
+    .toggle-label { display: flex; align-items: center; gap: .75rem; cursor: pointer; }
+    .toggle-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #3b82f6; cursor: pointer; }
+    .toggle-text { font-size: .875rem; }
+
+    /* Working hours */
+    .working-hours-grid { display: grid; gap: .75rem; }
+    .wh-row { display: grid; grid-template-columns: 100px 1fr 1fr auto; gap: .75rem; align-items: center; padding: .6rem .75rem; border-radius: 10px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05); }
+    .wh-day { font-weight: 600; font-size: .85rem; text-transform: capitalize; }
+    .wh-row input[type="time"] { padding: .5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-family: inherit; }
+    .wh-row input[type="time"]:focus { border-color: #3b82f6; outline: none; }
+    .wh-toggle { display: flex; align-items: center; }
+    .wh-toggle input { width: 16px; height: 16px; accent-color: #10b981; cursor: pointer; }
+
+    .settings-actions { margin-top: 1rem; }
+    .btn-save {
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .75rem 2rem; border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: #fff; font-size: .95rem; font-weight: 600; cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+    }
+    .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,.3); }
+
+    @media (max-width: 640px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .wh-row { grid-template-columns: 1fr 1fr; gap: .5rem; }
+        .wh-day { grid-column: 1 / -1; }
+    }
+</style>
+
+<script>
+(function() {
+    const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
+    const DAY_LABELS = {mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday',sun:'Sunday'};
+
+    // Parse existing working hours from settings
+    let wh = {};
+    try { wh = JSON.parse('{{ settings.working_hours|escapejs }}' || '{}'); } catch(e) { wh = {}; }
+
+    const grid = document.getElementById('workingHoursGrid');
+    const hiddenInput = document.getElementById('workingHoursInput');
+
+    DAYS.forEach(day => {
+        const data = wh[day] || { open: '09:00', close: '18:00' };
+        const isOpen = wh[day] ? true : (day !== 'sun');
+
+        const row = document.createElement('div');
+        row.className = 'wh-row';
+        row.innerHTML = `
+            <span class="wh-day">${DAY_LABELS[day]}</span>
+            <input type="time" class="wh-open" data-day="${day}" value="${data.open}" ${!isOpen ? 'disabled' : ''}>
+            <input type="time" class="wh-close" data-day="${day}" value="${data.close}" ${!isOpen ? 'disabled' : ''}>
+            <div class="wh-toggle"><input type="checkbox" class="wh-active" data-day="${day}" ${isOpen ? 'checked' : ''} title="Open on this day"></div>
+        `;
+        grid.appendChild(row);
+
+        // Toggle day
+        row.querySelector('.wh-active').addEventListener('change', function() {
+            row.querySelector('.wh-open').disabled = !this.checked;
+            row.querySelector('.wh-close').disabled = !this.checked;
+            updateHidden();
+        });
+    });
+
+    function updateHidden() {
+        const result = {};
+        DAYS.forEach(day => {
+            const active = grid.querySelector(`.wh-active[data-day="${day}"]`).checked;
+            if (active) {
+                result[day] = {
+                    open: grid.querySelector(`.wh-open[data-day="${day}"]`).value,
+                    close: grid.querySelector(`.wh-close[data-day="${day}"]`).value,
+                };
+            }
+        });
+        hiddenInput.value = JSON.stringify(result);
+    }
+
+    // Update on any time change
+    grid.addEventListener('change', updateHidden);
+
+    // Initial update
+    updateHidden();
+})();
+</script>
+
+{% endblock %}

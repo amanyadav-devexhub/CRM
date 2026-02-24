@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block nav_analytics %}active{% endblock %}
+{% block page_title %}Revenue Analytics{% endblock %}
+
+{% block content %}
+
+<div class="page-actions" style="margin-bottom:1.5rem;">
+    <a href="/dashboard/analytics/" class="btn-back">
+        <span class="material-icons-round">arrow_back</span> Back to Analytics
+    </a>
+</div>
+
+<div class="content-grid equal">
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">account_balance_wallet</span> Revenue by Payment Method</h3>
+        </div>
+        <div class="card-body">
+            {% if payments_by_method %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments_by_method %}
+                    <tr>
+                        <td><strong>{{ p.method }}</strong></td>
+                        <td>₹{{ p.total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-text">No payment data available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; overflow: hidden; }
+    .card-header { padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,.05); display: flex; align-items: center; gap: .75rem; }
+    .card-header h3 { font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+    .card-header .icon { color: #10b981; }
+    .card-body { padding: 1.25rem; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { text-align: left; padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.06); font-size: .75rem; color: rgba(241,245,249,.4); text-transform: uppercase; }
+    .data-table td { padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.03); font-size: .85rem; }
+    .empty-text { color: rgba(241,245,249,.4); font-size: .85rem; }
+    .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: rgba(241,245,249,.5); text-decoration: none; }
+    .btn-back:hover { color: #3b82f6; }
+</style>
+
+{% endblock %}

@@ -11,7 +11,7 @@ from apps.tenants.models import Feature
 # All feature codes that can appear in the sidebar
 ALL_FEATURE_CODES = [
     "patients", "appointments", "billing", "staff", "reports_basic",
-    "queue", "clinical_notes", "lab", "pharmacy",
+    "queue", "clinical_notes", "prescriptions", "lab", "pharmacy",
     "communications", "notifications",
     "analytics", "ai_notes", "ai_risk", "multi_branch",
 ]

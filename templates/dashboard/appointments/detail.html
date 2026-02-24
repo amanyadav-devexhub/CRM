@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block nav_appointments %}active{% endblock %}
+{% block page_title %}Appointment Detail{% endblock %}
+
+{% block content %}
+
+<div class="detail-grid">
+    <!-- ─── Main Info ─── -->
+    <div class="detail-card">
+        <div class="card-header">
+            <span class="material-icons-round">event</span>
+            <h3>{{ apt.display_name }} → Dr. {{ apt.doctor.name }}</h3>
+        </div>
+        <div class="detail-rows">
+            <div class="row"><span class="label">Date</span><span>{{ apt.appointment_date|date:"d M Y" }}</span></div>
+            <div class="row"><span class="label">Time</span><span>{{ apt.appointment_time|time:"h:i A" }}</span></div>
+            <div class="row"><span class="label">Type</span><span class="type-pill {{ apt.appointment_type|lower }}">{{ apt.get_appointment_type_display }}</span></div>
+            <div class="row"><span class="label">Status</span><span class="status-pill {{ apt.status|lower }}">{{ apt.get_status_display }}</span></div>
+            <div class="row"><span class="label">Fee</span><span>₹{{ apt.fee }}</span></div>
+            {% if apt.check_in_time %}<div class="row"><span class="label">Check-in</span><span>{{ apt.check_in_time|time:"h:i A" }}</span></div>{% endif %}
+            {% if apt.check_out_time %}<div class="row"><span class="label">Check-out</span><span>{{ apt.check_out_time|time:"h:i A" }}</span></div>{% endif %}
+            {% if apt.notes %}<div class="row"><span class="label">Notes</span><span>{{ apt.notes }}</span></div>{% endif %}
+            {% if apt.cancellation_reason %}<div class="row"><span class="label">Cancel Reason</span><span style="color:#ef4444;">{{ apt.cancellation_reason }}</span></div>{% endif %}
+        </div>
+    </div>
+
+    <!-- ─── Actions ─── -->
+    <div class="detail-card">
+        <div class="card-header">
+            <span class="material-icons-round">settings</span>
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="action-stack">
+            {% if apt.status == "SCHEDULED" or apt.status == "CONFIRMED" %}
+            <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="check_in">
+                <button type="submit" class="action-btn green">
+                    <span class="material-icons-round">login</span> Check In
+                </button>
+            </form>
+            {% endif %}
+
+            {% if apt.status == "IN_PROGRESS" %}
+            <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="check_out">
+                <button type="submit" class="action-btn blue">
+                    <span class="material-icons-round">logout</span> Check Out
+                </button>
+            </form>
+            {% endif %}
+
+            {% if apt.status != "COMPLETED" and apt.status != "CANCELLED" %}
+            <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="update_status">
+                <select name="status" class="filter-input" style="width:100%; margin-bottom:.5rem;">
+                    {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if apt.status == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="action-btn muted">Update Status</button>
+            </form>
+
+            <form method="post" onsubmit="return confirm('Cancel this appointment?')">{% csrf_token %}
+                <input type="hidden" name="action" value="cancel">
+                <input type="text" name="reason" class="filter-input" style="width:100%; margin-bottom:.5rem;" placeholder="Cancellation reason...">
+                <button type="submit" class="action-btn red">
+                    <span class="material-icons-round">cancel</span> Cancel Appointment
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="margin-top:1rem;">
+    <a href="/dashboard/appointments/" class="btn-back">
+        <span class="material-icons-round">arrow_back</span> Back to Appointments
+    </a>
+</div>
+
+<style>
+    .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
+    @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
+
+    .detail-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.5rem; }
+    .card-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+    .card-header .material-icons-round { color: #3b82f6; }
+    .card-header h3 { font-size: 1rem; font-weight: 600; }
+
+    .detail-rows { display: flex; flex-direction: column; gap: .6rem; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: .4rem 0; border-bottom: 1px solid rgba(255,255,255,.03); font-size: .85rem; }
+    .row .label { color: rgba(241,245,249,.45); font-weight: 500; }
+
+    .type-pill, .status-pill { padding: .2rem .5rem; border-radius: 5px; font-size: .72rem; font-weight: 600; }
+    .type-pill.scheduled { background: rgba(59,130,246,.12); color: #60a5fa; }
+    .type-pill.walk_in { background: rgba(245,158,11,.12); color: #f59e0b; }
+    .type-pill.tele_consult { background: rgba(139,92,246,.12); color: #8b5cf6; }
+    .status-pill.scheduled { background: rgba(59,130,246,.1); color: #60a5fa; }
+    .status-pill.confirmed { background: rgba(16,185,129,.1); color: #10b981; }
+    .status-pill.in_progress { background: rgba(245,158,11,.1); color: #f59e0b; }
+    .status-pill.completed { background: rgba(16,185,129,.15); color: #10b981; }
+    .status-pill.cancelled, .status-pill.no_show { background: rgba(239,68,68,.1); color: #ef4444; }
+
+    .action-stack { display: flex; flex-direction: column; gap: .75rem; }
+    .action-btn { width: 100%; padding: .6rem 1rem; border-radius: 10px; border: none; cursor: pointer; font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: .5rem; justify-content: center; transition: all .15s; }
+    .action-btn.green { background: rgba(16,185,129,.12); color: #10b981; }
+    .action-btn.green:hover { background: rgba(16,185,129,.2); }
+    .action-btn.blue { background: rgba(59,130,246,.12); color: #3b82f6; }
+    .action-btn.blue:hover { background: rgba(59,130,246,.2); }
+    .action-btn.muted { background: rgba(255,255,255,.06); color: rgba(241,245,249,.7); }
+    .action-btn.red { background: rgba(239,68,68,.1); color: #ef4444; }
+    .action-btn.red:hover { background: rgba(239,68,68,.18); }
+
+    .filter-input { padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .8rem; font-family: inherit; }
+    .filter-input option { background: #111827; }
+    .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: rgba(241,245,249,.5); text-decoration: none; }
+    .btn-back:hover { color: #3b82f6; }
+</style>
+
+{% endblock %}

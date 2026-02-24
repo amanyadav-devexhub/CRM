@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block nav_analytics %}active{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- ─── Overview Stats ─── -->
+<div class="stats-grid" style="margin-bottom:24px;">
+    <div class="stat-card blue">
+        <div class="stat-info">
+            <div class="stat-label">Total Revenue (30 Days)</div>
+            <div class="stat-value">₹{{ total_revenue|floatformat:2 }}</div>
+        </div>
+        <div class="stat-icon blue"><span class="material-icons-round">payments</span></div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-info">
+            <div class="stat-label">Appointments (30 Days)</div>
+            <div class="stat-value">{{ total_apts }}</div>
+        </div>
+        <div class="stat-icon green"><span class="material-icons-round">event_available</span></div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-info">
+            <div class="stat-label">No-Show Rate</div>
+            <div class="stat-value">{{ no_show_rate }}%</div>
+        </div>
+        <div class="stat-icon red"><span class="material-icons-round">event_busy</span></div>
+    </div>
+    <div class="stat-card purple">
+        <div class="stat-info">
+            <div class="stat-label">New Patients</div>
+            <div class="stat-value">{{ new_patients }}</div>
+        </div>
+        <div class="stat-icon purple"><span class="material-icons-round">person_add</span></div>
+    </div>
+</div>
+
+<!-- ─── Detailed Reports Links ─── -->
+<div class="content-grid equal">
+    <a href="/dashboard/analytics/revenue/" class="report-card">
+        <span class="icon material-icons-round" style="color:#10b981; background:rgba(16,185,129,.1);">trending_up</span>
+        <div>
+            <h3>Revenue Reports</h3>
+            <p>View income breakdown by payment method, services, and doctors.</p>
+        </div>
+        <span class="material-icons-round arrow">chevron_right</span>
+    </a>
+    
+    <a href="/dashboard/analytics/appointments/" class="report-card">
+        <span class="icon material-icons-round" style="color:#3b82f6; background:rgba(59,130,246,.1);">calendar_month</span>
+        <div>
+            <h3>Appointment Analytics</h3>
+            <p>Analyze walk-ins vs scheduled, cancellations, and peak hours.</p>
+        </div>
+        <span class="material-icons-round arrow">chevron_right</span>
+    </a>
+
+    <a href="/dashboard/analytics/doctors/" class="report-card">
+        <span class="icon material-icons-round" style="color:#8b5cf6; background:rgba(139,92,246,.1);">stethoscope</span>
+        <div>
+            <h3>Doctor Performance</h3>
+            <p>Track doctor-wise patient counts, revenue share, and ratings.</p>
+        </div>
+        <span class="material-icons-round arrow">chevron_right</span>
+    </a>
+</div>
+
+<style>
+    .report-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; text-decoration: none; color: inherit; transition: all .2s; }
+    .report-card:hover { border-color: rgba(59,130,246,.4); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .report-card .icon { font-size: 1.75rem; padding: .75rem; border-radius: 12px; }
+    .report-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .25rem; }
+    .report-card p { font-size: .82rem; color: rgba(241,245,249,.5); line-height: 1.4; margin: 0; }
+    .report-card .arrow { margin-left: auto; color: rgba(241,245,249,.3); font-size: 1.5rem; }
+</style>
+
+{% endblock %}

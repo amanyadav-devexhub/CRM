@@ -17,3 +17,7 @@ media/
 # Optional: OS files
 .DS_Store
 Thumbs.db
+
+# Generated data files
+generate_dummy_data.py
+HealthCRM_Dummy_Data.xlsx

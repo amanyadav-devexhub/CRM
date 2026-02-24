@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block nav_staff %}active{% endblock %}
+{% block page_title %}Staff Management <span>/ {{ total }} employees</span>{% endblock %}
+
+{% block content %}
+
+<!-- ─── Header Actions ─── -->
+<div class="page-actions">
+    <div class="action-left">
+        <div class="stat-pills">
+            <span class="pill green">{{ active }} Active</span>
+            <span class="pill muted">{{ total }} Total</span>
+        </div>
+    </div>
+    <a href="/dashboard/staff/create/" class="btn-primary">
+        <span class="material-icons-round">person_add</span>
+        Add Employee
+    </a>
+</div>
+
+<!-- ─── Staff Table ─── -->
+<div class="table-card">
+    <table class="data-table" id="staffTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Department</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in employees %}
+            <tr>
+                <td>
+                    <div class="user-cell">
+                        <div class="avatar {{ emp.employee_type|lower }}">
+                            {{ emp.user.first_name|first }}{{ emp.user.last_name|first }}
+                        </div>
+                        <div>
+                            <span class="name">{{ emp.user.get_full_name|default:emp.user.username }}</span>
+                            <span class="email">{{ emp.user.email }}</span>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="type-badge {{ emp.employee_type|lower }}">{{ emp.get_employee_type_display }}</span></td>
+                <td>{{ emp.department|default:"—" }}</td>
+                <td>{{ emp.phone|default:"—" }}</td>
+                <td>{{ emp.user.role.name|default:"No role" }}</td>
+                <td>
+                    {% if emp.is_active %}
+                    <span class="status-dot active"></span> Active
+                    {% else %}
+                    <span class="status-dot inactive"></span> Inactive
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="action-btns">
+                        <a href="/dashboard/staff/{{ emp.pk }}/edit/" class="btn-icon" title="Edit">
+                            <span class="material-icons-round">edit</span>
+                        </a>
+                        <form method="post" action="/dashboard/staff/{{ emp.pk }}/delete/" class="inline-form"
+                              onsubmit="return confirm('Deactivate this employee?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon danger" title="Deactivate">
+                                <span class="material-icons-round">person_off</span>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <span class="material-icons-round">group_off</span>
+                    <p>No employees yet. <a href="/dashboard/staff/create/">Add your first employee</a>.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .page-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .stat-pills { display: flex; gap: .5rem; }
+    .pill { padding: .35rem .8rem; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+    .pill.green { background: rgba(16,185,129,.12); color: #10b981; }
+    .pill.muted { background: rgba(255,255,255,.06); color: rgba(241,245,249,.5); }
+
+    .btn-primary { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.25rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; text-decoration: none; transition: transform .15s; }
+    .btn-primary:hover { transform: translateY(-1px); }
+
+    .table-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { padding: .75rem 1rem; text-align: left; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: rgba(241,245,249,.45); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .data-table td { padding: .75rem 1rem; font-size: .85rem; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+    .data-table tr:hover { background: rgba(255,255,255,.02); }
+
+    .user-cell { display: flex; align-items: center; gap: .75rem; }
+    .avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 700; background: rgba(59,130,246,.15); color: #3b82f6; }
+    .avatar.doctor { background: rgba(16,185,129,.15); color: #10b981; }
+    .avatar.receptionist { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .avatar.nurse { background: rgba(236,72,153,.15); color: #ec4899; }
+    .avatar.lab_assistant { background: rgba(139,92,246,.15); color: #8b5cf6; }
+    .avatar.accountant { background: rgba(6,182,212,.15); color: #06b6d4; }
+    .user-cell .name { display: block; font-weight: 500; }
+    .user-cell .email { display: block; font-size: .75rem; color: rgba(241,245,249,.4); }
+
+    .type-badge { padding: .25rem .6rem; border-radius: 6px; font-size: .72rem; font-weight: 600; }
+    .type-badge.doctor { background: rgba(16,185,129,.12); color: #10b981; }
+    .type-badge.receptionist { background: rgba(245,158,11,.12); color: #f59e0b; }
+    .type-badge.nurse { background: rgba(236,72,153,.12); color: #ec4899; }
+    .type-badge.lab_assistant { background: rgba(139,92,246,.12); color: #8b5cf6; }
+    .type-badge.accountant { background: rgba(6,182,212,.12); color: #06b6d4; }
+    .type-badge.custom { background: rgba(255,255,255,.08); color: rgba(241,245,249,.6); }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: .35rem; }
+    .status-dot.active { background: #10b981; }
+    .status-dot.inactive { background: rgba(255,255,255,.2); }
+
+    .action-btns { display: flex; gap: .3rem; }
+    .btn-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: rgba(241,245,249,.6); cursor: pointer; text-decoration: none; transition: all .15s; }
+    .btn-icon:hover { background: rgba(59,130,246,.1); color: #3b82f6; }
+    .btn-icon.danger:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+    .inline-form { display: inline; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem !important; color: rgba(241,245,249,.4); }
+    .empty-state .material-icons-round { font-size: 2.5rem; margin-bottom: .5rem; display: block; }
+    .empty-state a { color: #3b82f6; text-decoration: none; }
+</style>
+
+{% endblock %}

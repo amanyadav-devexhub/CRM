@@ -378,9 +378,6 @@ class ClinicPatientsView(View):
 class CategoryPharmacyView(View):
     """Pharmacy dashboard with real inventory stats."""
     def get(self, request):
-        # Non-superadmin users go to the full dashboard
-        if not request.user.is_superuser:
-            return redirect("/dashboard/")
 
         from apps.pharmacy.models import Medicine, Sale
 
@@ -437,9 +434,6 @@ class CategoryHospitalsView(View):
 class CategoryLabsView(View):
     """Labs management panel with placeholder stats."""
     def get(self, request):
-        # Non-superadmin users go to the full dashboard
-        if not request.user.is_superuser:
-            return redirect("/dashboard/")
 
         context = {
             "pending_tests": 0,

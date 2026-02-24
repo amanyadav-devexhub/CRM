@@ -75,17 +75,25 @@
                     </span>
                     {% endif %}
                     {% if "staff" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_staff %}{% endblock %}">
+                    <a href="/dashboard/staff/" class="nav-item {% block nav_staff %}{% endblock %}">
                         <span class="icon material-icons-round">badge</span>
                         Staff
                     </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Staff 🔒
+                    </span>
                     {% endif %}
+                    <a href="/dashboard/doctors/" class="nav-item {% block nav_doctors %}{% endblock %}">
+                        <span class="icon material-icons-round">stethoscope</span>
+                        Doctors
+                    </a>
                 </div>
 
                 <div class="nav-section">
                     <div class="nav-section-title">Operations</div>
                     {% if "appointments" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_appointments %}{% endblock %}">
+                    <a href="/dashboard/appointments/" class="nav-item {% block nav_appointments %}{% endblock %}">
                         <span class="icon material-icons-round">calendar_month</span>
                         Appointments
                     </a>
@@ -95,19 +103,23 @@
                     </span>
                     {% endif %}
                     {% if "billing" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_billing %}{% endblock %}">
+                    <a href="/dashboard/billing/" class="nav-item {% block nav_billing %}{% endblock %}">
                         <span class="icon material-icons-round">receipt_long</span>
                         Billing
                     </a>
-                    {% endif %}
-                    {% if "queue" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_queue %}{% endblock %}">
-                        <span class="icon material-icons-round">format_list_numbered</span>
-                        Queue / Tokens
-                    </a>
-                    {% elif "queue" not in enabled_features and "billing" in enabled_features %}
+                    {% else %}
                     <span class="nav-item locked" title="Upgrade your plan to unlock">
-                        <span class="icon material-icons-round">lock</span> Queue 🔒
+                        <span class="icon material-icons-round">lock</span> Billing 🔒
+                    </span>
+                    {% endif %}
+                    {% if "prescriptions" in enabled_features %}
+                    <a href="/dashboard/clinical/prescriptions/" class="nav-item {% block nav_prescriptions %}{% endblock %}">
+                        <span class="icon material-icons-round">description</span>
+                        Prescriptions
+                    </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Prescriptions 🔒
                     </span>
                     {% endif %}
                 </div>
@@ -115,7 +127,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Clinical</div>
                     {% if "clinical_notes" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_clinical %}{% endblock %}">
+                    <a href="/dashboard/clinical/notes/" class="nav-item {% block nav_clinical %}{% endblock %}">
                         <span class="icon material-icons-round">medical_services</span>
                         Clinical Notes
                     </a>
@@ -125,7 +137,7 @@
                     </span>
                     {% endif %}
                     {% if "pharmacy" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_pharmacy %}{% endblock %}">
+                    <a href="/categories/pharmacy/" class="nav-item {% block nav_pharmacy %}{% endblock %}">
                         <span class="icon material-icons-round">medication</span>
                         Pharmacy
                     </a>
@@ -135,7 +147,7 @@
                     </span>
                     {% endif %}
                     {% if "lab" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_labs %}{% endblock %}">
+                    <a href="/categories/labs/" class="nav-item {% block nav_labs %}{% endblock %}">
                         <span class="icon material-icons-round">biotech</span>
                         Lab Reports
                     </a>
@@ -149,7 +161,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Insights</div>
                     {% if "analytics" in enabled_features %}
-                    <a href="#" class="nav-item {% block nav_analytics %}{% endblock %}">
+                    <a href="/dashboard/analytics/" class="nav-item {% block nav_analytics %}{% endblock %}">
                         <span class="icon material-icons-round">bar_chart</span>
                         Analytics
                     </a>
@@ -163,6 +175,10 @@
                         <span class="icon material-icons-round">chat</span>
                         Communications
                     </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Communications 🔒
+                    </span>
                     {% endif %}
                     {% if "notifications" in enabled_features %}
                     <a href="/notifications/" class="nav-item {% block nav_notifications %}{% endblock %}">
@@ -170,7 +186,7 @@
                         Notifications
                     </a>
                     {% endif %}
-                    <a href="#" class="nav-item {% block nav_settings %}{% endblock %}">
+                    <a href="/dashboard/settings/" class="nav-item {% block nav_settings %}{% endblock %}">
                         <span class="icon material-icons-round">settings</span>
                         Settings
                     </a>
