@@ -7,7 +7,6 @@ class TenantCreateSerializer(serializers.Serializer):
     schema_name = serializers.CharField(max_length=50)
     domain_url = serializers.CharField(max_length=100)
     owner_email = serializers.EmailField()
-    owner_username = serializers.CharField(max_length=50)
     owner_password = serializers.CharField(write_only=True)
 
     def validate_schema_name(self, value):

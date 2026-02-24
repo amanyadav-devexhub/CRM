@@ -8,17 +8,17 @@
 {% block hub_nav %}
 <div class="nav-section">
     <div class="nav-section-title">Operations</div>
-    <a href="#" class="nav-item active">
+    <a href="{% url 'category-hospitals' %}" class="nav-item active">
         <span class="icon material-icons-round">dashboard</span>
         Dashboard
     </a>
-    <a href="#" class="nav-item">
+    <a href="{% url 'hospital-beds' %}" class="nav-item">
         <span class="icon material-icons-round">bed</span>
         Bed Management
     </a>
-    <a href="#" class="nav-item">
-        <span class="icon material-icons-round">groups</span>
-        Departments
+    <a href="{% url 'hospital-admissions' %}" class="nav-item">
+        <span class="icon material-icons-round">login</span>
+        Admissions
     </a>
     <a href="#" class="nav-item">
         <span class="icon material-icons-round">emergency</span>
@@ -34,8 +34,8 @@
     <div class="stat-card blue animate-in">
         <div class="stat-info">
             <div class="stat-label">Bed Occupancy</div>
-            <div class="stat-value">82%</div>
-            <div class="stat-sub">164 / 200 occupied</div>
+            <div class="stat-value">{{ occupancy_rate }}%</div>
+            <div class="stat-sub">{{ occupied_beds }} / {{ total_beds }} occupied</div>
         </div>
         <div class="stat-icon blue">
             <span class="material-icons-round">bed</span>
@@ -44,8 +44,8 @@
     <div class="stat-card green animate-in">
         <div class="stat-info">
             <div class="stat-label">Available ICU</div>
-            <div class="stat-value">4</div>
-            <div class="stat-sub">Out of 20 total</div>
+            <div class="stat-value">{{ icu_available }}</div>
+            <div class="stat-sub">Out of {{ icu_total }} total</div>
         </div>
         <div class="stat-icon green">
             <span class="material-icons-round">monitor_heart</span>
@@ -54,8 +54,8 @@
     <div class="stat-card red animate-in" style="--accent-red: #ef4444;">
         <div class="stat-info">
             <div class="stat-label">ER Load</div>
-            <div class="stat-value">High</div>
-            <div class="stat-sub">8 patients waiting</div>
+            <div class="stat-value">{% if er_load > 5 %}High{% elif er_load > 0 %}Medium{% else %}Low{% endif %}</div>
+            <div class="stat-sub">{{ er_load }} patients in ER</div>
         </div>
         <div class="stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
             <span class="material-icons-round">emergency</span>
@@ -64,8 +64,8 @@
     <div class="stat-card orange animate-in">
         <div class="stat-info">
             <div class="stat-label">Monthly Admits</div>
-            <div class="stat-value">842</div>
-            <div class="stat-sub"><span class="up">↑</span> 12% from last month</div>
+            <div class="stat-value">0</div>
+            <div class="stat-sub">Real data coming soon</div>
         </div>
         <div class="stat-icon orange">
             <span class="material-icons-round">trending_up</span>
@@ -74,34 +74,35 @@
 </div>
 
 <div class="content-grid">
-    <!-- Department Overview -->
+    <!-- Recent Admissions Overview -->
     <div class="card">
         <div class="card-header">
-            <h3>Department Status</h3>
+            <h3>Recent Admissions</h3>
         </div>
         <div class="card-body" style="padding:0">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Department</th>
-                        <th>Head Doctor</th>
-                        <th>Staffing</th>
-                        <th>Occupancy</th>
+                        <th>Patient</th>
+                        <th>Dept / Bed</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for adm in recent_admissions %}
                     <tr>
-                        <td>Cardiology</td>
-                        <td>Dr. Williams</td>
-                        <td><span class="badge-tag active">Full</span></td>
-                        <td>95%</td>
+                        <td><strong>{{ adm.patient.full_name }}</strong></td>
+                        <td>{{ adm.department.name }} / {{ adm.bed.bed_number }}</td>
+                        <td>Dr. {{ adm.attending_doctor.name }}</td>
+                        <td><span class="badge-tag active">Admitted</span></td>
                     </tr>
+                    {% empty %}
                     <tr>
-                        <td>Neurology</td>
-                        <td>Dr. Chen</td>
-                        <td><span class="badge-tag trial">Under</span></td>
-                        <td>60%</td>
+                        <td colspan="4" style="text-align:center; padding:1.5rem; color:var(--text-muted)">No recent
+                            admissions.</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -114,10 +115,10 @@
         </div>
         <div class="card-body">
             <div class="quick-actions">
-                <button class="action-btn">
+                <a href="{% url 'hospital-admissions' %}" class="action-btn" style="text-decoration:none;">
                     <span class="material-icons-round">login</span>
                     New Admission
-                </button>
+                </a>
                 <button class="action-btn">
                     <span class="material-icons-round">logout</span>
                     Discharge
@@ -126,10 +127,10 @@
                     <span class="material-icons-round">swap_horiz</span>
                     Transfer
                 </button>
-                <button class="action-btn">
-                    <span class="material-icons-round">groups</span>
-                    Duty Roster
-                </button>
+                <a href="{% url 'hospital-beds' %}" class="action-btn" style="text-decoration:none;">
+                    <span class="material-icons-round">bed</span>
+                    Bed Status
+                </a>
             </div>
         </div>
     </div>

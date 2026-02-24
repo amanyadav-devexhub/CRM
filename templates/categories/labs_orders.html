@@ -1,0 +1,167 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-purple){% endblock %}
+{% block mgmt_gradient %}var(--gradient-purple){% endblock %}
+{% block hub_icon %}biotech{% endblock %}
+{% block hub_name %}LabFlow{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'labs-hub' %}" class="nav-item">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="{% url 'lab-test-catalog' %}" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Test Catalog
+    </a>
+    <a href="{% url 'lab-order-list' %}" class="nav-item active">
+        <span class="icon material-icons-round">assignment</span>
+        Orders
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">description</span>
+        Reports
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Lab Orders Management{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <!-- Active Orders -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Recent Orders</h3>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="document.getElementById('new-order-modal').style.display='flex'">
+                    <span class="material-icons-round">add_shopping_cart</span> New Order
+                </button>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Patient</th>
+                        <th>Tests</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><code>{{ order.id|stringformat:".8s" }}</code></td>
+                        <td><strong>{{ order.patient.full_name }}</strong></td>
+                        <td>
+                            {% for test in order.tests.all %}
+                            <span class="badge-tag trial" style="font-size: 0.7rem;">{{ test.code }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <span
+                                class="badge-tag {% if order.status == 'COMPLETED' %}active{% elif order.status == 'PENDING' %}expired{% else %}trial{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if order.priority == 'URGENT' or order.priority == 'STAT' %}
+                            <span style="color:var(--accent-red); font-weight:600;">{{ order.get_priority_display
+                                }}</span>
+                            {% else %}
+                            {{ order.get_priority_display }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'lab-order-entry' order.id %}" class="btn-text">Manage</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted)">No lab orders
+                            found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- New Order Modal -->
+    <div id="new-order-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+        <div class="card" style="width:100%; max-width:600px; animation: slideUp 0.3s ease-out;">
+            <div class="card-header">
+                <h3>Create Lab Order</h3>
+                <button onclick="document.getElementById('new-order-modal').style.display='none'"
+                    style="background:none; border:none; cursor:pointer;">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div style="display:grid; gap:1.2rem;">
+                        <div class="form-group">
+                            <label>Select Patient</label>
+                            <select name="patient_id" class="form-control" required>
+                                <option value="">-- Search Patient --</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.id }}">{{ patient.full_name }} ({{ patient.patient_id }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Select Tests</label>
+                            <div
+                                style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; max-height:200px; overflow-y:auto; border:1px solid #eee; padding:0.8rem; border-radius:8px;">
+                                {% for test in tests %}
+                                <label
+                                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; cursor:pointer;">
+                                    <input type="checkbox" name="tests" value="{{ test.id }}">
+                                    {{ test.name }} (₹{{ test.price }})
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div class="form-group">
+                                <label>Priority</label>
+                                <select name="priority" class="form-control">
+                                    <option value="ROUTINE">Routine</option>
+                                    <option value="URGENT">Urgent</option>
+                                    <option value="STAT">STAT</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Clinical Notes (Optional)</label>
+                            <textarea name="notes" class="form-control" rows="3"
+                                placeholder="Reason for tests..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top:0.5rem;">Create Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if success_message %}
+<div class="alert success animate-in"
+    style="position:fixed; bottom:2rem; right:2rem; background:var(--accent-green); color:white; padding:1rem 2rem; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); z-index:1001;">
+    {{ success_message }}
+</div>
+<script>setTimeout(() => document.querySelector('.alert').remove(), 3000);</script>
+{% endif %}
+{% endblock %}

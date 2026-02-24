@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,262 +9,489 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --bg: #0a0e17; --card: #111827; --border: rgba(255,255,255,.06);
-            --text: #f1f5f9; --muted: rgba(241,245,249,.5);
-            --accent: #3b82f6; --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            --green: #10b981; --error: #ef4444;
+            --bg: #0a0e17;
+            --card: #111827;
+            --border: rgba(255, 255, 255, .06);
+            --text: #f1f5f9;
+            --muted: rgba(241, 245, 249, .5);
+            --accent: #3b82f6;
+            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            --green: #10b981;
+            --error: #ef4444;
         }
+
         body {
-            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
-            min-height: 100vh; padding: 2rem 1rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem 1rem;
         }
+
         body::before {
-            content: ''; position: fixed; bottom: -30%; left: -20%;
-            width: 60vw; height: 60vh;
-            background: radial-gradient(ellipse, rgba(16,185,129,.05) 0%, transparent 70%);
+            content: '';
+            position: fixed;
+            bottom: -30%;
+            left: -20%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(ellipse, rgba(16, 185, 129, .05) 0%, transparent 70%);
             pointer-events: none;
         }
-        .wizard-container { width: 100%; max-width: 580px; margin: 0 auto; position: relative; z-index: 1; }
 
-        .steps { display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; gap: .5rem; }
-        .step { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 500; color: var(--muted); }
-        .step.active { color: var(--accent); }
-        .step.done { color: var(--green); }
-        .step .num {
-            width: 28px; height: 28px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: .75rem; font-weight: 700; border: 2px solid rgba(255,255,255,.12);
+        .wizard-container {
+            width: 100%;
+            max-width: 580px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
-        .step.active .num { border-color: var(--accent); background: rgba(59,130,246,.15); color: var(--accent); }
-        .step.done .num { border-color: var(--green); background: rgba(16,185,129,.15); color: var(--green); }
-        .step-line { width: 40px; height: 2px; background: rgba(255,255,255,.08); }
+
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: .5rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .8rem;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .step.active {
+            color: var(--accent);
+        }
+
+        .step.done {
+            color: var(--green);
+        }
+
+        .step .num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 700;
+            border: 2px solid rgba(255, 255, 255, .12);
+        }
+
+        .step.active .num {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, .15);
+            color: var(--accent);
+        }
+
+        .step.done .num {
+            border-color: var(--green);
+            background: rgba(16, 185, 129, .15);
+            color: var(--green);
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: rgba(255, 255, 255, .08);
+        }
 
         .wizard-card {
-            background: var(--card); border-radius: 20px; padding: 2.5rem;
-            border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.3);
+            background: var(--card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
         }
-        .wizard-card h2 { font-size: 1.35rem; font-weight: 700; margin-bottom: .4rem; }
-        .wizard-card .subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 1.75rem; }
+
+        .wizard-card h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
+        }
+
+        .wizard-card .subtitle {
+            color: var(--muted);
+            font-size: .875rem;
+            margin-bottom: 1.75rem;
+        }
 
         .error-list {
-            background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
-            border-radius: 10px; padding: .75rem 1rem; margin-bottom: 1.25rem; list-style: none;
+            background: rgba(239, 68, 68, .08);
+            border: 1px solid rgba(239, 68, 68, .2);
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            margin-bottom: 1.25rem;
+            list-style: none;
         }
-        .error-list li { font-size: .85rem; color: var(--error); padding: .15rem 0; }
+
+        .error-list li {
+            font-size: .85rem;
+            color: var(--error);
+            padding: .15rem 0;
+        }
 
         .review-section {
-            background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06);
-            border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
         }
+
         .review-section h4 {
-            font-size: .8rem; font-weight: 600; color: var(--accent);
-            text-transform: uppercase; letter-spacing: .05em; margin-bottom: .75rem;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: .75rem;
         }
+
         .review-row {
-            display: flex; justify-content: space-between; padding: .35rem 0;
+            display: flex;
+            justify-content: space-between;
+            padding: .35rem 0;
             font-size: .88rem;
         }
-        .review-row .label { color: var(--muted); }
-        .review-row .value { font-weight: 600; }
-        .review-row .value.yes { color: var(--green); }
-        .review-row .value.no { color: var(--muted); opacity: .5; }
+
+        .review-row .label {
+            color: var(--muted);
+        }
+
+        .review-row .value {
+            font-weight: 600;
+        }
+
+        .review-row .value.yes {
+            color: var(--green);
+        }
+
+        .review-row .value.no {
+            color: var(--muted);
+            opacity: .5;
+        }
 
         .trial-badge {
-            display: inline-flex; align-items: center; gap: .4rem;
-            background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.2);
-            color: #34d399; font-size: .8rem; font-weight: 600;
-            padding: .4rem 1rem; border-radius: 99px; margin-bottom: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: rgba(16, 185, 129, .1);
+            border: 1px solid rgba(16, 185, 129, .2);
+            color: #34d399;
+            font-size: .8rem;
+            font-weight: 600;
+            padding: .4rem 1rem;
+            border-radius: 99px;
+            margin-bottom: 1.5rem;
         }
 
         .setup-group-heading {
-            font-size: .7rem; font-weight: 600; color: var(--accent);
-            text-transform: uppercase; letter-spacing: .06em;
-            margin: .75rem 0 .4rem; padding-bottom: .3rem;
-            border-bottom: 1px solid rgba(59,130,246,.1);
+            font-size: .7rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin: .75rem 0 .4rem;
+            padding-bottom: .3rem;
+            border-bottom: 1px solid rgba(59, 130, 246, .1);
         }
 
-        .btn-row { display: flex; gap: 1rem; }
+        .btn-row {
+            display: flex;
+            gap: 1rem;
+        }
+
         .btn-back {
-            flex: 1; padding: .85rem; border-radius: 12px;
-            background: rgba(255,255,255,.05); color: var(--text);
-            border: 1px solid rgba(255,255,255,.1);
-            font-size: .95rem; font-weight: 500; cursor: pointer;
-            text-decoration: none; text-align: center;
+            flex: 1;
+            padding: .85rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, .1);
+            font-size: .95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
             transition: background .2s;
         }
-        .btn-back:hover { background: rgba(255,255,255,.08); }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, .08);
+        }
+
         .btn-submit {
-            flex: 2; padding: .85rem; border: none; border-radius: 12px;
-            background: var(--gradient); color: #fff;
-            font-size: 1rem; font-weight: 600; cursor: pointer;
+            flex: 2;
+            padding: .85rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--gradient);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
             transition: transform .2s, box-shadow .2s;
         }
-        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59,130,246,.3); }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
+        }
     </style>
 </head>
+
 <body>
-<div class="wizard-container">
-    <div class="steps">
-        <div class="step done"><div class="num">✓</div> Organization</div>
-        <div class="step-line"></div>
-        <div class="step done"><div class="num">✓</div> Plan</div>
-        <div class="step-line"></div>
-        <div class="step active"><div class="num">3</div> Confirm</div>
-    </div>
-
-    <div class="wizard-card">
-        <h2>✅ Review & Launch</h2>
-        <p class="subtitle">Everything looks good? Let's set up your workspace.</p>
-
-        {% if errors %}
-        <ul class="error-list">
-            {% for err in errors %}<li>{{ err }}</li>{% endfor %}
-        </ul>
-        {% endif %}
-
-        <div class="trial-badge">
-            <span class="material-icons-round" style="font-size:1rem;">celebration</span>
-            14-day free trial included
+    <div class="wizard-container">
+        <div class="steps">
+            <div class="step done">
+                <div class="num">✓</div> Organization
+            </div>
+            <div class="step-line"></div>
+            <div class="step done">
+                <div class="num">✓</div> Plan
+            </div>
+            <div class="step-line"></div>
+            <div class="step active">
+                <div class="num">3</div> Confirm
+            </div>
         </div>
 
-        <!-- Organization Details -->
-        <div class="review-section">
-            <h4>Organization</h4>
-            <div class="review-row">
-                <span class="label">Name</span>
-                <span class="value">{{ org.org_name }}</span>
-            </div>
-            <div class="review-row">
-                <span class="label">Category</span>
-                <span class="value">{{ org.category }}</span>
-            </div>
-            <div class="review-row">
-                <span class="label">Subdomain</span>
-                <span class="value" style="color: var(--accent);">{{ org.subdomain }}.healthcrm.com</span>
-            </div>
-            <div class="review-row">
-                <span class="label">Email</span>
-                <span class="value">{{ org.org_email }}</span>
-            </div>
-            {% if org.org_phone %}
-            <div class="review-row">
-                <span class="label">Phone</span>
-                <span class="value">{{ org.org_phone }}</span>
-            </div>
+        <div class="wizard-card">
+            <h2>✅ Review & Launch</h2>
+            <p class="subtitle">Everything looks good? Let's set up your workspace.</p>
+
+            {% if errors %}
+            <ul class="error-list">
+                {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+            </ul>
             {% endif %}
+
+            <div class="trial-badge">
+                <span class="material-icons-round" style="font-size:1rem;">celebration</span>
+                14-day free trial included
+            </div>
+
+            <!-- Organization Details -->
+            <div class="review-section">
+                <h4>Organization</h4>
+                <div class="review-row">
+                    <span class="label">Name</span>
+                    <span class="value">{{ org.org_name }}</span>
+                </div>
+                <div class="review-row">
+                    <span class="label">Category</span>
+                    <span class="value">{{ org.category }}</span>
+                </div>
+                <div class="review-row">
+                    <span class="label">Subdomain</span>
+                    <span class="value" style="color: var(--accent);">{{ org.subdomain }}.healthcrm.com</span>
+                </div>
+
+                <!-- Category-specific setup answers -->
+                {% if org.setup %}
+                <div class="review-section">
+                    <h4>{{ org.category }} Configuration</h4>
+
+                    {% if org.category == "HOSPITAL" %}
+                    <div class="setup-group-heading">Structure</div>
+                    <div class="review-row"><span class="label">Branches</span><span class="value">{{
+                            org.setup.h_branches }}</span></div>
+                    <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.h_doctors
+                            }}</span></div>
+                    <div class="review-row"><span class="label">Departments</span><span class="value">{{
+                            org.setup.h_departments }}</span></div>
+                    <div class="review-row"><span class="label">ICU Facilities</span><span
+                            class="value {% if org.setup.h_icu %}yes{% else %}no{% endif %}">{% if org.setup.h_icu
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">IPD Admissions</span><span
+                            class="value {% if org.setup.h_ipd %}yes{% else %}no{% endif %}">{% if org.setup.h_ipd
+                            %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Clinical & Operations</div>
+                    <div class="review-row"><span class="label">Full EMR</span><span
+                            class="value {% if org.setup.h_emr %}yes{% else %}no{% endif %}">{% if org.setup.h_emr
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">OT Management</span><span
+                            class="value {% if org.setup.h_ot %}yes{% else %}no{% endif %}">{% if org.setup.h_ot %}Yes{%
+                            else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Bed Management</span><span
+                            class="value {% if org.setup.h_beds %}yes{% else %}no{% endif %}">{% if org.setup.h_beds
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">In-house Lab</span><span
+                            class="value {% if org.setup.h_lab %}yes{% else %}no{% endif %}">{% if org.setup.h_lab
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">In-house Pharmacy</span><span
+                            class="value {% if org.setup.h_pharmacy %}yes{% else %}no{% endif %}">{% if
+                            org.setup.h_pharmacy %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Billing</div>
+                    <div class="review-row"><span class="label">Insurance & TPA</span><span
+                            class="value {% if org.setup.h_insurance %}yes{% else %}no{% endif %}">{% if
+                            org.setup.h_insurance %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Multi-dept Billing</span><span
+                            class="value {% if org.setup.h_multi_billing %}yes{% else %}no{% endif %}">{% if
+                            org.setup.h_multi_billing %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Package Billing</span><span
+                            class="value {% if org.setup.h_pkg_billing %}yes{% else %}no{% endif %}">{% if
+                            org.setup.h_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">AI & Advanced</div>
+                    <div class="review-row"><span class="label">AI Clinical Notes</span><span
+                            class="value {% if org.setup.h_ai_notes %}yes{% else %}no{% endif %}">{% if
+                            org.setup.h_ai_notes %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">AI Risk Scoring</span><span
+                            class="value {% if org.setup.h_ai_risk %}yes{% else %}no{% endif %}">{% if
+                            org.setup.h_ai_risk %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Monthly Volume</span><span class="value">{{
+                            org.setup.h_volume }} patients</span></div>
+
+                    {% elif org.category == "CLINIC" %}
+                    <div class="setup-group-heading">Basic Setup</div>
+                    <div class="review-row"><span class="label">Clinic Type</span><span class="value">{{
+                            org.setup.c_type|title }}</span></div>
+                    <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.c_doctors
+                            }}</span></div>
+                    <div class="review-row"><span class="label">Specialization</span><span class="value">{{
+                            org.setup.c_specialization|title }}</span></div>
+
+                    <div class="setup-group-heading">Operations</div>
+                    <div class="review-row"><span class="label">Appointments</span><span
+                            class="value {% if org.setup.c_appointments %}yes{% else %}no{% endif %}">{% if
+                            org.setup.c_appointments %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Walk-in Tokens</span><span
+                            class="value {% if org.setup.c_walkin %}yes{% else %}no{% endif %}">{% if org.setup.c_walkin
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Basic EMR</span><span
+                            class="value {% if org.setup.c_emr %}yes{% else %}no{% endif %}">{% if org.setup.c_emr
+                            %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Billing</div>
+                    <div class="review-row"><span class="label">Insurance Billing</span><span
+                            class="value {% if org.setup.c_insurance %}yes{% else %}no{% endif %}">{% if
+                            org.setup.c_insurance %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Online Payments</span><span
+                            class="value {% if org.setup.c_online_pay %}yes{% else %}no{% endif %}">{% if
+                            org.setup.c_online_pay %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Optional Modules</div>
+                    <div class="review-row"><span class="label">Pharmacy</span><span
+                            class="value {% if org.setup.c_pharmacy %}yes{% else %}no{% endif %}">{% if
+                            org.setup.c_pharmacy %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Lab Samples</span><span
+                            class="value {% if org.setup.c_lab %}yes{% else %}no{% endif %}">{% if org.setup.c_lab
+                            %}Yes{% else %}No{% endif %}</span></div>
+
+                    {% elif org.category == "LAB" %}
+                    <div class="setup-group-heading">Lab Details</div>
+                    <div class="review-row"><span class="label">Lab Type</span><span class="value">{{
+                            org.setup.l_type|title }}</span></div>
+                    <div class="review-row"><span class="label">In-house Collection</span><span
+                            class="value {% if org.setup.l_inhouse %}yes{% else %}no{% endif %}">{% if
+                            org.setup.l_inhouse %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Home Collection</span><span
+                            class="value {% if org.setup.l_home %}yes{% else %}no{% endif %}">{% if org.setup.l_home
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Hospital Integration</span><span
+                            class="value {% if org.setup.l_hospital_int %}yes{% else %}no{% endif %}">{% if
+                            org.setup.l_hospital_int %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Reporting</div>
+                    <div class="review-row"><span class="label">Auto Report Uploads</span><span
+                            class="value {% if org.setup.l_auto_report %}yes{% else %}no{% endif %}">{% if
+                            org.setup.l_auto_report %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Patient Portal</span><span
+                            class="value {% if org.setup.l_patient_portal %}yes{% else %}no{% endif %}">{% if
+                            org.setup.l_patient_portal %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">AI Abnormal Flagging</span><span
+                            class="value {% if org.setup.l_ai_abnormal %}yes{% else %}no{% endif %}">{% if
+                            org.setup.l_ai_abnormal %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Billing</div>
+                    <div class="review-row"><span class="label">Package Billing</span><span
+                            class="value {% if org.setup.l_pkg_billing %}yes{% else %}no{% endif %}">{% if
+                            org.setup.l_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Insurance</span><span
+                            class="value {% if org.setup.l_insurance %}yes{% else %}no{% endif %}">{% if
+                            org.setup.l_insurance %}Yes{% else %}No{% endif %}</span></div>
+
+                    {% elif org.category == "PHARMACY" %}
+                    <div class="setup-group-heading">Pharmacy Setup</div>
+                    <div class="review-row"><span class="label">Pharmacy Type</span><span class="value">{{
+                            org.setup.p_type|title }}</span></div>
+                    <div class="review-row"><span class="label">Inventory Tracking</span><span
+                            class="value {% if org.setup.p_inventory %}yes{% else %}no{% endif %}">{% if
+                            org.setup.p_inventory %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Expiry Alerts</span><span
+                            class="value {% if org.setup.p_expiry %}yes{% else %}no{% endif %}">{% if org.setup.p_expiry
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Batch Tracking</span><span
+                            class="value {% if org.setup.p_batch %}yes{% else %}no{% endif %}">{% if org.setup.p_batch
+                            %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Billing</div>
+                    <div class="review-row"><span class="label">GST Billing</span><span
+                            class="value {% if org.setup.p_gst %}yes{% else %}no{% endif %}">{% if org.setup.p_gst
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Online Payments</span><span
+                            class="value {% if org.setup.p_online_pay %}yes{% else %}no{% endif %}">{% if
+                            org.setup.p_online_pay %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Supplier Management</span><span
+                            class="value {% if org.setup.p_supplier %}yes{% else %}no{% endif %}">{% if
+                            org.setup.p_supplier %}Yes{% else %}No{% endif %}</span></div>
+
+                    <div class="setup-group-heading">Integration</div>
+                    <div class="review-row"><span class="label">Prescription Integration</span><span
+                            class="value {% if org.setup.p_rx_int %}yes{% else %}no{% endif %}">{% if org.setup.p_rx_int
+                            %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Auto Stock Deduction</span><span
+                            class="value {% if org.setup.p_auto_deduct %}yes{% else %}no{% endif %}">{% if
+                            org.setup.p_auto_deduct %}Yes{% else %}No{% endif %}</span></div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Subscription -->
+                <div class="review-section">
+                    <h4>Subscription</h4>
+                    <div class="review-row">
+                        <span class="label">Plan</span>
+                        <span class="value">{{ plan.plan_name }}</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="label">Price</span>
+                        <span class="value">₹{{ plan.plan_price }}/month</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="label">Billing starts</span>
+                        <span class="value" style="color: var(--green);">After 14-day trial</span>
+                    </div>
+                </div>
+
+                <form method="post" action="/onboarding/confirm/">
+                    {% csrf_token %}
+                    <div class="btn-row">
+                        <a href="/onboarding/plan/" class="btn-back">← Back</a>
+                        <button type="submit" class="btn-submit">🚀 Launch My Workspace</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <!-- Category-specific setup answers -->
-        {% if org.setup %}
-        <div class="review-section">
-            <h4>{{ org.category }} Configuration</h4>
-
-            {% if org.category == "HOSPITAL" %}
-            <div class="setup-group-heading">Structure</div>
-            <div class="review-row"><span class="label">Branches</span><span class="value">{{ org.setup.h_branches }}</span></div>
-            <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.h_doctors }}</span></div>
-            <div class="review-row"><span class="label">Departments</span><span class="value">{{ org.setup.h_departments }}</span></div>
-            <div class="review-row"><span class="label">ICU Facilities</span><span class="value {% if org.setup.h_icu %}yes{% else %}no{% endif %}">{% if org.setup.h_icu %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">IPD Admissions</span><span class="value {% if org.setup.h_ipd %}yes{% else %}no{% endif %}">{% if org.setup.h_ipd %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Clinical & Operations</div>
-            <div class="review-row"><span class="label">Full EMR</span><span class="value {% if org.setup.h_emr %}yes{% else %}no{% endif %}">{% if org.setup.h_emr %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">OT Management</span><span class="value {% if org.setup.h_ot %}yes{% else %}no{% endif %}">{% if org.setup.h_ot %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Bed Management</span><span class="value {% if org.setup.h_beds %}yes{% else %}no{% endif %}">{% if org.setup.h_beds %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">In-house Lab</span><span class="value {% if org.setup.h_lab %}yes{% else %}no{% endif %}">{% if org.setup.h_lab %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">In-house Pharmacy</span><span class="value {% if org.setup.h_pharmacy %}yes{% else %}no{% endif %}">{% if org.setup.h_pharmacy %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Billing</div>
-            <div class="review-row"><span class="label">Insurance & TPA</span><span class="value {% if org.setup.h_insurance %}yes{% else %}no{% endif %}">{% if org.setup.h_insurance %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Multi-dept Billing</span><span class="value {% if org.setup.h_multi_billing %}yes{% else %}no{% endif %}">{% if org.setup.h_multi_billing %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Package Billing</span><span class="value {% if org.setup.h_pkg_billing %}yes{% else %}no{% endif %}">{% if org.setup.h_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">AI & Advanced</div>
-            <div class="review-row"><span class="label">AI Clinical Notes</span><span class="value {% if org.setup.h_ai_notes %}yes{% else %}no{% endif %}">{% if org.setup.h_ai_notes %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">AI Risk Scoring</span><span class="value {% if org.setup.h_ai_risk %}yes{% else %}no{% endif %}">{% if org.setup.h_ai_risk %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Monthly Volume</span><span class="value">{{ org.setup.h_volume }} patients</span></div>
-
-            {% elif org.category == "CLINIC" %}
-            <div class="setup-group-heading">Basic Setup</div>
-            <div class="review-row"><span class="label">Clinic Type</span><span class="value">{{ org.setup.c_type|title }}</span></div>
-            <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.c_doctors }}</span></div>
-            <div class="review-row"><span class="label">Specialization</span><span class="value">{{ org.setup.c_specialization|title }}</span></div>
-
-            <div class="setup-group-heading">Operations</div>
-            <div class="review-row"><span class="label">Appointments</span><span class="value {% if org.setup.c_appointments %}yes{% else %}no{% endif %}">{% if org.setup.c_appointments %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Walk-in Tokens</span><span class="value {% if org.setup.c_walkin %}yes{% else %}no{% endif %}">{% if org.setup.c_walkin %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Basic EMR</span><span class="value {% if org.setup.c_emr %}yes{% else %}no{% endif %}">{% if org.setup.c_emr %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Billing</div>
-            <div class="review-row"><span class="label">Insurance Billing</span><span class="value {% if org.setup.c_insurance %}yes{% else %}no{% endif %}">{% if org.setup.c_insurance %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Online Payments</span><span class="value {% if org.setup.c_online_pay %}yes{% else %}no{% endif %}">{% if org.setup.c_online_pay %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Optional Modules</div>
-            <div class="review-row"><span class="label">Pharmacy</span><span class="value {% if org.setup.c_pharmacy %}yes{% else %}no{% endif %}">{% if org.setup.c_pharmacy %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Lab Samples</span><span class="value {% if org.setup.c_lab %}yes{% else %}no{% endif %}">{% if org.setup.c_lab %}Yes{% else %}No{% endif %}</span></div>
-
-            {% elif org.category == "LAB" %}
-            <div class="setup-group-heading">Lab Details</div>
-            <div class="review-row"><span class="label">Lab Type</span><span class="value">{{ org.setup.l_type|title }}</span></div>
-            <div class="review-row"><span class="label">In-house Collection</span><span class="value {% if org.setup.l_inhouse %}yes{% else %}no{% endif %}">{% if org.setup.l_inhouse %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Home Collection</span><span class="value {% if org.setup.l_home %}yes{% else %}no{% endif %}">{% if org.setup.l_home %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Hospital Integration</span><span class="value {% if org.setup.l_hospital_int %}yes{% else %}no{% endif %}">{% if org.setup.l_hospital_int %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Reporting</div>
-            <div class="review-row"><span class="label">Auto Report Uploads</span><span class="value {% if org.setup.l_auto_report %}yes{% else %}no{% endif %}">{% if org.setup.l_auto_report %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Patient Portal</span><span class="value {% if org.setup.l_patient_portal %}yes{% else %}no{% endif %}">{% if org.setup.l_patient_portal %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">AI Abnormal Flagging</span><span class="value {% if org.setup.l_ai_abnormal %}yes{% else %}no{% endif %}">{% if org.setup.l_ai_abnormal %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Billing</div>
-            <div class="review-row"><span class="label">Package Billing</span><span class="value {% if org.setup.l_pkg_billing %}yes{% else %}no{% endif %}">{% if org.setup.l_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Insurance</span><span class="value {% if org.setup.l_insurance %}yes{% else %}no{% endif %}">{% if org.setup.l_insurance %}Yes{% else %}No{% endif %}</span></div>
-
-            {% elif org.category == "PHARMACY" %}
-            <div class="setup-group-heading">Pharmacy Setup</div>
-            <div class="review-row"><span class="label">Pharmacy Type</span><span class="value">{{ org.setup.p_type|title }}</span></div>
-            <div class="review-row"><span class="label">Inventory Tracking</span><span class="value {% if org.setup.p_inventory %}yes{% else %}no{% endif %}">{% if org.setup.p_inventory %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Expiry Alerts</span><span class="value {% if org.setup.p_expiry %}yes{% else %}no{% endif %}">{% if org.setup.p_expiry %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Batch Tracking</span><span class="value {% if org.setup.p_batch %}yes{% else %}no{% endif %}">{% if org.setup.p_batch %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Billing</div>
-            <div class="review-row"><span class="label">GST Billing</span><span class="value {% if org.setup.p_gst %}yes{% else %}no{% endif %}">{% if org.setup.p_gst %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Online Payments</span><span class="value {% if org.setup.p_online_pay %}yes{% else %}no{% endif %}">{% if org.setup.p_online_pay %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Supplier Management</span><span class="value {% if org.setup.p_supplier %}yes{% else %}no{% endif %}">{% if org.setup.p_supplier %}Yes{% else %}No{% endif %}</span></div>
-
-            <div class="setup-group-heading">Integration</div>
-            <div class="review-row"><span class="label">Prescription Integration</span><span class="value {% if org.setup.p_rx_int %}yes{% else %}no{% endif %}">{% if org.setup.p_rx_int %}Yes{% else %}No{% endif %}</span></div>
-            <div class="review-row"><span class="label">Auto Stock Deduction</span><span class="value {% if org.setup.p_auto_deduct %}yes{% else %}no{% endif %}">{% if org.setup.p_auto_deduct %}Yes{% else %}No{% endif %}</span></div>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <!-- Subscription -->
-        <div class="review-section">
-            <h4>Subscription</h4>
-            <div class="review-row">
-                <span class="label">Plan</span>
-                <span class="value">{{ plan.plan_name }}</span>
-            </div>
-            <div class="review-row">
-                <span class="label">Price</span>
-                <span class="value">₹{{ plan.plan_price }}/month</span>
-            </div>
-            <div class="review-row">
-                <span class="label">Billing starts</span>
-                <span class="value" style="color: var(--green);">After 14-day trial</span>
-            </div>
-        </div>
-
-        <form method="post" action="/onboarding/confirm/">
-            {% csrf_token %}
-            <div class="btn-row">
-                <a href="/onboarding/plan/" class="btn-back">← Back</a>
-                <button type="submit" class="btn-submit">🚀 Launch My Workspace</button>
-            </div>
-        </form>
-    </div>
-</div>
 </body>
+
 </html>

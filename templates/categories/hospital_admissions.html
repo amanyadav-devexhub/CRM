@@ -1,0 +1,171 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-blue){% endblock %}
+{% block mgmt_gradient %}var(--gradient-blue){% endblock %}
+{% block hub_icon %}login{% endblock %}
+{% block hub_name %}Enterprise Control{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Enterprise Layer</div>
+    <a href="{% url 'category-hospitals' %}" class="nav-item {% if request.resolver_match.url_name == 'category-hospitals' %}active{% endif %}">
+        <span class="icon material-icons-round">dashboard</span>
+        Executive Dashboard
+    </a>
+    <a href="{% url 'hospital-departments' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-departments' %}active{% endif %}">
+        <span class="icon material-icons-round">account_balance</span>
+        Departments
+    </a>
+    <a href="{% url 'hospital-wards' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-wards' %}active{% endif %}">
+        <span class="icon material-icons-round">domain</span>
+        Ward Management
+    </a>
+    <a href="{% url 'hospital-beds' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-beds' %}active{% endif %}">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="{% url 'hospital-staffing' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-staffing' %}active{% endif %}">
+        <span class="icon material-icons-round">groups</span>
+        Staffing Control
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-insurance' %}active{% endif %}">
+        <span class="icon material-icons-round">receipt_long</span>
+        Revenue Cycle
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'hospital-er-console' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-er-console' %}active{% endif %}">
+        <span class="icon material-icons-round">emergency</span>
+        ER Board
+    </a>
+    <a href="{% url 'hospital-admissions' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-admissions' or request.resolver_match.url_name == 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">login</span>
+        IPD Admissions
+    </a>
+    <a href="{% url 'hospital-patients' %}" class="nav-item {% if 'patient' in request.resolver_match.url_name and request.resolver_match.url_name != 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">personal_injury</span>
+        Patients
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Standalone Panels</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">stethoscope</span>
+        Clinic Panel
+    </a>
+    <a href="/categories/labs/" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Laboratory
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">local_pharmacy</span>
+        Pharmacy
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Patient Admissions Tracking{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Admitted Patients</h3>
+            <button class="btn-primary" onclick="document.getElementById('admit-patient-modal').style.display='flex'">
+                <span class="material-icons-round">person_add</span> Admit Patient
+            </button>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Admission ID</th>
+                        <th>Patient</th>
+                        <th>Dept / Bed</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admission in admissions %}
+                    <tr>
+                        <td><code>{{ admission.id|stringformat:".8s" }}</code></td>
+                        <td><strong>{{ admission.patient.full_name }}</strong></td>
+                        <td>{{ admission.department.name }} / {{ admission.bed.bed_number }}</td>
+                        <td>Dr. {{ admission.attending_doctor.name }}</td>
+                        <td>
+                            <span
+                                class="badge-tag {% if admission.status == 'ADMITTED' %}active{% else %}trial{% endif %}">
+                                {{ admission.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ admission.admission_date|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:2rem;">No admissions active.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Admit Patient Modal -->
+<div id="admit-patient-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:600px;">
+        <div class="card-header">
+            <h3>New Patient Admission</h3>
+            <button onclick="document.getElementById('admit-patient-modal').style.display='none'"
+                style="background:none; border:none; cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display:grid; gap:1.2rem;">
+                    <div class="form-group">
+                        <label>Select Patient</label>
+                        <select name="patient_id" class="form-control" required>
+                            <option value="">-- Choose Patient --</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}">{{ p.full_name }} ({{ p.patient_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Assign Bed (Available Only)</label>
+                        <select name="bed_id" class="form-control" required>
+                            <option value="">-- Choose Bed --</option>
+                            {% for b in available_beds %}
+                            <option value="{{ b.id }}">{{ b.bed_number }} - {{
+                                b.ward.name|default:b.department.name|default:'General' }} ({{ b.get_bed_type_display
+                                }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Attending Doctor</label>
+                        <select name="doctor_id" class="form-control" required>
+                            <option value="">-- Choose Doctor --</option>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">Dr. {{ d.name }} ({{ d.specialization }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Admission Reason</label>
+                        <textarea name="reason" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Admit Patient</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -19,6 +19,7 @@ class RoleRouteMiddleware:
         "/register/",
         "/verify-otp/",
         "/resend-otp/",
+        "/password-reset/",
         "/admin/",          # Django admin has its own auth
         "/static/",
         "/api/",

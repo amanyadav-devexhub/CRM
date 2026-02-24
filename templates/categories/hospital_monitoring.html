@@ -1,0 +1,218 @@
+{% extends "categories/base_mgmt.html" %}
+
+{% block mgmt_color %}var(--accent-blue){% endblock %}
+{% block mgmt_gradient %}var(--gradient-blue){% endblock %}
+{% block hub_icon %}monitor_heart{% endblock %}
+{% block hub_name %}Enterprise Control{% endblock %}
+
+{% block hub_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Enterprise Layer</div>
+    <a href="{% url 'category-hospitals' %}" class="nav-item {% if request.resolver_match.url_name == 'category-hospitals' %}active{% endif %}">
+        <span class="icon material-icons-round">dashboard</span>
+        Executive Dashboard
+    </a>
+    <a href="{% url 'hospital-departments' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-departments' %}active{% endif %}">
+        <span class="icon material-icons-round">account_balance</span>
+        Departments
+    </a>
+    <a href="{% url 'hospital-wards' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-wards' %}active{% endif %}">
+        <span class="icon material-icons-round">domain</span>
+        Ward Management
+    </a>
+    <a href="{% url 'hospital-beds' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-beds' %}active{% endif %}">
+        <span class="icon material-icons-round">bed</span>
+        Bed Management
+    </a>
+    <a href="{% url 'hospital-staffing' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-staffing' %}active{% endif %}">
+        <span class="icon material-icons-round">groups</span>
+        Staffing Control
+    </a>
+    <a href="{% url 'hospital-insurance' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-insurance' %}active{% endif %}">
+        <span class="icon material-icons-round">receipt_long</span>
+        Revenue Cycle
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="{% url 'hospital-er-console' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-er-console' %}active{% endif %}">
+        <span class="icon material-icons-round">emergency</span>
+        ER Board
+    </a>
+    <a href="{% url 'hospital-admissions' %}" class="nav-item {% if request.resolver_match.url_name == 'hospital-admissions' or request.resolver_match.url_name == 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">login</span>
+        IPD Admissions
+    </a>
+    <a href="{% url 'hospital-patients' %}" class="nav-item {% if 'patient' in request.resolver_match.url_name and request.resolver_match.url_name != 'patient-monitoring' %}active{% endif %}">
+        <span class="icon material-icons-round">personal_injury</span>
+        Patients
+    </a>
+</div>
+<div class="nav-section">
+    <div class="nav-section-title">Standalone Panels</div>
+    <a href="{% url 'category-clinic' %}" class="nav-item">
+        <span class="icon material-icons-round">stethoscope</span>
+        Clinic Panel
+    </a>
+    <a href="/categories/labs/" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Laboratory
+    </a>
+    <a href="{% url 'category-pharmacy' %}" class="nav-item">
+        <span class="icon material-icons-round">local_pharmacy</span>
+        Pharmacy
+    </a>
+</div>
+{% endblock %}
+
+{% block page_title %}Patient Monitoring: {{ admission.patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <!-- Vitals History -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3>Vitals Log</h3>
+            <button class="btn-primary" onclick="document.getElementById('add-vitals-modal').style.display='flex'">
+                <span class="material-icons-round">add</span> Record Vitals
+            </button>
+        </div>
+        <div class="card-body" style="padding:0">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Temp (°C)</th>
+                        <th>Pulse (bpm)</th>
+                        <th>BP (mmHg)</th>
+                        <th>SpO2 (%)</th>
+                        <th>Recorded By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vitals %}
+                    <tr>
+                        <td>{{ v.recorded_at|date:"H:i (d M)" }}</td>
+                        <td>{{ v.temperature|default:"-" }}</td>
+                        <td>{{ v.pulse|default:"-" }}</td>
+                        <td>{{ v.systolic_bp|default:"-" }}/{{ v.diastolic_bp|default:"-" }}</td>
+                        <td>
+                            <span style="{% if v.spo2 and v.spo2 < 95 %}color:red; font-weight:bold;{% endif %}">
+                                {{ v.spo2|default:"-" }}%
+                            </span>
+                        </td>
+                        <td>Dr. {{ v.recorded_by.name }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:2rem;">No vitals recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Clinical Orders (Integration) -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Lab Orders</h3>
+            <a href="{% url 'labs-hub' %}" class="btn-text">Manage Labs</a>
+        </div>
+        <div class="card-body" style="padding:0">
+            <ul style="list-style:none; padding:0; margin:0">
+                {% for order in lab_orders %}
+                <li
+                    style="padding:1rem; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600;">{{ order.id|stringformat:".8s" }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">{{ order.ordered_at|date:"d M, H:i" }}
+                        </div>
+                    </div>
+                    <span class="badge-tag {% if order.status == 'COMPLETED' %}active{% else %}trial{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </li>
+                {% empty %}
+                <li style="padding:2rem; text-align:center; color:var(--text-muted);">No lab orders yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Prescription History</h3>
+            <a href="{% url 'category-pharmacy' %}" class="btn-text">Pharmacy</a>
+        </div>
+        <div class="card-body" style="padding:0">
+            <ul style="list-style:none; padding:0; margin:0">
+                {% for rx in prescriptions %}
+                <li
+                    style="padding:1rem; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600;">Dr. {{ rx.doctor_name }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">{{ rx.created_at|date:"d M" }}</div>
+                    </div>
+                    <span class="badge-tag {% if rx.status == 'DISPENSED' %}active{% else %}trial{% endif %}">
+                        {{ rx.status }}
+                    </span>
+                </li>
+                {% empty %}
+                <li style="padding:2rem; text-align:center; color:var(--text-muted);">No meds dispensed.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Add Vitals Modal -->
+<div id="add-vitals-modal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:500px;">
+        <div class="card-header">
+            <h3>Record New Vitals</h3>
+            <button onclick="document.getElementById('add-vitals-modal').style.display='none'"
+                style="background:none; border:none; cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label>Temperature (°C)</label>
+                        <input type="number" step="0.1" name="temp" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Pulse (bpm)</label>
+                        <input type="number" name="pulse" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Systolic BP</label>
+                        <input type="number" name="sbp" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Diastolic BP</label>
+                        <input type="number" name="dbp" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>SpO2 (%)</label>
+                        <input type="number" name="spo2" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Recorded By</label>
+                        <select name="doctor_id" class="form-control" required>
+                            {% for d in doctors %}
+                            <option value="{{ d.id }}">Dr. {{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top:1.2rem; width:100%;">Save Vitals</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

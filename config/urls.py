@@ -12,10 +12,10 @@ from apps.patients.template_views import (
 from apps.tenants.template_views import (
     TenantCreatePageView,
     CategoryIndexView, CategoryClinicView, CategoryPharmacyView,
-    CategoryHospitalsView, CategoryLabsView, CategoryListView,
+    CategoryListView,
     PharmacyInventoryView, PharmacySalesView, PharmacyPrescriptionsView,
     ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
-    ClinicDashboardAPIView,
+    ClinicDashboardAPIView,CategoryLabsView
 )
 from apps.communications.template_views import (
     CommunicationsIndexView, MessageListView,
@@ -62,6 +62,24 @@ urlpatterns = [
     path("verify-otp/", OTPVerifyView.as_view(), name="verify-otp"),
     path("resend-otp/", ResendOTPView.as_view(), name="resend-otp"),
     path("logout/", LogoutView.as_view(), name="logout"),
+
+    # ── Password Reset ──
+    path("password-reset/", auth_views.PasswordResetView.as_view(
+        template_name="accounts/password_reset.html",
+        email_template_name="accounts/password_reset_email.html",
+        subject_template_name="accounts/password_reset_subject.txt",
+        success_url="/password-reset/done/",
+    ), name="password_reset"),
+    path("password-reset/done/", auth_views.PasswordResetDoneView.as_view(
+        template_name="accounts/password_reset_done.html",
+    ), name="password_reset_done"),
+    path("password-reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
+        template_name="accounts/password_reset_confirm.html",
+        success_url="/password-reset/complete/",
+    ), name="password_reset_confirm"),
+    path("password-reset/complete/", auth_views.PasswordResetCompleteView.as_view(
+        template_name="accounts/password_reset_complete.html",
+    ), name="password_reset_complete"),
 
     # ── Onboarding Wizard ──
     path("onboarding/", OnboardingStep1View.as_view(), name="onboarding-step1"),
@@ -141,7 +159,8 @@ urlpatterns = [
     path("categories/clinic/patients/", ClinicPatientsView.as_view(), name="clinic-patients"),
     path("categories/clinic/api/stats/", ClinicDashboardAPIView.as_view(), name="clinic-api-stats"),
 
-    # Pharmacy Flow
+    # Hospital Flow
+    path("categories/hospital/", include("apps.hospitals.urls")),
     path("categories/pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
     path("categories/pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
     path("categories/pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),

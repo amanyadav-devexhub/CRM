@@ -27,7 +27,6 @@ class TenantCreatePageView(View):
         name = data.get("name", "").strip()
         schema_name = data.get("schema_name", "").strip()
         domain_url = data.get("domain_url", "").strip()
-        owner_username = data.get("owner_username", "").strip()
         owner_email = data.get("owner_email", "").strip()
         owner_password = data.get("owner_password", "")
 
@@ -40,6 +39,11 @@ class TenantCreatePageView(View):
             return render(request, "tenants/tenant_create.html", {
                 "form_errors": "Domain URL already exists.",
             })
+
+        # Auto-generate username from email
+        owner_username = owner_email.split("@")[0]
+        base_username = owner_username
+        counter = 1
 
         try:
             tenant = Client.objects.create(
@@ -54,6 +58,9 @@ class TenantCreatePageView(View):
                 is_primary=True,
             )
             with schema_context(tenant.schema_name):
+                while User.objects.filter(username=owner_username).exists():
+                    owner_username = f"{base_username}{counter}"
+                    counter += 1
                 User.objects.create_superuser(
                     username=owner_username,
                     email=owner_email,
@@ -432,15 +439,15 @@ class CategoryHospitalsView(View):
 # Labs Hub (placeholder stats)
 # ──────────────────────────────────────────────
 class CategoryLabsView(View):
-    """Labs management panel with placeholder stats."""
+    """Labs management panel with real stats."""
     def get(self, request):
 
         context = {
-            "pending_tests": 0,
-            "samples_received": 0,
-            "tat_score": "—",
-            "revenue_today": "₹0",
-            "test_requests": [],
+            "pending_tests": pending_tests,
+            "samples_received": samples_received,
+            "tat_score": tat_score,
+            "revenue_today": f"₹{revenue:,.0f}",
+            "test_requests": test_requests,
         }
         return render(request, "categories/labs.html", context)
 

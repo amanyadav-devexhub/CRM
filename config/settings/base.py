@@ -50,8 +50,15 @@ SHARED_APPS = [
     "apps.pharmacy",
     "apps.clinical",
     "apps.appointments",
+    "apps.labs",
+    "apps.billing",
     "apps.communications",
+    "apps.analytics",
+    "apps.ai",
     "apps.notifications",
+    "apps.utils",
+    "apps.hospitals",
+
 ]
 
 TENANT_APPS = [
@@ -69,7 +76,8 @@ TENANT_APPS = [
     "apps.analytics",
     "apps.ai",
     "apps.notifications",
-    "apps.utils"
+    "apps.utils",
+    "apps.hospitals"
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
@@ -272,5 +280,10 @@ LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/login/"
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "noreply@healthcrm.com"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "testampli2023@gmail.com"
+EMAIL_HOST_PASSWORD = "iopr mlgp lrnz umgf"
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

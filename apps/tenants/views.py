@@ -37,16 +37,17 @@ class TenantCreateAPIView(APIView):
                 is_primary=True
             )
 
-            # 3️⃣ Create Superuser in tenant schema using API-provided data
+            # 3️⃣ Create Superuser in tenant schema — auto-generate username from email
             with schema_context(tenant.schema_name):
-                if User.objects.filter(username=data['owner_username']).exists():
-                    return Response(
-                        {"error": "Username already exists in tenant schema"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+                owner_username = data['owner_email'].split('@')[0]
+                base_username = owner_username
+                counter = 1
+                while User.objects.filter(username=owner_username).exists():
+                    owner_username = f"{base_username}{counter}"
+                    counter += 1
 
                 User.objects.create_superuser(
-                    username=data['owner_username'],
+                    username=owner_username,
                     email=data['owner_email'],
                     password=data['owner_password']
                 )
@@ -55,7 +56,6 @@ class TenantCreateAPIView(APIView):
                 "message": "Tenant created successfully!",
                 "schema_name": tenant.schema_name,
                 "domain_url": data['domain_url'],
-                "admin_username": data['owner_username']
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
