@@ -1,0 +1,324 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP — HealthCRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0e17;
+            --card: #111827;
+            --border: rgba(255, 255, 255, .06);
+            --text: #f1f5f9;
+            --muted: rgba(241, 245, 249, .5);
+            --accent: #3b82f6;
+            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            --error: #ef4444;
+            --green: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            right: -20%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(ellipse, rgba(139, 92, 246, .06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-brand a {
+            text-decoration: none;
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .auth-brand .logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .auth-brand h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+            text-align: center;
+        }
+
+        .verify-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: rgba(59, 130, 246, .1);
+            border: 1px solid rgba(59, 130, 246, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+
+        .verify-icon .material-icons-round {
+            font-size: 2rem;
+            color: var(--accent);
+        }
+
+        .auth-card h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
+        }
+
+        .auth-card .subtitle {
+            color: var(--muted);
+            font-size: .875rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .auth-card .email-highlight {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: .75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .otp-inputs input {
+            width: 48px;
+            height: 56px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: inherit;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            color: var(--text);
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .otp-inputs input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+        }
+
+        /* Hidden full OTP input for form submission */
+        .otp-hidden {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .error-list {
+            background: rgba(239, 68, 68, .08);
+            border: 1px solid rgba(239, 68, 68, .2);
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            margin-bottom: 1.25rem;
+            list-style: none;
+            text-align: left;
+        }
+
+        .error-list li {
+            font-size: .85rem;
+            color: var(--error);
+            padding: .15rem 0;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: .85rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--gradient);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
+        }
+
+        .resend-row {
+            margin-top: 1.5rem;
+            font-size: .85rem;
+            color: var(--muted);
+        }
+
+        .resend-row form {
+            display: inline;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: .85rem;
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        .resend-btn:hover {
+            text-decoration: underline;
+        }
+
+        .timer {
+            color: var(--green);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-brand">
+            <a href="/">
+                <div class="logo">H</div>
+                <h1>HealthCRM</h1>
+            </a>
+        </div>
+
+        <div class="auth-card">
+            <div class="verify-icon">
+                <span class="material-icons-round">mark_email_read</span>
+            </div>
+            <h2>Verify Your Email</h2>
+            <p class="subtitle">
+                We sent a 6-digit code to <span class="email-highlight">{{ email }}</span>
+            </p>
+
+            {% if errors %}
+            <ul class="error-list">
+                {% for err in errors %}
+                <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <form method="post" action="/verify-otp/" id="otpForm">
+                {% csrf_token %}
+                <input type="hidden" name="otp" id="otpHidden" class="otp-hidden">
+
+                <div class="otp-inputs">
+                    <input type="text" maxlength="1" class="otp-digit" autofocus>
+                    <input type="text" maxlength="1" class="otp-digit">
+                    <input type="text" maxlength="1" class="otp-digit">
+                    <input type="text" maxlength="1" class="otp-digit">
+                    <input type="text" maxlength="1" class="otp-digit">
+                    <input type="text" maxlength="1" class="otp-digit">
+                </div>
+
+                <button type="submit" class="btn-submit">Verify & Continue →</button>
+            </form>
+
+            <div class="resend-row">
+                Didn't receive the code?
+                <form method="post" action="/resend-otp/">
+                    {% csrf_token %}
+                    <button type="submit" class="resend-btn">Resend Code</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // OTP digit auto-advance and combine
+        const digits = document.querySelectorAll('.otp-digit');
+        const hidden = document.getElementById('otpHidden');
+        const form = document.getElementById('otpForm');
+
+        digits.forEach((input, idx) => {
+            input.addEventListener('input', (e) => {
+                const v = e.target.value;
+                if (v && idx < digits.length - 1) digits[idx + 1].focus();
+                combineOTP();
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+                    digits[idx - 1].focus();
+                }
+            });
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+                if (/^\d{6}$/.test(text)) {
+                    digits.forEach((d, i) => { d.value = text[i]; });
+                    combineOTP();
+                    digits[5].focus();
+                }
+            });
+        });
+
+        function combineOTP() {
+            hidden.value = Array.from(digits).map(d => d.value).join('');
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns{% endblock %}
+{% block nav_communications %}active{% endblock %}
+{% block page_title %}Campaigns{% endblock %}
+
+{% block content %}
+<style>
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.25rem;
+        background: var(--card-bg, #1e2530);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .filter-bar select {
+        background: rgba(255, 255, 255, .06);
+        border: 1px solid rgba(255, 255, 255, .1);
+        color: #fff;
+        padding: .55rem 1rem;
+        border-radius: 8px;
+        font-size: .875rem;
+        min-width: 160px;
+    }
+
+    .filter-bar select option {
+        background: #1e2530;
+    }
+
+    .filter-bar .btn-filter {
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        color: #fff;
+        border: none;
+        padding: .55rem 1.25rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: .875rem;
+    }
+
+    .filter-bar .btn-clear {
+        background: transparent;
+        color: rgba(255, 255, 255, .5);
+        border: 1px solid rgba(255, 255, 255, .12);
+        padding: .55rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: .875rem;
+    }
+
+    .campaign-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .campaign-card {
+        background: var(--card-bg, #1e2530);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, .06);
+        transition: transform .2s, box-shadow .2s;
+    }
+
+    .campaign-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    }
+
+    .campaign-card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: .5rem;
+    }
+
+    .campaign-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin: .75rem 0;
+    }
+
+    .campaign-meta-item {
+        font-size: .8rem;
+        color: rgba(255, 255, 255, .5);
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .campaign-meta-item .material-icons-round {
+        font-size: 1rem;
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, .08);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: .75rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width .4s;
+    }
+
+    .progress-green {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .progress-blue {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+
+    .progress-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: .4rem;
+        font-size: .75rem;
+        color: rgba(255, 255, 255, .4);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: .2rem .65rem;
+        border-radius: 99px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .status-draft {
+        background: rgba(148, 163, 184, .15);
+        color: #94a3b8;
+    }
+
+    .status-scheduled {
+        background: rgba(59, 130, 246, .15);
+        color: #60a5fa;
+    }
+
+    .status-running {
+        background: rgba(245, 158, 11, .15);
+        color: #fbbf24;
+    }
+
+    .status-completed {
+        background: rgba(16, 185, 129, .15);
+        color: #34d399;
+    }
+
+    .status-cancelled {
+        background: rgba(239, 68, 68, .15);
+        color: #f87171;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, .35);
+    }
+
+    .empty-state .material-icons-round {
+        font-size: 3rem;
+        margin-bottom: .5rem;
+        display: block;
+    }
+
+    .result-count {
+        font-size: .85rem;
+        color: rgba(255, 255, 255, .4);
+        margin-bottom: 1rem;
+    }
+
+    .breadcrumb {
+        font-size: .85rem;
+        color: rgba(255, 255, 255, .4);
+        margin-bottom: 1.25rem;
+    }
+
+    .breadcrumb a {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="breadcrumb">
+    <a href="/communications/">Communications</a> &nbsp;/&nbsp; Campaigns
+</div>
+
+<!-- ── Filters ── -->
+<form class="filter-bar" method="get" action="">
+    <select name="status">
+        <option value="">All Statuses</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status_filter==value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter">Filter</button>
+    <a href="/communications/campaigns/" class="btn-clear">Clear</a>
+</form>
+
+<div class="result-count">{{ total_count }} campaign{{ total_count|pluralize }}</div>
+
+<!-- ── Campaign Cards ── -->
+<div class="campaign-grid">
+    {% for camp in campaigns %}
+    <div class="campaign-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <h3>{{ camp.name }}</h3>
+            <span class="status-badge status-{{ camp.status }}">{{ camp.get_status_display }}</span>
+        </div>
+
+        <div class="campaign-meta">
+            {% if camp.template %}
+            <div class="campaign-meta-item">
+                <span class="material-icons-round">description</span>
+                {{ camp.template.name }}
+            </div>
+            {% endif %}
+            {% if camp.scheduled_at %}
+            <div class="campaign-meta-item">
+                <span class="material-icons-round">schedule</span>
+                {{ camp.scheduled_at|date:"M d, Y H:i" }}
+            </div>
+            {% endif %}
+            <div class="campaign-meta-item">
+                <span class="material-icons-round">group</span>
+                {{ camp.total_recipients }} recipient{{ camp.total_recipients|pluralize }}
+            </div>
+        </div>
+
+        {% if camp.total_recipients > 0 %}
+        <div class="progress-bar">
+            <div class="progress-fill {% if camp.status == 'completed' %}progress-green{% else %}progress-blue{% endif %}"
+                style="width: {{ camp.delivery_rate }}%;"></div>
+        </div>
+        <div class="progress-stats">
+            <span>{{ camp.sent_count }} sent · {{ camp.failed_count }} failed</span>
+            <span>{{ camp.delivery_rate }}%</span>
+        </div>
+        {% endif %}
+
+        <div style="margin-top:.75rem; font-size:.8rem; color:rgba(255,255,255,.35);">
+            Created {{ camp.created_at|date:"M d, Y" }}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="grid-column: 1 / -1;">
+        <span class="material-icons-round">campaign</span>
+        <p>No campaigns found</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

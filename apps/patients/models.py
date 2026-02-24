@@ -52,6 +52,12 @@ class Patient(AuditMixin, SoftDeleteMixin):
         O_POS = "O+", "O+"
         O_NEG = "O-", "O-"
 
+    class MaritalStatus(models.TextChoices):
+        SINGLE = "single", "Single"
+        MARRIED = "married", "Married"
+        DIVORCED = "divorced", "Divorced"
+        WIDOWED = "widowed", "Widowed"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient_id = models.CharField(
         max_length=20, unique=True, editable=False,
@@ -64,11 +70,13 @@ class Patient(AuditMixin, SoftDeleteMixin):
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=Gender.choices, blank=True, default="")
     blood_group = models.CharField(max_length=3, choices=BloodGroup.choices, blank=True, default="")
+    marital_status = models.CharField(max_length=20, choices=MaritalStatus.choices, blank=True, default="")
 
     # Contact
     email = models.EmailField(blank=True, default="")
     phone = models.CharField(max_length=20)
     secondary_phone = models.CharField(max_length=20, blank=True, default="")
+    preferred_language = models.CharField(max_length=50, blank=True, default="English")
 
     # Profile
     profile_picture = models.ImageField(upload_to="patients/profile_pics/", blank=True, null=True)

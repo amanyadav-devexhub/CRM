@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block brand_gradient %}linear-gradient(135deg, #8b5cf6, #6366f1){% endblock %}
+{% block brand_text_gradient %}linear-gradient(135deg, #a78bfa, #c4b5fd){% endblock %}
+{% block nav_active_bg %}rgba(139, 92, 246, 0.12){% endblock %}
+{% block nav_active_color %}var(--accent-purple){% endblock %}
+{% block badge_bg %}var(--accent-purple){% endblock %}
+{% block brand_icon_letter %}L{% endblock %}
+{% block brand_name %}LabFlow{% endblock %}
+{% block brand_subtitle %}Laboratory Dashboard{% endblock %}
+{% block user_avatar_gradient %}linear-gradient(135deg, #8b5cf6, #6366f1){% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Dashboard <span>/ Laboratory Overview</span>{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-section">
+    <div class="nav-section-title">Main</div>
+    <a href="/dashboard/" class="nav-item active">
+        <span class="icon material-icons-round">dashboard</span>
+        Dashboard
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">biotech</span>
+        Test Catalog
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">people</span>
+        Patients
+    </a>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Operations</div>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">science</span>
+        Sample Collection
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">assignment</span>
+        Test Processing
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">description</span>
+        Report Generation
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">receipt_long</span>
+        Billing
+    </a>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Quality</div>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">verified</span>
+        QC Dashboard
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">inventory_2</span>
+        Reagent Stock
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">build</span>
+        Equipment Log
+    </a>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Insights</div>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">bar_chart</span>
+        Analytics
+    </a>
+    <a href="#" class="nav-item">
+        <span class="icon material-icons-round">settings</span>
+        Settings
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- ─── Stat Cards ─── -->
+<div class="stats-grid">
+    <div class="stat-card purple animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Pending Tests</div>
+            <div class="stat-value" data-target="{{ pending_tests }}">0</div>
+            <div class="stat-sub">
+                In queue today
+            </div>
+        </div>
+        <div class="stat-icon purple">
+            <span class="material-icons-round">hourglass_top</span>
+        </div>
+    </div>
+
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Samples Received</div>
+            <div class="stat-value" data-target="{{ samples_received }}">0</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Last 24 hours
+            </div>
+        </div>
+        <div class="stat-icon blue">
+            <span class="material-icons-round">science</span>
+        </div>
+    </div>
+
+    <div class="stat-card green animate-in">
+        <div class="stat-info">
+            <div class="stat-label">TAT Score</div>
+            <div class="stat-value">{{ tat_score }}</div>
+            <div class="stat-sub">
+                Within turnaround time
+            </div>
+        </div>
+        <div class="stat-icon green">
+            <span class="material-icons-round">speed</span>
+        </div>
+    </div>
+
+    <div class="stat-card orange animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Revenue</div>
+            <div class="stat-value">{{ revenue_today }}</div>
+            <div class="stat-sub">
+                <span class="up">↑</span> Today's bookings
+            </div>
+        </div>
+        <div class="stat-icon orange">
+            <span class="material-icons-round">payments</span>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Row: Test Requests + Quick Actions ─── -->
+<div class="content-grid">
+
+    <!-- Recent Test Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">assignment</span>
+                Recent Test Requests
+            </h3>
+            <a href="#" class="card-action">View All →</a>
+        </div>
+        <div class="card-body" style="padding:0">
+            {% if test_requests %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Test Type</th>
+                        <th>Sample Status</th>
+                        <th>Priority</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in test_requests %}
+                    <tr>
+                        <td>
+                            <div class="patient-cell">
+                                <div class="patient-avatar"
+                                    style="background: {% cycle 'var(--gradient-purple)' 'var(--gradient-blue)' 'var(--gradient-green)' 'var(--gradient-orange)' %}">
+                                    {{ test.patient.0 }}
+                                </div>
+                                <div>
+                                    <div class="patient-name">{{ test.patient }}</div>
+                                    <div class="patient-id">{{ test.test_type }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ test.test_type }}</td>
+                        <td>
+                            {% if test.status == 'COLLECTED' %}
+                            <span class="badge-tag trial">Collected</span>
+                            {% elif test.status == 'PROCESSING' %}
+                            <span class="badge-tag" style="background: rgba(255,165,2,0.1); color: #ffa502;">Processing</span>
+                            {% elif test.status == 'COMPLETED' %}
+                            <span class="badge-tag active">Completed</span>
+                            {% else %}
+                            <span class="badge-tag expired">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test.priority == 'URGENT' %}
+                            <span style="color: var(--accent-red); font-weight: 600;">Urgent</span>
+                            {% else %}
+                            Routine
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">assignment</div>
+                <p>No test requests today.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar column: Quick Actions + Status -->
+    <div>
+        <!-- Quick Actions -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">bolt</span>
+                    Quick Actions
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="#" class="action-btn primary" style="text-decoration:none;">
+                        <span class="icon material-icons-round">add_task</span>
+                        Enter Results
+                    </a>
+                    <a href="#" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">qr_code_2</span>
+                        Label Sample
+                    </a>
+                    <a href="#" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">description</span>
+                        Generate Report
+                    </a>
+                    <a href="#" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">analytics</span>
+                        Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lab Status -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">monitor_heart</span>
+                    Lab Status
+                </h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(139,92,246,0.06); border-radius: 10px; border-left: 3px solid #8b5cf6;">
+                        <span class="material-icons-round" style="color: #8b5cf6;">hourglass_top</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ pending_tests }} Pending</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Tests in queue</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(46,213,115,0.06); border-radius: 10px; border-left: 3px solid #2ed573;">
+                        <span class="material-icons-round" style="color: #2ed573;">speed</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ tat_score }} TAT</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Turnaround score</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(55,66,250,0.06); border-radius: 10px; border-left: 3px solid #3742fa;">
+                        <span class="material-icons-round" style="color: #3742fa;">science</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ samples_received }} Samples</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Received today</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

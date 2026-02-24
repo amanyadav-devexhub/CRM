@@ -4,6 +4,7 @@ URL configuration for config project.
 
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
 from apps.tenants.views import AdminDashboardView, SubAdminDashboardView
 from apps.patients.template_views import (
     PatientListView, PatientDetailView,
@@ -15,36 +16,90 @@ from apps.tenants.template_views import (
     CategoryListView,
     PharmacyInventoryView, PharmacySalesView, PharmacyPrescriptionsView,
     ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
-    ClinicDashboardAPIView,
+    ClinicDashboardAPIView,CategoryLabsView
+)
+from apps.communications.template_views import (
+    CommunicationsIndexView, MessageListView,
+    CampaignListView, FeedbackListView,
+)
+from apps.notifications.template_views import NotificationCenterView
+from apps.accounts.public_views import LandingPageView
+from apps.accounts.auth_views import (
+    RegisterView, OTPVerifyView, ResendOTPView,
+    LoginView, LogoutView,
+)
+from apps.accounts.jwt_views import (
+    JWTTokenObtainView, JWTTokenRefreshView, JWTTokenVerifyView,
+)
+from apps.accounts.onboarding_views import (
+    OnboardingStep1View, OnboardingStep2View, OnboardingStep3View,
 )
 
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    # API endpoints
+    # ── Public / Auth ──
+    path("", LandingPageView.as_view(), name="landing"),
+    path("login/", LoginView.as_view(), name="login"),
+    path("register/", RegisterView.as_view(), name="register"),
+    path("verify-otp/", OTPVerifyView.as_view(), name="verify-otp"),
+    path("resend-otp/", ResendOTPView.as_view(), name="resend-otp"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+
+    # ── Password Reset ──
+    path("password-reset/", auth_views.PasswordResetView.as_view(
+        template_name="accounts/password_reset.html",
+        email_template_name="accounts/password_reset_email.html",
+        subject_template_name="accounts/password_reset_subject.txt",
+        success_url="/password-reset/done/",
+    ), name="password_reset"),
+    path("password-reset/done/", auth_views.PasswordResetDoneView.as_view(
+        template_name="accounts/password_reset_done.html",
+    ), name="password_reset_done"),
+    path("password-reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
+        template_name="accounts/password_reset_confirm.html",
+        success_url="/password-reset/complete/",
+    ), name="password_reset_confirm"),
+    path("password-reset/complete/", auth_views.PasswordResetCompleteView.as_view(
+        template_name="accounts/password_reset_complete.html",
+    ), name="password_reset_complete"),
+
+    # ── Onboarding Wizard ──
+    path("onboarding/", OnboardingStep1View.as_view(), name="onboarding-step1"),
+    path("onboarding/plan/", OnboardingStep2View.as_view(), name="onboarding-step2"),
+    path("onboarding/confirm/", OnboardingStep3View.as_view(), name="onboarding-step3"),
+
+    # ── API endpoints ──
     path("api/tenants/", include("apps.tenants.urls")),
     path("api/patients/", include("apps.patients.urls")),
+    path("api/communications/", include("apps.communications.urls")),
+    path("api/notifications/", include("apps.notifications.urls")),
 
-    # Admin Dashboard (Platform Owner)
+    # ── JWT Auth Endpoints (programmatic API access) ──
+    path("api/auth/token/", JWTTokenObtainView.as_view(), name="token-obtain"),
+    path("api/auth/token/refresh/", JWTTokenRefreshView.as_view(), name="token-refresh"),
+    path("api/auth/token/verify/", JWTTokenVerifyView.as_view(), name="token-verify"),
+
+    # ── Admin Dashboard (Platform Owner / SuperAdmin) ──
     path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
 
-    # Sub-Admin Dashboard (Tenant / Clinic)
+    # ── Sub-Admin Dashboard (Tenant / Clinic) ──
     path("dashboard/", SubAdminDashboardView.as_view(), name="dashboard"),
 
-    # Patient HTML pages
+    # ── Patient HTML pages ──
     path("patients/", PatientListView.as_view(), name="patient-list"),
     path("patients/create/", PatientCreateView.as_view(), name="patient-create"),
     path("patients/<uuid:pk>/", PatientDetailView.as_view(), name="patient-detail"),
     path("patients/<uuid:pk>/edit/", PatientEditView.as_view(), name="patient-edit"),
     path("patients/<uuid:pk>/delete/", PatientDeleteView.as_view(), name="patient-delete"),
 
-    # Tenant HTML pages
+    # ── Tenant HTML pages ──
     path("tenants/create/", TenantCreatePageView.as_view(), name="tenant-create-page"),
 
-    # Category Lists (Super Admin)
-    path("admin/category/<slug:category_slug>/", CategoryListView.as_view(), name="category-list"),
+    # ── Category Lists (Super Admin) ──
+    path("categories/list/<slug:category_slug>/", CategoryListView.as_view(), name="category-list"),
 
-    # Category Pages (standalone management hubs)
+    # ── Category Pages (standalone management hubs) ──
     path("categories/", CategoryIndexView.as_view(), name="category-index"),
 
     # Clinic Flow
@@ -60,8 +115,14 @@ urlpatterns = [
     path("categories/pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
     path("categories/pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
     path("categories/pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
-    # Labs Flow
-    path("categories/labs/", include("apps.labs.urls")),
+    path("categories/labs/", CategoryLabsView.as_view(), name="category-labs"),
+
+    # ── Communications HTML pages ──
+    path("communications/", CommunicationsIndexView.as_view(), name="communications-index"),
+    path("communications/messages/", MessageListView.as_view(), name="communications-messages"),
+    path("communications/campaigns/", CampaignListView.as_view(), name="communications-campaigns"),
+    path("communications/feedback/", FeedbackListView.as_view(), name="communications-feedback"),
+
+    # ── Notifications HTML pages ──
+    path("notifications/", NotificationCenterView.as_view(), name="notification-center"),
 ]
-
-

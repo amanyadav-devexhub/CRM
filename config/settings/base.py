@@ -40,6 +40,9 @@ SHARED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    "rest_framework",
+    "rest_framework_simplejwt",
+
     "apps.tenants",
     "apps.accounts",
     "apps.core",
@@ -55,6 +58,7 @@ SHARED_APPS = [
     "apps.notifications",
     "apps.utils",
     "apps.hospitals",
+
 ]
 
 TENANT_APPS = [
@@ -88,10 +92,11 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.core.middleware.jwt_middleware.JWTCookieMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'apps.core.middleware.FeatureFlagMiddleware.FeatureFlagMiddleware',
-
+    'apps.core.middleware.RoleRouteMiddleware.RoleRouteMiddleware',
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -106,6 +111,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.tenants.context_processors.tenant_features",
             ],
         },
     },
@@ -202,6 +208,10 @@ SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
 CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
@@ -209,34 +219,71 @@ REST_FRAMEWORK = {
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# ── JWT (SimpleJWT) ──────────────────────────────────────────────────
+from datetime import timedelta  # noqa: E402
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+}
+
+# Cookie names used by JWTCookieMiddleware
+JWT_AUTH_COOKIE = "access_token"
+JWT_AUTH_REFRESH_COOKIE = "refresh_token"
+JWT_AUTH_SECURE = False          # True in production (HTTPS only)
+JWT_AUTH_HTTPONLY = True
+JWT_AUTH_SAMESITE = "Lax"
+
 # ── Logging ──────────────────────────────────────────────────────────
 # Show every incoming request (method + path + status) in the terminal
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "request_fmt": {
-            "format": "\n🔹 [{asctime}] {message}",
-            "style": "{",
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "request_fmt",
-        },
-    },
-    "loggers": {
-        "django.server": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "django.request": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "formatters": {
+#         "request_fmt": {
+#             "format": "\n🔹 [{asctime}] {message}",
+#             "style": "{",
+#             "datefmt": "%Y-%m-%d %H:%M:%S",
+#         },
+#     },
+#     "handlers": {
+#         "console": {
+#             "class": "logging.StreamHandler",
+#             "formatter": "request_fmt",
+#         },
+#     },
+#     "loggers": {
+#         "django.server": {
+#             "handlers": ["console"],
+#             "level": "INFO",
+#             "propagate": False,
+#         },
+#         "django.request": {
+#             "handlers": ["console"],
+#             "level": "INFO",
+#             "propagate": False,
+#         },
+#     },
+# }
+
+# ──────────────────────────────────────────────
+# Authentication & Email
+# ──────────────────────────────────────────────
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/login/"
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "testampli2023@gmail.com"
+EMAIL_HOST_PASSWORD = "iopr mlgp lrnz umgf"
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

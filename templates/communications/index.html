@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Communications{% endblock %}
+{% block nav_communications %}active{% endblock %}
+{% block page_title %}Communications Hub{% endblock %}
+
+{% block content %}
+<style>
+    .comm-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .comm-card {
+        background: var(--card-bg, #1e2530);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, .06);
+        transition: transform .2s, box-shadow .2s;
+    }
+
+    .comm-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    }
+
+    .comm-card .card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .comm-card .card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .comm-card .card-label {
+        font-size: .85rem;
+        color: rgba(255, 255, 255, .5);
+        margin-top: .25rem;
+    }
+
+    .icon-messages {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .icon-campaigns {
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+
+    .icon-feedback {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .icon-templates {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .section-header a {
+        color: #3b82f6;
+        text-decoration: none;
+        font-size: .85rem;
+    }
+
+    .section-header a:hover {
+        text-decoration: underline;
+    }
+
+    .recent-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .recent-table th {
+        text-align: left;
+        padding: .75rem 1rem;
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: rgba(255, 255, 255, .4);
+        border-bottom: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .recent-table td {
+        padding: .75rem 1rem;
+        font-size: .875rem;
+        color: rgba(255, 255, 255, .8);
+        border-bottom: 1px solid rgba(255, 255, 255, .04);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: .2rem .65rem;
+        border-radius: 99px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .status-queued {
+        background: rgba(245, 158, 11, .15);
+        color: #fbbf24;
+    }
+
+    .status-sent {
+        background: rgba(59, 130, 246, .15);
+        color: #60a5fa;
+    }
+
+    .status-delivered {
+        background: rgba(16, 185, 129, .15);
+        color: #34d399;
+    }
+
+    .status-failed {
+        background: rgba(239, 68, 68, .15);
+        color: #f87171;
+    }
+
+    .status-read {
+        background: rgba(139, 92, 246, .15);
+        color: #a78bfa;
+    }
+
+    .status-draft {
+        background: rgba(148, 163, 184, .15);
+        color: #94a3b8;
+    }
+
+    .status-scheduled {
+        background: rgba(59, 130, 246, .15);
+        color: #60a5fa;
+    }
+
+    .status-running {
+        background: rgba(245, 158, 11, .15);
+        color: #fbbf24;
+    }
+
+    .status-completed {
+        background: rgba(16, 185, 129, .15);
+        color: #34d399;
+    }
+
+    .status-cancelled {
+        background: rgba(239, 68, 68, .15);
+        color: #f87171;
+    }
+
+    .rating-stars {
+        color: #fbbf24;
+        letter-spacing: 2px;
+    }
+
+    .avg-rating {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fbbf24;
+    }
+
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+        .two-col {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .panel {
+        background: var(--card-bg, #1e2530);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, .06);
+    }
+</style>
+
+<!-- ── Stat Cards ── -->
+<div class="comm-grid">
+    <div class="comm-card">
+        <div class="card-icon icon-messages"><span class="material-icons-round">mail</span></div>
+        <div class="card-value">{{ total_messages }}</div>
+        <div class="card-label">Total Messages</div>
+        <div style="margin-top:.5rem; font-size:.8rem; color:rgba(255,255,255,.45);">
+            {{ queued_messages }} queued · {{ sent_messages }} sent · {{ failed_messages }} failed
+        </div>
+    </div>
+    <div class="comm-card">
+        <div class="card-icon icon-campaigns"><span class="material-icons-round">campaign</span></div>
+        <div class="card-value">{{ total_campaigns }}</div>
+        <div class="card-label">Campaigns</div>
+        <div style="margin-top:.5rem; font-size:.8rem; color:rgba(255,255,255,.45);">
+            {{ active_campaigns }} active
+        </div>
+    </div>
+    <div class="comm-card">
+        <div class="card-icon icon-feedback"><span class="material-icons-round">star</span></div>
+        <div class="card-value"><span class="avg-rating">{{ avg_rating|floatformat:1 }}</span> <span
+                style="font-size:1rem;">/ 5</span></div>
+        <div class="card-label">Avg. Rating ({{ total_feedback }} reviews)</div>
+    </div>
+    <div class="comm-card">
+        <div class="card-icon icon-templates"><span class="material-icons-round">description</span></div>
+        <div class="card-value">{{ template_count }}</div>
+        <div class="card-label">Active Templates</div>
+    </div>
+</div>
+
+<!-- ── Recent Messages & Campaigns ── -->
+<div class="two-col">
+    <div class="panel">
+        <div class="section-header">
+            <h2><span class="material-icons-round"
+                    style="vertical-align:middle; margin-right:.4rem; font-size:1.2rem;">mail</span> Recent Messages
+            </h2>
+            <a href="/communications/messages/">View All →</a>
+        </div>
+        <table class="recent-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Channel</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for msg in recent_messages %}
+                <tr>
+                    <td>{{ msg.patient.full_name }}</td>
+                    <td>{{ msg.get_channel_display }}</td>
+                    <td><span class="status-badge status-{{ msg.status }}">{{ msg.get_status_display }}</span></td>
+                    <td>{{ msg.created_at|date:"M d, H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center; color:rgba(255,255,255,.35); padding:2rem;">No messages
+                        yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel">
+        <div class="section-header">
+            <h2><span class="material-icons-round"
+                    style="vertical-align:middle; margin-right:.4rem; font-size:1.2rem;">campaign</span> Recent
+                Campaigns</h2>
+            <a href="/communications/campaigns/">View All →</a>
+        </div>
+        <table class="recent-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Recipients</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for camp in recent_campaigns %}
+                <tr>
+                    <td>{{ camp.name }}</td>
+                    <td><span class="status-badge status-{{ camp.status }}">{{ camp.get_status_display }}</span></td>
+                    <td>{{ camp.sent_count }} / {{ camp.total_recipients }}</td>
+                    <td>{{ camp.created_at|date:"M d, H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center; color:rgba(255,255,255,.35); padding:2rem;">No campaigns
+                        yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ── Recent Feedback ── -->
+<div class="panel" style="margin-top:1.5rem;">
+    <div class="section-header">
+        <h2><span class="material-icons-round"
+                style="vertical-align:middle; margin-right:.4rem; font-size:1.2rem;">reviews</span> Recent Feedback</h2>
+        <a href="/communications/feedback/">View All →</a>
+    </div>
+    <table class="recent-table">
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Rating</th>
+                <th>Comments</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fb in recent_feedback %}
+            <tr>
+                <td>{{ fb.patient.full_name }}</td>
+                <td><span class="rating-stars">{% for i in "12345" %}{% if forloop.counter <= fb.rating %}★{% else %}☆
+                            {% endif %}{% endfor %}</span>
+                </td>
+                <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{
+                    fb.comments|truncatechars:60 }}</td>
+                <td>{{ fb.submitted_at|date:"M d, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center; color:rgba(255,255,255,.35); padding:2rem;">No feedback yet
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

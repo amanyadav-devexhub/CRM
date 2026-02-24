@@ -8,8 +8,12 @@
 {% block hub_nav %}
 <div class="nav-section">
     <div class="nav-section-title">Operations</div>
+<<<<<<< HEAD
     <a href="{% url 'labs-hub' %}"
         class="nav-item {% if request.resolver_match.url_name == 'labs-hub' %}active{% endif %}">
+=======
+    <a href="{% url 'category-labs' %}" class="nav-item active">
+>>>>>>> dbe3750320992546a530671b9d8df40f28989493
         <span class="icon material-icons-round">dashboard</span>
         Dashboard
     </a>
@@ -30,7 +34,31 @@
 </div>
 {% endblock %}
 
-{% block page_title %}Laboratory Management Dashboard{% endblock %}
+{% block page_title %}Laboratory Dashboard{% endblock %}
+{% block page_subtitle %}
+<span style="display: inline-flex; align-items: center; gap: 6px;">
+    Real-time diagnostics overview
+    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #8b5cf6;">
+        <span style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;animation:livePulse 1.5s ease-in-out infinite;"></span> LIVE
+    </span>
+</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @keyframes livePulse {
+        0%, 100% { opacity:1; box-shadow:0 0 0 0 rgba(139,92,246,0.6); }
+        50% { opacity:0.6; box-shadow:0 0 0 6px rgba(139,92,246,0); }
+    }
+    .stat-value { transition: all 0.3s ease; }
+    .stat-value.updated { animation: valueFlash 0.5s ease; }
+    @keyframes valueFlash {
+        0% { transform: scale(1); }
+        30% { transform: scale(1.15); color: #8b5cf6; }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="stats-grid">
@@ -48,7 +76,11 @@
         <div class="stat-info">
             <div class="stat-label">Samples Recv.</div>
             <div class="stat-value">{{ samples_received }}</div>
+<<<<<<< HEAD
             <div class="stat-sub">Today</div>
+=======
+            <div class="stat-sub">Last 24 hours</div>
+>>>>>>> dbe3750320992546a530671b9d8df40f28989493
         </div>
         <div class="stat-icon blue">
             <span class="material-icons-round">science</span>
@@ -68,7 +100,11 @@
         <div class="stat-info">
             <div class="stat-label">Revenue</div>
             <div class="stat-value">{{ revenue_today }}</div>
+<<<<<<< HEAD
             <div class="stat-sub">Today's completed</div>
+=======
+            <div class="stat-sub">Today's bookings</div>
+>>>>>>> dbe3750320992546a530671b9d8df40f28989493
         </div>
         <div class="stat-icon orange">
             <span class="material-icons-round">payments</span>
@@ -79,9 +115,15 @@
 <div class="content-grid">
     <!-- Recent Test Requests -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Recent Test Requests</h3>
+<<<<<<< HEAD
             <a href="{% url 'lab-order-list' %}" class="btn-text">View All</a>
+=======
+            <span style="font-size: 12px; padding: 4px 10px; background: rgba(139,92,246,0.1); color: #8b5cf6; border-radius: 20px;">
+                {{ test_requests|length }} pending
+            </span>
+>>>>>>> dbe3750320992546a530671b9d8df40f28989493
         </div>
         <div class="card-body" style="padding:0">
             <table class="data-table">
@@ -95,6 +137,7 @@
                     </tr>
                 </thead>
                 <tbody>
+<<<<<<< HEAD
                     {% for order in test_requests %}
                     <tr>
                         <td>{{ order.patient.full_name }}</td>
@@ -115,12 +158,39 @@
                         <td>
                             <a href="{% url 'lab-order-entry' order.id %}" class="material-icons-round"
                                 style="color:var(--accent-purple); text-decoration:none;">edit_note</a>
+=======
+                    {% for test in test_requests %}
+                    <tr>
+                        <td>{{ test.patient }}</td>
+                        <td>{{ test.test_type }}</td>
+                        <td>
+                            {% if test.status == 'COLLECTED' %}
+                            <span class="badge-tag trial">Collected</span>
+                            {% elif test.status == 'PROCESSING' %}
+                            <span class="badge-tag" style="background: rgba(255,165,2,0.1); color: #ffa502;">Processing</span>
+                            {% elif test.status == 'COMPLETED' %}
+                            <span class="badge-tag active">Completed</span>
+                            {% else %}
+                            <span class="badge-tag expired">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test.priority == 'URGENT' %}
+                            <span style="color: var(--accent-red); font-weight: 600;">Urgent</span>
+                            {% else %}
+                            Routine
+                            {% endif %}
+>>>>>>> dbe3750320992546a530671b9d8df40f28989493
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
+<<<<<<< HEAD
                         <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">No recent
                             requests found.</td>
+=======
+                        <td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No test requests today.</td>
+>>>>>>> dbe3750320992546a530671b9d8df40f28989493
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -128,10 +198,10 @@
         </div>
     </div>
 
-    <!-- Lab Process Menu -->
+    <!-- Lab Workflows -->
     <div class="card">
         <div class="card-header">
-            <h3>Lab Workflows</h3>
+            <h3>Management Tools</h3>
         </div>
         <div class="card-body">
             <div class="quick-actions">
@@ -144,12 +214,19 @@
                     Manage Catalog
                 </a>
                 <button class="action-btn">
+<<<<<<< HEAD
+=======
+                    <span class="material-icons-round">qr_code_2</span>
+                    Label Sample
+                </button>
+                <button class="action-btn">
+>>>>>>> dbe3750320992546a530671b9d8df40f28989493
                     <span class="material-icons-round">inventory_2</span>
                     Reagent Stock
                 </button>
                 <button class="action-btn">
-                    <span class="material-icons-round">settings_suggest</span>
-                    Maint. Log
+                    <span class="material-icons-round">analytics</span>
+                    Reports
                 </button>
             </div>
         </div>

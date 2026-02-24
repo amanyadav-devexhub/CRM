@@ -11,24 +11,32 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <style>
-        /* Tenant/Clinic brand color — teal/green */
+        /* Tenant brand color — overridden per category */
         .sidebar-brand .brand-icon {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: {% block brand_gradient %}linear-gradient(135deg, #10b981, #059669){% endblock %};
         }
 
         .sidebar-brand h2 {
-            background: linear-gradient(135deg, #34d399, #6ee7b7);
+            background: {% block brand_text_gradient %}linear-gradient(135deg, #34d399, #6ee7b7){% endblock %};
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .nav-item.active {
-            background: rgba(16, 185, 129, 0.12);
-            color: var(--accent-green);
+            background: {% block nav_active_bg %}rgba(16, 185, 129, 0.12){% endblock %};
+            color: {% block nav_active_color %}var(--accent-green){% endblock %};
         }
 
         .nav-item .badge {
-            background: var(--accent-green);
+            background: {% block badge_bg %}var(--accent-green){% endblock %};
+        }
+
+        .nav-item.locked {
+            opacity: .35;
+            cursor: not-allowed;
+            font-size: .82rem;
+            pointer-events: none;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -40,75 +48,134 @@
         <!-- ─── Tenant Sidebar ─── -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <div class="brand-icon">H</div>
+                <div class="brand-icon">{% block brand_icon_letter %}H{% endblock %}</div>
                 <div>
-                    <h2>HealthCRM</h2>
-                    <span>Clinic Dashboard</span>
+                    <h2>{% block brand_name %}HealthCRM{% endblock %}</h2>
+                    <span>{% block brand_subtitle %}Clinic Dashboard{% endblock %}</span>
                 </div>
             </div>
 
             <nav class="sidebar-nav">
+                {% block sidebar_nav %}
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
                     <a href="/dashboard/" class="nav-item {% block nav_dashboard %}{% endblock %}">
                         <span class="icon material-icons-round">dashboard</span>
                         Dashboard
                     </a>
+                    {% if "patients" in enabled_features %}
                     <a href="/patients/" class="nav-item {% block nav_patients %}{% endblock %}">
                         <span class="icon material-icons-round">people</span>
                         Patients
                         {% if patient_count %}<span class="badge">{{ patient_count }}</span>{% endif %}
                     </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Patients 🔒
+                    </span>
+                    {% endif %}
+                    {% if "staff" in enabled_features %}
+                    <a href="#" class="nav-item {% block nav_staff %}{% endblock %}">
+                        <span class="icon material-icons-round">badge</span>
+                        Staff
+                    </a>
+                    {% endif %}
                 </div>
 
                 <div class="nav-section">
                     <div class="nav-section-title">Operations</div>
+                    {% if "appointments" in enabled_features %}
                     <a href="#" class="nav-item {% block nav_appointments %}{% endblock %}">
                         <span class="icon material-icons-round">calendar_month</span>
                         Appointments
                     </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Appointments 🔒
+                    </span>
+                    {% endif %}
+                    {% if "billing" in enabled_features %}
                     <a href="#" class="nav-item {% block nav_billing %}{% endblock %}">
                         <span class="icon material-icons-round">receipt_long</span>
                         Billing
                     </a>
+                    {% endif %}
+                    {% if "queue" in enabled_features %}
                     <a href="#" class="nav-item {% block nav_queue %}{% endblock %}">
                         <span class="icon material-icons-round">format_list_numbered</span>
                         Queue / Tokens
                     </a>
+                    {% elif "queue" not in enabled_features and "billing" in enabled_features %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Queue 🔒
+                    </span>
+                    {% endif %}
                 </div>
 
                 <div class="nav-section">
                     <div class="nav-section-title">Clinical</div>
+                    {% if "clinical_notes" in enabled_features %}
                     <a href="#" class="nav-item {% block nav_clinical %}{% endblock %}">
                         <span class="icon material-icons-round">medical_services</span>
                         Clinical Notes
                     </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Clinical Notes 🔒
+                    </span>
+                    {% endif %}
+                    {% if "pharmacy" in enabled_features %}
                     <a href="#" class="nav-item {% block nav_pharmacy %}{% endblock %}">
                         <span class="icon material-icons-round">medication</span>
                         Pharmacy
                     </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Pharmacy 🔒
+                    </span>
+                    {% endif %}
+                    {% if "lab" in enabled_features %}
                     <a href="#" class="nav-item {% block nav_labs %}{% endblock %}">
                         <span class="icon material-icons-round">biotech</span>
                         Lab Reports
                     </a>
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Lab Reports 🔒
+                    </span>
+                    {% endif %}
                 </div>
 
                 <div class="nav-section">
                     <div class="nav-section-title">Insights</div>
+                    {% if "analytics" in enabled_features %}
                     <a href="#" class="nav-item {% block nav_analytics %}{% endblock %}">
                         <span class="icon material-icons-round">bar_chart</span>
                         Analytics
                     </a>
-                    <a href="#" class="nav-item {% block nav_communications %}{% endblock %}">
+                    {% else %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Analytics 🔒
+                    </span>
+                    {% endif %}
+                    {% if "communications" in enabled_features %}
+                    <a href="/communications/" class="nav-item {% block nav_communications %}{% endblock %}">
                         <span class="icon material-icons-round">chat</span>
                         Communications
                     </a>
+                    {% endif %}
+                    {% if "notifications" in enabled_features %}
+                    <a href="/notifications/" class="nav-item {% block nav_notifications %}{% endblock %}">
+                        <span class="icon material-icons-round">notifications</span>
+                        Notifications
+                    </a>
+                    {% endif %}
                     <a href="#" class="nav-item {% block nav_settings %}{% endblock %}">
                         <span class="icon material-icons-round">settings</span>
                         Settings
                     </a>
                 </div>
-            </nav>
+                {% endblock %}
         </aside>
 
         <!-- ─── Main ─── -->
@@ -127,17 +194,19 @@
                         <span class="icon material-icons-round">search</span>
                         <input type="text" placeholder="Search patients, appointments…">
                     </div>
-                    <button class="topbar-btn" title="Notifications">
+                    <a href="/notifications/" class="topbar-btn" title="Notifications" style="text-decoration:none;">
                         <span class="material-icons-round">notifications</span>
-                        <span class="dot"></span>
-                    </button>
+                    </a>
                     <div class="user-pill">
-                        <div class="user-avatar" style="background: var(--gradient-green);">S</div>
+                        <div class="user-avatar" style="background: {% block user_avatar_gradient %}var(--gradient-green){% endblock %};">{% firstof request.user.username.0 'S' %}</div>
                         <div class="user-info">
-                            <div class="name">Staff</div>
-                            <div class="role">Sub Admin</div>
+                            <div class="name">{{ request.user.username|default:'Staff' }}</div>
+                            <div class="role">{% if request.user.is_superuser %}Admin View{% else %}Sub Admin{% endif %}</div>
                         </div>
                     </div>
+                    <a href="/logout/" class="topbar-btn" title="Logout" style="text-decoration:none;">
+                        <span class="material-icons-round">logout</span>
+                    </a>
                 </div>
             </header>
 
