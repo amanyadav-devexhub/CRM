@@ -179,17 +179,19 @@
                         <span class="icon material-icons-round">search</span>
                         <input type="text" placeholder="Search tenants, plans…">
                     </div>
-                    <button class="topbar-btn" title="Notifications">
+                    <a href="/notifications/" class="topbar-btn" title="Notifications" style="text-decoration:none;">
                         <span class="material-icons-round">notifications</span>
-                        <span class="dot"></span>
-                    </button>
+                    </a>
                     <div class="user-pill">
-                        <div class="user-avatar" style="background: var(--gradient-purple);">P</div>
+                        <div class="user-avatar" style="background: var(--gradient-purple);">{% firstof request.user.username.0 'P' %}</div>
                         <div class="user-info">
-                            <div class="name">Platform Owner</div>
+                            <div class="name">{{ request.user.username|default:'Platform Owner' }}</div>
                             <div class="role">Super Admin</div>
                         </div>
                     </div>
+                    <a href="/logout/" class="topbar-btn" title="Logout" style="text-decoration:none;">
+                        <span class="material-icons-round">logout</span>
+                    </a>
                 </div>
             </header>
 

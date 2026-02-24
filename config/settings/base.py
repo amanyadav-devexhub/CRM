@@ -47,14 +47,8 @@ SHARED_APPS = [
     "apps.pharmacy",
     "apps.clinical",
     "apps.appointments",
-    "apps.labs",
-    "apps.billing",
     "apps.communications",
-    "apps.analytics",
-    "apps.ai",
     "apps.notifications",
-    "apps.utils",
-    "apps.hospitals",
 ]
 
 TENANT_APPS = [
@@ -91,7 +85,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'apps.core.middleware.FeatureFlagMiddleware.FeatureFlagMiddleware',
-
+    'apps.core.middleware.RoleRouteMiddleware.RoleRouteMiddleware',
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -240,3 +234,13 @@ LOGGING = {
         },
     },
 }
+
+# ──────────────────────────────────────────────
+# Authentication & Email
+# ──────────────────────────────────────────────
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/login/"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "noreply@healthcrm.com"

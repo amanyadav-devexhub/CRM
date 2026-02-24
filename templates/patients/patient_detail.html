@@ -56,8 +56,7 @@
     <div class="stat-card green" style="padding:16px 20px;">
         <div class="stat-info">
             <div class="stat-label">Age</div>
-            <div style="font-size:18px; font-weight:600;">{% if patient.age %}{{ patient.age }} yrs{% else %}—{% endif
-                %}</div>
+            <div style="font-size:18px; font-weight:600;">{% if patient.age %}{{ patient.age }} yrs{% else %}—{% endif %}</div>
         </div>
         <div class="stat-icon green"><span class="material-icons-round">cake</span></div>
     </div>
@@ -80,13 +79,10 @@
             <ul class="sub-info">
                 <li><span class="label">First Name</span><span class="value">{{ patient.first_name }}</span></li>
                 <li><span class="label">Last Name</span><span class="value">{{ patient.last_name }}</span></li>
-                <li><span class="label">Date of Birth</span><span class="value">{{ patient.date_of_birth|date:"d M
-                        Y"|default:"—" }}</span></li>
+                <li><span class="label">Date of Birth</span><span class="value">{{ patient.date_of_birth|date:"d M Y"|default:"—" }}</span></li>
                 <li><span class="label">Gender</span><span class="value">{{ patient.get_gender_display }}</span></li>
-                <li><span class="label">Blood Group</span><span class="value">{{ patient.blood_group|default:"—"
-                        }}</span></li>
-                <li><span class="label">Marital Status</span><span class="value">{{
-                        patient.get_marital_status_display|default:"—" }}</span></li>
+                <li><span class="label">Blood Group</span><span class="value">{{ patient.blood_group|default:"—" }}</span></li>
+                <li><span class="label">Marital Status</span><span class="value">{{ patient.get_marital_status_display|default:"—" }}</span></li>
             </ul>
         </div>
     </div>
@@ -98,8 +94,7 @@
             <ul class="sub-info">
                 <li><span class="label">Phone</span><span class="value">{{ patient.phone|default:"—" }}</span></li>
                 <li><span class="label">Email</span><span class="value">{{ patient.email|default:"—" }}</span></li>
-                <li><span class="label">Preferred Language</span><span class="value">{{
-                        patient.preferred_language|default:"English" }}</span></li>
+                <li><span class="label">Preferred Language</span><span class="value">{{ patient.preferred_language|default:"English" }}</span></li>
             </ul>
         </div>
     </div>
