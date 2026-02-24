@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,99 +9,258 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --bg: #0a0e17; --card: #111827; --card2: #172033; --border: rgba(255,255,255,.06);
-            --text: #f1f5f9; --muted: rgba(241,245,249,.5); --dim: rgba(241,245,249,.35);
-            --accent: #3b82f6; --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            --green: #10b981; --error: #ef4444; --purple: #8b5cf6; --orange: #f59e0b; --cyan: #06b6d4;
+            --bg: #0a0e17;
+            --card: #111827;
+            --card2: #172033;
+            --border: rgba(255, 255, 255, .06);
+            --text: #f1f5f9;
+            --muted: rgba(241, 245, 249, .5);
+            --dim: rgba(241, 245, 249, .35);
+            --accent: #3b82f6;
+            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            --green: #10b981;
+            --error: #ef4444;
+            --purple: #8b5cf6;
+            --orange: #f59e0b;
+            --cyan: #06b6d4;
         }
+
         body {
-            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
-            min-height: 100vh; padding: 2rem 1rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem 1rem;
         }
+
         body::before {
-            content: ''; position: fixed; top: -30%; right: -20%;
-            width: 60vw; height: 60vh;
-            background: radial-gradient(ellipse, rgba(16,185,129,.05) 0%, transparent 70%);
+            content: '';
+            position: fixed;
+            top: -30%;
+            right: -20%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(ellipse, rgba(16, 185, 129, .05) 0%, transparent 70%);
             pointer-events: none;
         }
-        .wizard-container { width: 100%; max-width: 640px; margin: 0 auto; position: relative; z-index: 1; }
+
+        .wizard-container {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
 
         /* Steps indicator */
-        .steps { display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; gap: .5rem; }
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: .5rem;
+        }
+
         .step {
-            display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 500; color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .8rem;
+            font-weight: 500;
+            color: var(--muted);
         }
-        .step.active { color: var(--accent); }
-        .step.done { color: var(--green); }
+
+        .step.active {
+            color: var(--accent);
+        }
+
+        .step.done {
+            color: var(--green);
+        }
+
         .step .num {
-            width: 28px; height: 28px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: .75rem; font-weight: 700;
-            border: 2px solid rgba(255,255,255,.12);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 700;
+            border: 2px solid rgba(255, 255, 255, .12);
         }
-        .step.active .num { border-color: var(--accent); background: rgba(59,130,246,.15); color: var(--accent); }
-        .step.done .num { border-color: var(--green); background: rgba(16,185,129,.15); color: var(--green); }
-        .step-line { width: 40px; height: 2px; background: rgba(255,255,255,.08); }
+
+        .step.active .num {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, .15);
+            color: var(--accent);
+        }
+
+        .step.done .num {
+            border-color: var(--green);
+            background: rgba(16, 185, 129, .15);
+            color: var(--green);
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: rgba(255, 255, 255, .08);
+        }
 
         .wizard-card {
-            background: var(--card); border-radius: 20px; padding: 2.5rem;
-            border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.3);
+            background: var(--card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
         }
-        .wizard-card h2 { font-size: 1.35rem; font-weight: 700; margin-bottom: .4rem; }
-        .wizard-card .subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 1.75rem; }
 
-        .form-group { margin-bottom: 1.25rem; }
-        .form-group label, .field-label {
-            display: block; font-size: .85rem; font-weight: 500; color: var(--muted); margin-bottom: .4rem;
+        .wizard-card h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
         }
-        .form-group input, .form-group select {
-            width: 100%; padding: .7rem 1rem; border-radius: 10px;
-            border: 1px solid rgba(255,255,255,.1);
-            background: rgba(255,255,255,.04); color: var(--text);
-            font-size: .9rem; font-family: inherit;
+
+        .wizard-card .subtitle {
+            color: var(--muted);
+            font-size: .875rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label,
+        .field-label {
+            display: block;
+            font-size: .85rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: .4rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: .7rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: rgba(255, 255, 255, .04);
+            color: var(--text);
+            font-size: .9rem;
+            font-family: inherit;
             transition: border-color .2s, box-shadow .2s;
         }
-        .form-group input:focus, .form-group select:focus {
-            outline: none; border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
         }
-        .form-group input::placeholder { color: rgba(255,255,255,.25); }
-        .form-group select option { background: var(--card); }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, .25);
+        }
+
+        .form-group select option {
+            background: var(--card);
+        }
 
         /* Category selector cards */
-        .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-bottom: 1.25rem; }
-        .category-option { position: relative; cursor: pointer; }
-        .category-option input { position: absolute; opacity: 0; }
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: .75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .category-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .category-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
         .category-option .cat-card {
-            padding: 1rem; border-radius: 12px; text-align: center;
-            border: 2px solid rgba(255,255,255,.08);
-            background: rgba(255,255,255,.02);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, .08);
+            background: rgba(255, 255, 255, .02);
             transition: all .25s;
         }
-        .category-option input:checked + .cat-card {
-            border-color: var(--accent); background: rgba(59,130,246,.08);
+
+        .category-option input:checked+.cat-card {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, .08);
         }
-        .category-option .cat-card:hover { border-color: rgba(255,255,255,.15); }
-        .cat-icon { font-size: 1.5rem; margin-bottom: .25rem; }
-        .cat-label { font-size: .85rem; font-weight: 600; }
-        .cat-desc { font-size: .7rem; color: var(--muted); }
+
+        .category-option .cat-card:hover {
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        .cat-icon {
+            font-size: 1.5rem;
+            margin-bottom: .25rem;
+        }
+
+        .cat-label {
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        .cat-desc {
+            font-size: .7rem;
+            color: var(--muted);
+        }
 
         .error-list {
-            background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
-            border-radius: 10px; padding: .75rem 1rem; margin-bottom: 1.25rem;
+            background: rgba(239, 68, 68, .08);
+            border: 1px solid rgba(239, 68, 68, .2);
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            margin-bottom: 1.25rem;
             list-style: none;
         }
-        .error-list li { font-size: .85rem; color: var(--error); padding: .15rem 0; }
+
+        .error-list li {
+            font-size: .85rem;
+            color: var(--error);
+            padding: .15rem 0;
+        }
 
         .btn-next {
-            width: 100%; padding: .85rem; border: none; border-radius: 12px;
-            background: var(--gradient); color: #fff;
-            font-size: 1rem; font-weight: 600; cursor: pointer;
+            width: 100%;
+            padding: .85rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--gradient);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
             transition: transform .2s, box-shadow .2s;
         }
-        .btn-next:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59,130,246,.3); }
+
+        .btn-next:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
+        }
 
         /* ─── Dynamic Questions Area ─── */
         .dyn-section {
@@ -110,446 +270,601 @@
             border-top: 1px solid var(--border);
             animation: fade-up .35s ease-out;
         }
-        .dyn-section.active { display: block; }
+
+        .dyn-section.active {
+            display: block;
+        }
 
         .dyn-section-title {
-            display: flex; align-items: center; gap: .5rem;
-            font-size: .9rem; font-weight: 700; margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
             color: var(--text);
         }
-        .dyn-section-title .material-icons-round { font-size: 1.1rem; }
-        .dyn-section-title.blue .material-icons-round { color: var(--accent); }
-        .dyn-section-title.green .material-icons-round { color: var(--green); }
-        .dyn-section-title.purple .material-icons-round { color: var(--purple); }
-        .dyn-section-title.orange .material-icons-round { color: var(--orange); }
+
+        .dyn-section-title .material-icons-round {
+            font-size: 1.1rem;
+        }
+
+        .dyn-section-title.blue .material-icons-round {
+            color: var(--accent);
+        }
+
+        .dyn-section-title.green .material-icons-round {
+            color: var(--green);
+        }
+
+        .dyn-section-title.purple .material-icons-round {
+            color: var(--purple);
+        }
+
+        .dyn-section-title.orange .material-icons-round {
+            color: var(--orange);
+        }
 
         .dyn-group-heading {
-            font-size: .75rem; font-weight: 600; color: var(--accent);
-            text-transform: uppercase; letter-spacing: .06em;
-            margin: 1.25rem 0 .75rem; padding-bottom: .4rem;
-            border-bottom: 1px solid rgba(59,130,246,.12);
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin: 1.25rem 0 .75rem;
+            padding-bottom: .4rem;
+            border-bottom: 1px solid rgba(59, 130, 246, .12);
         }
 
         /* Toggle switch questions */
         .q-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: .6rem 0; border-bottom: 1px solid rgba(255,255,255,.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .6rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
         }
-        .q-row:last-child { border-bottom: none; }
-        .q-label { font-size: .85rem; color: var(--text); flex: 1; padding-right: 1rem; }
+
+        .q-row:last-child {
+            border-bottom: none;
+        }
+
+        .q-label {
+            font-size: .85rem;
+            color: var(--text);
+            flex: 1;
+            padding-right: 1rem;
+        }
 
         /* Toggle switch */
-        .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
-        .toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
         .toggle .slider {
-            position: absolute; inset: 0; cursor: pointer;
-            background: rgba(255,255,255,.1); border-radius: 12px;
+            position: absolute;
+            inset: 0;
+            cursor: pointer;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 12px;
             transition: background .2s;
         }
+
         .toggle .slider::before {
-            content: ''; position: absolute; left: 3px; top: 3px;
-            width: 18px; height: 18px; border-radius: 50%;
-            background: #fff; transition: transform .2s;
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform .2s;
         }
-        .toggle input:checked + .slider { background: var(--accent); }
-        .toggle input:checked + .slider::before { transform: translateX(20px); }
+
+        .toggle input:checked+.slider {
+            background: var(--accent);
+        }
+
+        .toggle input:checked+.slider::before {
+            transform: translateX(20px);
+        }
 
         /* Number / select within dynamic */
         .q-input {
-            width: 100px; padding: .45rem .7rem; border-radius: 8px;
-            border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04);
-            color: var(--text); font-size: .85rem; font-family: inherit;
-            text-align: center; flex-shrink: 0;
-        }
-        .q-input:focus { outline: none; border-color: var(--accent); }
-
-        .q-select {
-            padding: .45rem .7rem; border-radius: 8px;
-            border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04);
-            color: var(--text); font-size: .85rem; font-family: inherit;
+            width: 100px;
+            padding: .45rem .7rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: rgba(255, 255, 255, .04);
+            color: var(--text);
+            font-size: .85rem;
+            font-family: inherit;
+            text-align: center;
             flex-shrink: 0;
         }
-        .q-select option { background: var(--card); }
-        .q-select:focus { outline: none; border-color: var(--accent); }
+
+        .q-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .q-select {
+            padding: .45rem .7rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: rgba(255, 255, 255, .04);
+            color: var(--text);
+            font-size: .85rem;
+            font-family: inherit;
+            flex-shrink: 0;
+        }
+
+        .q-select option {
+            background: var(--card);
+        }
+
+        .q-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
 
         @keyframes fade-up {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 500px) {
-            .wizard-card { padding: 1.5rem; }
-            .category-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
+            .wizard-card {
+                padding: 1.5rem;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: .5rem;
+            }
         }
     </style>
 </head>
+
 <body>
-<div class="wizard-container">
-    <!-- Steps -->
-    <div class="steps">
-        <div class="step active"><div class="num">1</div> Organization</div>
-        <div class="step-line"></div>
-        <div class="step"><div class="num">2</div> Plan</div>
-        <div class="step-line"></div>
-        <div class="step"><div class="num">3</div> Confirm</div>
-    </div>
-
-    <div class="wizard-card">
-        <h2>🏥 Organization Details</h2>
-        <p class="subtitle">Tell us about your healthcare organization</p>
-
-        {% if errors %}
-        <ul class="error-list">
-            {% for err in errors %}<li>{{ err }}</li>{% endfor %}
-        </ul>
-        {% endif %}
-
-        <form method="post" action="/onboarding/">
-            {% csrf_token %}
-
-            <div class="form-group">
-                <label>Organization Name</label>
-                <input type="text" name="org_name" placeholder="City Health Clinic"
-                       value="{{ data.org_name|default:'' }}" required autofocus>
+    <div class="wizard-container">
+        <!-- Steps -->
+        <div class="steps">
+            <div class="step active">
+                <div class="num">1</div> Organization
             </div>
-
-            <label class="field-label">What type of organization are you registering as?</label>
-            <div class="category-grid">
-                <label class="category-option">
-                    <input type="radio" name="category" value="HOSPITAL" {% if data.category == "HOSPITAL" %}checked{% endif %} onchange="showQuestions('HOSPITAL')">
-                    <div class="cat-card">
-                        <div class="cat-icon">🏨</div>
-                        <div class="cat-label">Hospital</div>
-                        <div class="cat-desc">Multi-department</div>
-                    </div>
-                </label>
-                <label class="category-option">
-                    <input type="radio" name="category" value="CLINIC" {% if data.category == "CLINIC" or not data.category %}checked{% endif %} onchange="showQuestions('CLINIC')">
-                    <div class="cat-card">
-                        <div class="cat-icon">🏥</div>
-                        <div class="cat-label">Clinic</div>
-                        <div class="cat-desc">Small to mid practice</div>
-                    </div>
-                </label>
-                <label class="category-option">
-                    <input type="radio" name="category" value="LAB" {% if data.category == "LAB" %}checked{% endif %} onchange="showQuestions('LAB')">
-                    <div class="cat-card">
-                        <div class="cat-icon">🔬</div>
-                        <div class="cat-label">Laboratory</div>
-                        <div class="cat-desc">Diagnostics & testing</div>
-                    </div>
-                </label>
-                <label class="category-option">
-                    <input type="radio" name="category" value="PHARMACY" {% if data.category == "PHARMACY" %}checked{% endif %} onchange="showQuestions('PHARMACY')">
-                    <div class="cat-card">
-                        <div class="cat-icon">💊</div>
-                        <div class="cat-label">Pharmacy</div>
-                        <div class="cat-desc">Retail / chain pharmacy</div>
-                    </div>
-                </label>
+            <div class="step-line"></div>
+            <div class="step">
+                <div class="num">2</div> Plan
             </div>
-
-            <div class="form-group">
-                <label>Organization Email</label>
-                <input type="email" name="org_email" placeholder="info@clinic.com"
-                       value="{{ data.org_email|default:'' }}" required>
+            <div class="step-line"></div>
+            <div class="step">
+                <div class="num">3</div> Confirm
             </div>
+        </div>
 
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="tel" name="org_phone" placeholder="+91 98765 43210"
-                       value="{{ data.org_phone|default:'' }}">
-            </div>
+        <div class="wizard-card">
+            <h2>🏥 Organization Details</h2>
+            <p class="subtitle">Tell us about your healthcare organization</p>
 
-            <!-- ══════════════════════════════════════════
+            {% if errors %}
+            <ul class="error-list">
+                {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <form method="post" action="/onboarding/">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>Organization Name</label>
+                    <input type="text" name="org_name" placeholder="City Health Clinic"
+                        value="{{ data.org_name|default:'' }}" required autofocus>
+                </div>
+
+                <label class="field-label">What type of organization are you registering as?</label>
+                <div class="category-grid">
+                    <label class="category-option">
+                        <input type="radio" name="category" value="HOSPITAL" {% if data.category == "HOSPITAL" %}checked{%
+                            endif %} onchange="showQuestions('HOSPITAL')">
+                        <div class="cat-card">
+                            <div class="cat-icon">🏨</div>
+                            <div class="cat-label">Hospital</div>
+                            <div class="cat-desc">Multi-department</div>
+                        </div>
+                    </label>
+                    <label class="category-option">
+                        <input type="radio" name="category" value="CLINIC" {% if data.category == "CLINIC" or not
+                            data.category %}checked{% endif %} onchange="showQuestions('CLINIC')">
+                        <div class="cat-card">
+                            <div class="cat-icon">🏥</div>
+                            <div class="cat-label">Clinic</div>
+                            <div class="cat-desc">Small to mid practice</div>
+                        </div>
+                    </label>
+                    <label class="category-option">
+                        <input type="radio" name="category" value="LAB" {% if data.category == "LAB" %}checked{% endif %}
+                            onchange="showQuestions('LAB')">
+                        <div class="cat-card">
+                            <div class="cat-icon">🔬</div>
+                            <div class="cat-label">Laboratory</div>
+                            <div class="cat-desc">Diagnostics & testing</div>
+                        </div>
+                    </label>
+                    <label class="category-option">
+                        <input type="radio" name="category" value="PHARMACY" {% if data.category == "PHARMACY" %}checked{% endif %} onchange="showQuestions('PHARMACY')">
+                        <div class="cat-card">
+                            <div class="cat-icon">💊</div>
+                            <div class="cat-label">Pharmacy</div>
+                            <div class="cat-desc">Retail / chain pharmacy</div>
+                        </div>
+                    </label>
+                </div>
+
+
+                <!-- Dynamic questions sections below -->
+
+                <!-- ══════════════════════════════════════════
                  HOSPITAL Dynamic Questions
                  ══════════════════════════════════════════ -->
-            <div class="dyn-section" id="q-HOSPITAL">
-                <div class="dyn-section-title blue">
-                    <span class="material-icons-round">local_hospital</span>
-                    Hospital-Specific Setup
+                <div class="dyn-section" id="q-HOSPITAL">
+                    <div class="dyn-section-title blue">
+                        <span class="material-icons-round">local_hospital</span>
+                        Hospital-Specific Setup
+                    </div>
+
+                    <div class="dyn-group-heading">Organization Structure</div>
+                    <div class="q-row">
+                        <span class="q-label">How many branches do you operate?</span>
+                        <input type="number" name="h_branches" class="q-input" min="1"
+                            value="{{ data.h_branches|default:'1' }}">
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Total number of doctors?</span>
+                        <input type="number" name="h_doctors" class="q-input" min="1"
+                            value="{{ data.h_doctors|default:'10' }}">
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Total number of departments?</span>
+                        <input type="number" name="h_departments" class="q-input" min="1"
+                            value="{{ data.h_departments|default:'5' }}">
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you have ICU facilities?</span>
+                        <label class="toggle"><input type="checkbox" name="h_icu" {% if data.h_icu %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you handle inpatient (IPD) admissions?</span>
+                        <label class="toggle"><input type="checkbox" name="h_ipd" {% if data.h_ipd %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Clinical & Operations</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you require full EMR?</span>
+                        <label class="toggle"><input type="checkbox" name="h_emr" {% if data.h_emr %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need OT (Operation Theatre) management?</span>
+                        <label class="toggle"><input type="checkbox" name="h_ot" {% if data.h_ot %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you require bed management?</span>
+                        <label class="toggle"><input type="checkbox" name="h_beds" {% if data.h_beds %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you have in-house lab?</span>
+                        <label class="toggle"><input type="checkbox" name="h_lab" {% if data.h_lab %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you have in-house pharmacy?</span>
+                        <label class="toggle"><input type="checkbox" name="h_pharmacy" {% if data.h_pharmacy %}checked{%
+                                endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Billing</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you handle insurance & TPA claims?</span>
+                        <label class="toggle"><input type="checkbox" name="h_insurance" {% if data.h_insurance
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need multi-department billing?</span>
+                        <label class="toggle"><input type="checkbox" name="h_multi_billing" {% if data.h_multi_billing
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you require package billing (surgery packages)?</span>
+                        <label class="toggle"><input type="checkbox" name="h_pkg_billing" {% if data.h_pkg_billing
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">AI & Advanced</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you want AI clinical notes?</span>
+                        <label class="toggle"><input type="checkbox" name="h_ai_notes" {% if data.h_ai_notes %}checked{%
+                                endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you want AI patient risk scoring?</span>
+                        <label class="toggle"><input type="checkbox" name="h_ai_risk" {% if data.h_ai_risk %}checked{%
+                                endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Expected monthly patient volume?</span>
+                        <select name="h_volume" class="q-select">
+                            <option value="500" {% if data.h_volume == "500" %}selected{% endif %}>
+                                < 500</option>
+                            <option value="2000" {% if data.h_volume == "2000" %}selected{% endif %}>500 – 2,000</option>
+                            <option value="5000" {% if data.h_volume == "5000" %}selected{% endif %}>2,000 – 5,000
+                            </option>
+                            <option value="10000" {% if data.h_volume == "10000" %}selected{% endif %}>5,000+</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="dyn-group-heading">Organization Structure</div>
-                <div class="q-row">
-                    <span class="q-label">How many branches do you operate?</span>
-                    <input type="number" name="h_branches" class="q-input" min="1" value="{{ data.h_branches|default:'1' }}">
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Total number of doctors?</span>
-                    <input type="number" name="h_doctors" class="q-input" min="1" value="{{ data.h_doctors|default:'10' }}">
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Total number of departments?</span>
-                    <input type="number" name="h_departments" class="q-input" min="1" value="{{ data.h_departments|default:'5' }}">
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you have ICU facilities?</span>
-                    <label class="toggle"><input type="checkbox" name="h_icu" {% if data.h_icu %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you handle inpatient (IPD) admissions?</span>
-                    <label class="toggle"><input type="checkbox" name="h_ipd" {% if data.h_ipd %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Clinical & Operations</div>
-                <div class="q-row">
-                    <span class="q-label">Do you require full EMR?</span>
-                    <label class="toggle"><input type="checkbox" name="h_emr" {% if data.h_emr %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need OT (Operation Theatre) management?</span>
-                    <label class="toggle"><input type="checkbox" name="h_ot" {% if data.h_ot %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you require bed management?</span>
-                    <label class="toggle"><input type="checkbox" name="h_beds" {% if data.h_beds %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you have in-house lab?</span>
-                    <label class="toggle"><input type="checkbox" name="h_lab" {% if data.h_lab %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you have in-house pharmacy?</span>
-                    <label class="toggle"><input type="checkbox" name="h_pharmacy" {% if data.h_pharmacy %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Billing</div>
-                <div class="q-row">
-                    <span class="q-label">Do you handle insurance & TPA claims?</span>
-                    <label class="toggle"><input type="checkbox" name="h_insurance" {% if data.h_insurance %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need multi-department billing?</span>
-                    <label class="toggle"><input type="checkbox" name="h_multi_billing" {% if data.h_multi_billing %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you require package billing (surgery packages)?</span>
-                    <label class="toggle"><input type="checkbox" name="h_pkg_billing" {% if data.h_pkg_billing %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">AI & Advanced</div>
-                <div class="q-row">
-                    <span class="q-label">Do you want AI clinical notes?</span>
-                    <label class="toggle"><input type="checkbox" name="h_ai_notes" {% if data.h_ai_notes %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you want AI patient risk scoring?</span>
-                    <label class="toggle"><input type="checkbox" name="h_ai_risk" {% if data.h_ai_risk %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Expected monthly patient volume?</span>
-                    <select name="h_volume" class="q-select">
-                        <option value="500" {% if data.h_volume == "500" %}selected{% endif %}>< 500</option>
-                        <option value="2000" {% if data.h_volume == "2000" %}selected{% endif %}>500 – 2,000</option>
-                        <option value="5000" {% if data.h_volume == "5000" %}selected{% endif %}>2,000 – 5,000</option>
-                        <option value="10000" {% if data.h_volume == "10000" %}selected{% endif %}>5,000+</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════
+                <!-- ══════════════════════════════════════════
                  CLINIC Dynamic Questions
                  ══════════════════════════════════════════ -->
-            <div class="dyn-section" id="q-CLINIC">
-                <div class="dyn-section-title green">
-                    <span class="material-icons-round">medical_services</span>
-                    Clinic-Specific Setup
+                <div class="dyn-section" id="q-CLINIC">
+                    <div class="dyn-section-title green">
+                        <span class="material-icons-round">medical_services</span>
+                        Clinic-Specific Setup
+                    </div>
+
+                    <div class="dyn-group-heading">Basic Setup</div>
+                    <div class="q-row">
+                        <span class="q-label">Clinic type?</span>
+                        <select name="c_type" class="q-select">
+                            <option value="single" {% if data.c_type == "single" %}selected{% endif %}>Single Doctor
+                            </option>
+                            <option value="multi" {% if data.c_type == "multi" %}selected{% endif %}>Multi-Doctor</option>
+                        </select>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Number of doctors?</span>
+                        <input type="number" name="c_doctors" class="q-input" min="1"
+                            value="{{ data.c_doctors|default:'1' }}">
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Specialization</span>
+                        <select name="c_specialization" class="q-select">
+                            <option value="general" {% if data.c_specialization == "general" %}selected{% endif %}>General
+                                Practice</option>
+                            <option value="dental" {% if data.c_specialization == "dental" %}selected{% endif %}>Dental
+                            </option>
+                            <option value="ortho" {% if data.c_specialization == "ortho" %}selected{% endif %}>Orthopedics
+                            </option>
+                            <option value="derma" {% if data.c_specialization == "derma" %}selected{% endif %}>Dermatology
+                            </option>
+                            <option value="pedia" {% if data.c_specialization == "pedia" %}selected{% endif %}>Pediatrics
+                            </option>
+                            <option value="gyno" {% if data.c_specialization == "gyno" %}selected{% endif %}>Gynecology
+                            </option>
+                            <option value="cardio" {% if data.c_specialization == "cardio" %}selected{% endif %}>
+                                Cardiology</option>
+                            <option value="ent" {% if data.c_specialization == "ent" %}selected{% endif %}>ENT</option>
+                            <option value="multi" {% if data.c_specialization == "multi" %}selected{% endif %}>
+                                Multi-Specialty</option>
+                            <option value="other" {% if data.c_specialization == "other" %}selected{% endif %}>Other
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="dyn-group-heading">Operations</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need appointment scheduling?</span>
+                        <label class="toggle"><input type="checkbox" name="c_appointments" {% if data.c_appointments
+                                %}checked{% endif %} checked><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you handle walk-in tokens?</span>
+                        <label class="toggle"><input type="checkbox" name="c_walkin" {% if data.c_walkin %}checked{%
+                                endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need basic EMR?</span>
+                        <label class="toggle"><input type="checkbox" name="c_emr" {% if data.c_emr %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Billing</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you require insurance billing?</span>
+                        <label class="toggle"><input type="checkbox" name="c_insurance" {% if data.c_insurance
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you want online payments enabled?</span>
+                        <label class="toggle"><input type="checkbox" name="c_online_pay" {% if data.c_online_pay
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Optional Modules</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you have a small pharmacy?</span>
+                        <label class="toggle"><input type="checkbox" name="c_pharmacy" {% if data.c_pharmacy %}checked{%
+                                endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you collect lab samples?</span>
+                        <label class="toggle"><input type="checkbox" name="c_lab" {% if data.c_lab %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
                 </div>
 
-                <div class="dyn-group-heading">Basic Setup</div>
-                <div class="q-row">
-                    <span class="q-label">Clinic type?</span>
-                    <select name="c_type" class="q-select">
-                        <option value="single" {% if data.c_type == "single" %}selected{% endif %}>Single Doctor</option>
-                        <option value="multi" {% if data.c_type == "multi" %}selected{% endif %}>Multi-Doctor</option>
-                    </select>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Number of doctors?</span>
-                    <input type="number" name="c_doctors" class="q-input" min="1" value="{{ data.c_doctors|default:'1' }}">
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Specialization</span>
-                    <select name="c_specialization" class="q-select">
-                        <option value="general" {% if data.c_specialization == "general" %}selected{% endif %}>General Practice</option>
-                        <option value="dental" {% if data.c_specialization == "dental" %}selected{% endif %}>Dental</option>
-                        <option value="ortho" {% if data.c_specialization == "ortho" %}selected{% endif %}>Orthopedics</option>
-                        <option value="derma" {% if data.c_specialization == "derma" %}selected{% endif %}>Dermatology</option>
-                        <option value="pedia" {% if data.c_specialization == "pedia" %}selected{% endif %}>Pediatrics</option>
-                        <option value="gyno" {% if data.c_specialization == "gyno" %}selected{% endif %}>Gynecology</option>
-                        <option value="cardio" {% if data.c_specialization == "cardio" %}selected{% endif %}>Cardiology</option>
-                        <option value="ent" {% if data.c_specialization == "ent" %}selected{% endif %}>ENT</option>
-                        <option value="multi" {% if data.c_specialization == "multi" %}selected{% endif %}>Multi-Specialty</option>
-                        <option value="other" {% if data.c_specialization == "other" %}selected{% endif %}>Other</option>
-                    </select>
-                </div>
-
-                <div class="dyn-group-heading">Operations</div>
-                <div class="q-row">
-                    <span class="q-label">Do you need appointment scheduling?</span>
-                    <label class="toggle"><input type="checkbox" name="c_appointments" {% if data.c_appointments %}checked{% endif %} checked><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you handle walk-in tokens?</span>
-                    <label class="toggle"><input type="checkbox" name="c_walkin" {% if data.c_walkin %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need basic EMR?</span>
-                    <label class="toggle"><input type="checkbox" name="c_emr" {% if data.c_emr %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Billing</div>
-                <div class="q-row">
-                    <span class="q-label">Do you require insurance billing?</span>
-                    <label class="toggle"><input type="checkbox" name="c_insurance" {% if data.c_insurance %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you want online payments enabled?</span>
-                    <label class="toggle"><input type="checkbox" name="c_online_pay" {% if data.c_online_pay %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Optional Modules</div>
-                <div class="q-row">
-                    <span class="q-label">Do you have a small pharmacy?</span>
-                    <label class="toggle"><input type="checkbox" name="c_pharmacy" {% if data.c_pharmacy %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you collect lab samples?</span>
-                    <label class="toggle"><input type="checkbox" name="c_lab" {% if data.c_lab %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════
+                <!-- ══════════════════════════════════════════
                  LAB Dynamic Questions
                  ══════════════════════════════════════════ -->
-            <div class="dyn-section" id="q-LAB">
-                <div class="dyn-section-title purple">
-                    <span class="material-icons-round">biotech</span>
-                    Laboratory-Specific Setup
+                <div class="dyn-section" id="q-LAB">
+                    <div class="dyn-section-title purple">
+                        <span class="material-icons-round">biotech</span>
+                        Laboratory-Specific Setup
+                    </div>
+
+                    <div class="dyn-group-heading">Lab Details</div>
+                    <div class="q-row">
+                        <span class="q-label">Type of lab?</span>
+                        <select name="l_type" class="q-select">
+                            <option value="diagnostic" {% if data.l_type == "diagnostic" %}selected{% endif %}>Diagnostic
+                            </option>
+                            <option value="pathology" {% if data.l_type == "pathology" %}selected{% endif %}>Pathology
+                            </option>
+                            <option value="imaging" {% if data.l_type == "imaging" %}selected{% endif %}>Imaging /
+                                Radiology</option>
+                            <option value="multi" {% if data.l_type == "multi" %}selected{% endif %}>Multi-Service
+                            </option>
+                        </select>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you collect samples in-house?</span>
+                        <label class="toggle"><input type="checkbox" name="l_inhouse" {% if data.l_inhouse %}checked{%
+                                endif %} checked><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you provide home sample collection?</span>
+                        <label class="toggle"><input type="checkbox" name="l_home" {% if data.l_home %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you integrate with hospitals?</span>
+                        <label class="toggle"><input type="checkbox" name="l_hospital_int" {% if data.l_hospital_int
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Reporting</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need automated lab report uploads?</span>
+                        <label class="toggle"><input type="checkbox" name="l_auto_report" {% if data.l_auto_report
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you want patient portal access for reports?</span>
+                        <label class="toggle"><input type="checkbox" name="l_patient_portal" {% if data.l_patient_portal
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need abnormal value highlighting (AI)?</span>
+                        <label class="toggle"><input type="checkbox" name="l_ai_abnormal" {% if data.l_ai_abnormal
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Billing</div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need test package billing?</span>
+                        <label class="toggle"><input type="checkbox" name="l_pkg_billing" {% if data.l_pkg_billing
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you work with insurance?</span>
+                        <label class="toggle"><input type="checkbox" name="l_insurance" {% if data.l_insurance
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
                 </div>
 
-                <div class="dyn-group-heading">Lab Details</div>
-                <div class="q-row">
-                    <span class="q-label">Type of lab?</span>
-                    <select name="l_type" class="q-select">
-                        <option value="diagnostic" {% if data.l_type == "diagnostic" %}selected{% endif %}>Diagnostic</option>
-                        <option value="pathology" {% if data.l_type == "pathology" %}selected{% endif %}>Pathology</option>
-                        <option value="imaging" {% if data.l_type == "imaging" %}selected{% endif %}>Imaging / Radiology</option>
-                        <option value="multi" {% if data.l_type == "multi" %}selected{% endif %}>Multi-Service</option>
-                    </select>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you collect samples in-house?</span>
-                    <label class="toggle"><input type="checkbox" name="l_inhouse" {% if data.l_inhouse %}checked{% endif %} checked><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you provide home sample collection?</span>
-                    <label class="toggle"><input type="checkbox" name="l_home" {% if data.l_home %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you integrate with hospitals?</span>
-                    <label class="toggle"><input type="checkbox" name="l_hospital_int" {% if data.l_hospital_int %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Reporting</div>
-                <div class="q-row">
-                    <span class="q-label">Do you need automated lab report uploads?</span>
-                    <label class="toggle"><input type="checkbox" name="l_auto_report" {% if data.l_auto_report %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you want patient portal access for reports?</span>
-                    <label class="toggle"><input type="checkbox" name="l_patient_portal" {% if data.l_patient_portal %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need abnormal value highlighting (AI)?</span>
-                    <label class="toggle"><input type="checkbox" name="l_ai_abnormal" {% if data.l_ai_abnormal %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Billing</div>
-                <div class="q-row">
-                    <span class="q-label">Do you need test package billing?</span>
-                    <label class="toggle"><input type="checkbox" name="l_pkg_billing" {% if data.l_pkg_billing %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you work with insurance?</span>
-                    <label class="toggle"><input type="checkbox" name="l_insurance" {% if data.l_insurance %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════
+                <!-- ══════════════════════════════════════════
                  PHARMACY Dynamic Questions
                  ══════════════════════════════════════════ -->
-            <div class="dyn-section" id="q-PHARMACY">
-                <div class="dyn-section-title orange">
-                    <span class="material-icons-round">medication</span>
-                    Pharmacy-Specific Setup
+                <div class="dyn-section" id="q-PHARMACY">
+                    <div class="dyn-section-title orange">
+                        <span class="material-icons-round">medication</span>
+                        Pharmacy-Specific Setup
+                    </div>
+
+                    <div class="dyn-group-heading">Pharmacy Setup</div>
+                    <div class="q-row">
+                        <span class="q-label">Pharmacy type?</span>
+                        <select name="p_type" class="q-select">
+                            <option value="standalone" {% if data.p_type == "standalone" %}selected{% endif %}>Standalone
+                            </option>
+                            <option value="attached" {% if data.p_type == "attached" %}selected{% endif %}>
+                                Hospital-Attached</option>
+                            <option value="chain" {% if data.p_type == "chain" %}selected{% endif %}>Chain / Multi-Branch
+                            </option>
+                        </select>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need inventory tracking?</span>
+                        <label class="toggle"><input type="checkbox" name="p_inventory" {% if data.p_inventory
+                                %}checked{% endif %} checked><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need expiry alerts?</span>
+                        <label class="toggle"><input type="checkbox" name="p_expiry" {% if data.p_expiry %}checked{% endif %} checked><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need batch tracking?</span>
+                        <label class="toggle"><input type="checkbox" name="p_batch" {% if data.p_batch %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Billing</div>
+                    <div class="q-row">
+                        <span class="q-label">GST-enabled billing?</span>
+                        <label class="toggle"><input type="checkbox" name="p_gst" {% if data.p_gst %}checked{% endif
+                                %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you accept online payments?</span>
+                        <label class="toggle"><input type="checkbox" name="p_online_pay" {% if data.p_online_pay
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Do you need supplier management?</span>
+                        <label class="toggle"><input type="checkbox" name="p_supplier" {% if data.p_supplier %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
+
+                    <div class="dyn-group-heading">Integration</div>
+                    <div class="q-row">
+                        <span class="q-label">Prescription integration from clinic/hospital?</span>
+                        <label class="toggle"><input type="checkbox" name="p_rx_int" {% if data.p_rx_int %}checked{%
+                                endif %}><span class="slider"></span></label>
+                    </div>
+                    <div class="q-row">
+                        <span class="q-label">Stock auto-deduction from prescriptions?</span>
+                        <label class="toggle"><input type="checkbox" name="p_auto_deduct" {% if data.p_auto_deduct
+                                %}checked{% endif %}><span class="slider"></span></label>
+                    </div>
                 </div>
 
-                <div class="dyn-group-heading">Pharmacy Setup</div>
-                <div class="q-row">
-                    <span class="q-label">Pharmacy type?</span>
-                    <select name="p_type" class="q-select">
-                        <option value="standalone" {% if data.p_type == "standalone" %}selected{% endif %}>Standalone</option>
-                        <option value="attached" {% if data.p_type == "attached" %}selected{% endif %}>Hospital-Attached</option>
-                        <option value="chain" {% if data.p_type == "chain" %}selected{% endif %}>Chain / Multi-Branch</option>
-                    </select>
+                <div style="margin-top: 1.75rem;">
+                    <button type="submit" class="btn-next">Continue to Plan Selection →</button>
                 </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need inventory tracking?</span>
-                    <label class="toggle"><input type="checkbox" name="p_inventory" {% if data.p_inventory %}checked{% endif %} checked><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need expiry alerts?</span>
-                    <label class="toggle"><input type="checkbox" name="p_expiry" {% if data.p_expiry %}checked{% endif %} checked><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need batch tracking?</span>
-                    <label class="toggle"><input type="checkbox" name="p_batch" {% if data.p_batch %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Billing</div>
-                <div class="q-row">
-                    <span class="q-label">GST-enabled billing?</span>
-                    <label class="toggle"><input type="checkbox" name="p_gst" {% if data.p_gst %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you accept online payments?</span>
-                    <label class="toggle"><input type="checkbox" name="p_online_pay" {% if data.p_online_pay %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Do you need supplier management?</span>
-                    <label class="toggle"><input type="checkbox" name="p_supplier" {% if data.p_supplier %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-
-                <div class="dyn-group-heading">Integration</div>
-                <div class="q-row">
-                    <span class="q-label">Prescription integration from clinic/hospital?</span>
-                    <label class="toggle"><input type="checkbox" name="p_rx_int" {% if data.p_rx_int %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-                <div class="q-row">
-                    <span class="q-label">Stock auto-deduction from prescriptions?</span>
-                    <label class="toggle"><input type="checkbox" name="p_auto_deduct" {% if data.p_auto_deduct %}checked{% endif %}><span class="slider"></span></label>
-                </div>
-            </div>
-
-            <div style="margin-top: 1.75rem;">
-                <button type="submit" class="btn-next">Continue to Plan Selection →</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-    function showQuestions(cat) {
-        document.querySelectorAll('.dyn-section').forEach(s => s.classList.remove('active'));
-        const el = document.getElementById('q-' + cat);
-        if (el) el.classList.add('active');
-    }
+    <script>
+        function showQuestions(cat) {
+            document.querySelectorAll('.dyn-section').forEach(s => s.classList.remove('active'));
+            const el = document.getElementById('q-' + cat);
+            if (el) el.classList.add('active');
+        }
 
-    // Show the correct section on page load
-    const checked = document.querySelector('input[name="category"]:checked');
-    if (checked) showQuestions(checked.value);
-</script>
+        // Show the correct section on page load
+        const checked = document.querySelector('input[name="category"]:checked');
+        if (checked) showQuestions(checked.value);
+    </script>
 </body>
+
 </html>

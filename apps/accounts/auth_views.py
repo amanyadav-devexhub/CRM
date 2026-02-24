@@ -72,34 +72,35 @@ class RegisterView(View):
         return render(request, self.template_name)
 
     def post(self, request):
-        username = request.POST.get("username", "").strip()
         email = request.POST.get("email", "").strip()
-        phone = request.POST.get("phone", "").strip()
         password = request.POST.get("password", "")
         confirm_password = request.POST.get("confirm_password", "")
 
         errors = []
 
-        if not username:
-            errors.append("Username is required.")
         if not email:
             errors.append("Email is required.")
         if not password or len(password) < 8:
             errors.append("Password must be at least 8 characters.")
         if password != confirm_password:
             errors.append("Passwords do not match.")
-        if User.objects.filter(username=username).exists():
-            errors.append("Username already taken.")
         if User.objects.filter(email=email).exists():
             errors.append("Email already registered.")
 
         if errors:
             return render(request, self.template_name, {
                 "errors": errors,
-                "username": username,
                 "email": email,
-                "phone": phone,
             })
+
+        # Auto-generate username from email
+        username = email.split("@")[0]
+        # Ensure uniqueness
+        base_username = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
 
         # Create inactive user
         user = User.objects.create_user(
@@ -114,17 +115,48 @@ class RegisterView(View):
         request.session["otp_created"] = timezone.now().isoformat()
         request.session["otp_email"] = email
 
-        # Send OTP email (console backend in dev)
+        # Send OTP email
+        html_message = f"""
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto;
+                    background: #111827; border-radius: 16px; padding: 32px; color: #f1f5f9;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+                            border-radius: 12px; width: 42px; height: 42px; line-height: 42px;
+                            font-size: 18px; font-weight: 800; color: #fff;">H</div>
+                <h2 style="margin: 8px 0 0; font-size: 20px;
+                           background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+                           -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    HealthCRM</h2>
+            </div>
+            <h1 style="text-align: center; font-size: 22px; margin-bottom: 8px; color: #f1f5f9;">
+                Email Verification</h1>
+            <p style="text-align: center; color: rgba(241,245,249,0.6); font-size: 14px; margin-bottom: 24px;">
+                Use the code below to verify your email address</p>
+            <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+                        border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #3b82f6;">
+                    {otp}</span>
+            </div>
+            <p style="text-align: center; color: rgba(241,245,249,0.5); font-size: 13px;">
+                This code expires in <strong style="color: #10b981;">5 minutes</strong>.</p>
+            <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 24px 0;">
+            <p style="text-align: center; color: rgba(241,245,249,0.35); font-size: 12px;">
+                If you didn't request this, you can safely ignore this email.</p>
+        </div>
+        """
         try:
             send_mail(
                 subject="Your HealthCRM Verification Code",
-                message=f"Your verification code is: {otp}\n\nThis code expires in 5 minutes.",
+                message=f"Your HealthCRM verification code is: {otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, please ignore this email.",
                 from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@healthcrm.com"),
                 recipient_list=[email],
+                html_message=html_message,
                 fail_silently=False,
             )
+            logger.info(f"OTP email sent successfully to {email}")
         except Exception as e:
-            logger.error(f"Failed to send OTP email: {e}")
+            logger.error(f"Failed to send OTP email to {email}: {e}")
+            request.session["otp_email_error"] = True
 
         return redirect("/verify-otp/")
 
@@ -203,16 +235,46 @@ class ResendOTPView(View):
         request.session["otp_code"] = otp
         request.session["otp_created"] = timezone.now().isoformat()
 
+        html_message = f"""
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto;
+                    background: #111827; border-radius: 16px; padding: 32px; color: #f1f5f9;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+                            border-radius: 12px; width: 42px; height: 42px; line-height: 42px;
+                            font-size: 18px; font-weight: 800; color: #fff;">H</div>
+                <h2 style="margin: 8px 0 0; font-size: 20px;
+                           background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+                           -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    HealthCRM</h2>
+            </div>
+            <h1 style="text-align: center; font-size: 22px; margin-bottom: 8px; color: #f1f5f9;">
+                Email Verification</h1>
+            <p style="text-align: center; color: rgba(241,245,249,0.6); font-size: 14px; margin-bottom: 24px;">
+                Here is your new verification code</p>
+            <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+                        border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #3b82f6;">
+                    {otp}</span>
+            </div>
+            <p style="text-align: center; color: rgba(241,245,249,0.5); font-size: 13px;">
+                This code expires in <strong style="color: #10b981;">5 minutes</strong>.</p>
+            <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 24px 0;">
+            <p style="text-align: center; color: rgba(241,245,249,0.35); font-size: 12px;">
+                If you didn't request this, you can safely ignore this email.</p>
+        </div>
+        """
         try:
             send_mail(
                 subject="Your HealthCRM Verification Code",
-                message=f"Your new verification code is: {otp}\n\nThis code expires in 5 minutes.",
+                message=f"Your new HealthCRM verification code is: {otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, please ignore this email.",
                 from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@healthcrm.com"),
                 recipient_list=[email],
+                html_message=html_message,
                 fail_silently=False,
             )
+            logger.info(f"Resend OTP email sent to {email}")
         except Exception as e:
-            logger.error(f"Failed to resend OTP: {e}")
+            logger.error(f"Failed to resend OTP to {email}: {e}")
 
         return redirect("/verify-otp/")
 
@@ -230,17 +292,16 @@ class LoginView(View):
         return render(request, self.template_name)
 
     def post(self, request):
-        username_or_email = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
         password = request.POST.get("password", "")
 
-        # If user entered an email, look up the username
-        username = username_or_email
-        if "@" in username_or_email:
-            try:
-                user_obj = User.objects.get(email=username_or_email)
-                username = user_obj.username
-            except User.DoesNotExist:
-                pass
+        # Look up username from email for Django's authenticate()
+        username = email
+        try:
+            user_obj = User.objects.get(email=email)
+            username = user_obj.username
+        except User.DoesNotExist:
+            pass
 
         user = authenticate(request, username=username, password=password)
 
@@ -254,8 +315,8 @@ class LoginView(View):
             return response
         else:
             return render(request, self.template_name, {
-                "errors": ["Invalid username or password."],
-                "username": username_or_email,
+                "errors": ["Invalid email or password."],
+                "email": email,
             })
 
     def _redirect_by_role(self, user):

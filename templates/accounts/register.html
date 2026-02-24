@@ -238,21 +238,9 @@
                 {% csrf_token %}
 
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="johndoe"
-                        value="{{ username|default:'' }}" required autofocus>
-                </div>
-
-                <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" placeholder="john@clinic.com"
-                        value="{{ email|default:'' }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210"
-                        value="{{ phone|default:'' }}">
+                        value="{{ email|default:'' }}" required autofocus>
                 </div>
 
                 <div class="form-row">
@@ -261,7 +249,7 @@
                         <input type="password" id="password" name="password" placeholder="Min 8 characters" required>
                     </div>
                     <div class="form-group">
-                        <label for="confirm_password">Confirm</label>
+                        <label for="confirm_password">Confirm Password</label>
                         <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter"
                             required>
                     </div>

@@ -35,14 +35,10 @@ class OnboardingStep1View(View):
 
         org_name = request.POST.get("org_name", "").strip()
         category = request.POST.get("category", "CLINIC")
-        org_email = request.POST.get("org_email", "").strip()
-        org_phone = request.POST.get("org_phone", "").strip()
 
         errors = []
         if not org_name:
             errors.append("Organization name is required.")
-        if not org_email:
-            errors.append("Organization email is required.")
 
         # Check subdomain availability
         subdomain = slugify(org_name)
@@ -113,19 +109,17 @@ class OnboardingStep1View(View):
         if errors:
             data = {
                 "org_name": org_name, "category": category,
-                "org_email": org_email, "org_phone": org_phone,
             }
             data.update(setup_answers)
             return render(request, self.template_name, {
                 "errors": errors, "data": data,
             })
 
-        # Save to session
+        # Save to session — use logged-in user's email as org email
         session_data = {
             "org_name": org_name,
             "category": category,
-            "org_email": org_email,
-            "org_phone": org_phone,
+            "org_email": request.user.email,
             "subdomain": subdomain,
             "setup": setup_answers,
         }
@@ -221,7 +215,7 @@ class OnboardingStep3View(View):
                 category=org_data["category"],
                 subdomain=org_data["subdomain"],
                 email=org_data["org_email"],
-                phone=org_data.get("org_phone", ""),
+                phone="",
             )
 
             # 2. Create Client (schema-per-tenant)

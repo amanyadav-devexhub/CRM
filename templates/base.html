@@ -13,23 +13,64 @@
     <style>
         /* Tenant brand color — overridden per category */
         .sidebar-brand .brand-icon {
-            background: {% block brand_gradient %}linear-gradient(135deg, #10b981, #059669){% endblock %};
+            background: {
+                % block brand_gradient %
+            }
+
+            linear-gradient(135deg, #10b981, #059669) {
+                % endblock %
+            }
+
+            ;
         }
 
         .sidebar-brand h2 {
-            background: {% block brand_text_gradient %}linear-gradient(135deg, #34d399, #6ee7b7){% endblock %};
+            background: {
+                % block brand_text_gradient %
+            }
+
+            linear-gradient(135deg, #34d399, #6ee7b7) {
+                % endblock %
+            }
+
+            ;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .nav-item.active {
-            background: {% block nav_active_bg %}rgba(16, 185, 129, 0.12){% endblock %};
-            color: {% block nav_active_color %}var(--accent-green){% endblock %};
+            background: {
+                % block nav_active_bg %
+            }
+
+            rgba(16, 185, 129, 0.12) {
+                % endblock %
+            }
+
+            ;
+
+            color: {
+                % block nav_active_color %
+            }
+
+            var(--accent-green) {
+                % endblock %
+            }
+
+            ;
         }
 
         .nav-item .badge {
-            background: {% block badge_bg %}var(--accent-green){% endblock %};
+            background: {
+                % block badge_bg %
+            }
+
+            var(--accent-green) {
+                % endblock %
+            }
+
+            ;
         }
 
         .nav-item.locked {
@@ -198,10 +239,13 @@
                         <span class="material-icons-round">notifications</span>
                     </a>
                     <div class="user-pill">
-                        <div class="user-avatar" style="background: {% block user_avatar_gradient %}var(--gradient-green){% endblock %};">{% firstof request.user.username.0 'S' %}</div>
+                        <div class="user-avatar"
+                            style="background: {% block user_avatar_gradient %}var(--gradient-green){% endblock %};">{%
+                            firstof request.user.email.0 'S' %}</div>
                         <div class="user-info">
-                            <div class="name">{{ request.user.username|default:'Staff' }}</div>
-                            <div class="role">{% if request.user.is_superuser %}Admin View{% else %}Sub Admin{% endif %}</div>
+                            <div class="name">{{ request.user.email|default:'Staff' }}</div>
+                            <div class="role">{% if request.user.is_superuser %}Admin View{% else %}Sub Admin{% endif %}
+                            </div>
                         </div>
                     </div>
                     <a href="/logout/" class="topbar-btn" title="Logout" style="text-decoration:none;">

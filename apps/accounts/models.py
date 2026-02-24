@@ -87,5 +87,5 @@ class User(AbstractUser):
 
     def __str__(self):
         if self.tenant:
-            return f"{self.username} ({self.tenant.name})"
-        return f"{self.username} (Platform Admin)"
+            return f"{self.email} ({self.tenant.name})"
+        return f"{self.email} (Platform Admin)"
