@@ -4,8 +4,7 @@ URL configuration for config project.
 
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth import views as auth_views
-from apps.tenants.views import AdminDashboardView, SubAdminDashboardView
+from apps.tenants.views import AdminDashboardView, SubAdminDashboardView, ClinicSettingsView
 from apps.patients.template_views import (
     PatientListView, PatientDetailView,
     PatientCreateView, PatientEditView, PatientDeleteView,
@@ -33,6 +32,24 @@ from apps.accounts.jwt_views import (
 )
 from apps.accounts.onboarding_views import (
     OnboardingStep1View, OnboardingStep2View, OnboardingStep3View,
+)
+from apps.accounts.staff_views import (
+    StaffListView, StaffCreateView, StaffEditView, StaffDeleteView,
+    DoctorListView,
+)
+from apps.appointments.views import (
+    AppointmentListView, AppointmentCreateView, AppointmentDetailView,
+)
+from apps.billing.views import (
+    BillingListView, BillingCreateView, BillingDetailView,
+)
+from apps.clinical.views import (
+    ClinicalNoteListView, ClinicalNoteCreateView, 
+    PrescriptionListView, PrescriptionCreateView,
+)
+from apps.analytics.views import (
+    AnalyticsDashboardView, RevenueAnalyticsView,
+    AppointmentAnalyticsView, DoctorAnalyticsView,
 )
 
 urlpatterns = [
@@ -85,6 +102,39 @@ urlpatterns = [
 
     # ── Sub-Admin Dashboard (Tenant / Clinic) ──
     path("dashboard/", SubAdminDashboardView.as_view(), name="dashboard"),
+    path("dashboard/settings/", ClinicSettingsView.as_view(), name="clinic-settings"),
+
+    # ── Staff / Employee CRUD ──
+    path("dashboard/staff/", StaffListView.as_view(), name="staff-list"),
+    path("dashboard/staff/create/", StaffCreateView.as_view(), name="staff-create"),
+    path("dashboard/staff/<uuid:pk>/edit/", StaffEditView.as_view(), name="staff-edit"),
+    path("dashboard/staff/<uuid:pk>/delete/", StaffDeleteView.as_view(), name="staff-delete"),
+
+    # ── Doctors ──
+    path("dashboard/doctors/", DoctorListView.as_view(), name="doctor-list"),
+
+    # ── Appointments ──
+    path("dashboard/appointments/", AppointmentListView.as_view(), name="appointment-list"),
+    path("dashboard/appointments/book/", AppointmentCreateView.as_view(), name="appointment-create"),
+    path("dashboard/appointments/<uuid:pk>/", AppointmentDetailView.as_view(), name="appointment-detail"),
+
+    # ── Billing ──
+    path("dashboard/billing/", BillingListView.as_view(), name="billing-list"),
+    path("dashboard/billing/create/", BillingCreateView.as_view(), name="billing-create"),
+    path("dashboard/billing/<uuid:pk>/", BillingDetailView.as_view(), name="billing-detail"),
+
+    # ── Clinical Notes & Prescriptions ──
+    path("dashboard/clinical/notes/", ClinicalNoteListView.as_view(), name="note-list"),
+    path("dashboard/clinical/notes/create/", ClinicalNoteCreateView.as_view(), name="note-create"),
+    path("dashboard/clinical/prescriptions/", PrescriptionListView.as_view(), name="prescription-list"),
+    path("dashboard/clinical/prescriptions/create/", PrescriptionCreateView.as_view(), name="prescription-create"),
+    path("dashboard/clinical/prescriptions/<uuid:pk>/pdf/", PrescriptionCreateView.as_view(), name="prescription-pdf"), # Placeholder for now
+
+    # ── Analytics & Reports ──
+    path("dashboard/analytics/", AnalyticsDashboardView.as_view(), name="analytics-dashboard"),
+    path("dashboard/analytics/revenue/", RevenueAnalyticsView.as_view(), name="analytics-revenue"),
+    path("dashboard/analytics/appointments/", AppointmentAnalyticsView.as_view(), name="analytics-appointments"),
+    path("dashboard/analytics/doctors/", DoctorAnalyticsView.as_view(), name="analytics-doctors"),
 
     # ── Patient HTML pages ──
     path("patients/", PatientListView.as_view(), name="patient-list"),

@@ -177,3 +177,39 @@ class Feedback(AuditMixin):
 
     def __str__(self):
         return f"{self.patient} — {self.rating}★"
+
+
+# ──────────────────────────────────────────────
+# 5. Automation Rule
+# ──────────────────────────────────────────────
+class AutomationRule(AuditMixin):
+    """
+    Rules for automatically sending messages triggered by events
+    (e.g., Appointment booked, 24h before appointment, 2 days after).
+    """
+    class TriggerEvent(models.TextChoices):
+        APPOINTMENT_BOOKED = "apt_booked", "Appointment Booked"
+        APPOINTMENT_REMINDER = "apt_reminder", "Appointment Reminder"
+        APPOINTMENT_FOLLOWUP = "apt_followup", "Appointment Follow-up"
+        PAYMENT_RECEIVED = "payment_recv", "Payment Received"
+        WELCOME_MESSAGE = "welcome", "Welcome Message (New Patient)"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    trigger_event = models.CharField(max_length=20, choices=TriggerEvent.choices)
+    
+    # E.g. -24 (24 hours before), 0 (immediate), 48 (48 hours after)
+    offset_hours = models.IntegerField(
+        default=0, help_text="Hours before (negative) or after (positive) the event"
+    )
+    
+    template = models.ForeignKey(
+        MessageTemplate, on_delete=models.CASCADE, related_name="automation_rules"
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "automation_rules"
+
+    def __str__(self):
+        return f"{self.name} ({self.get_trigger_event_display()})"

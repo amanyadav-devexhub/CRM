@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block nav_clinical_notes %}active{% endblock %}
+{% block page_title %}Clinical Notes <span>/ {{ total }} total</span>{% endblock %}
+
+{% block content %}
+
+<div class="page-actions">
+    <form method="get" class="filter-bar">
+        <select name="patient" class="filter-input">
+            <option value="">All Patients</option>
+            <option value="{{ patient_id }}" {% if patient_id %}selected{% endif %}>Current Filter</option>
+        </select>
+        <button type="submit" class="btn-filter">
+            <span class="material-icons-round">filter_list</span> Filter
+        </button>
+    </form>
+    <a href="/dashboard/clinical/notes/create/" class="btn-primary">
+        <span class="material-icons-round">edit_note</span> New Note
+    </a>
+</div>
+
+<div class="content-grid">
+    {% for note in notes %}
+    <div class="card note-card">
+        <div class="card-header" style="justify-content:space-between; display:flex;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="avatar">{{ note.patient.first_name.0 }}</div>
+                <div>
+                    <h3 style="margin-bottom:2px;"><a href="/patients/{{ note.patient.pk }}/" style="color:inherit; text-decoration:none;">{{ note.patient.full_name }}</a></h3>
+                    <p style="font-size:.75rem; color:rgba(241,245,249,.45);">Dr. {{ note.doctor.name }} &bull; {{ note.created_at|date:"d M Y" }}</p>
+                </div>
+            </div>
+            <a href="/dashboard/clinical/notes/{{ note.pk }}/edit/" class="btn-icon" title="Edit"><span class="material-icons-round">edit</span></a>
+        </div>
+        <div class="card-body">
+            <div class="soap-section">
+                {% if note.subjective %}<div class="soap-row"><span class="soap-label">S:</span>{{ note.subjective|truncatechars:100 }}</div>{% endif %}
+                {% if note.objective %}<div class="soap-row"><span class="soap-label">O:</span>{{ note.objective|truncatechars:100 }}</div>{% endif %}
+                {% if note.assessment %}<div class="soap-row"><span class="soap-label">A:</span>{{ note.assessment|truncatechars:100 }}</div>{% endif %}
+                {% if note.plan %}<div class="soap-row"><span class="soap-label" style="color:#10b981;">P:</span>{{ note.plan|truncatechars:100 }}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state full-width">
+        <div class="icon material-icons-round">history_edu</div>
+        <p>No clinical notes found. <a href="/dashboard/clinical/notes/create/">Write one</a>.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .page-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .filter-bar { display: flex; gap: .5rem; }
+    .filter-input { padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .8rem; }
+    .filter-input option { background: #111827; }
+    .btn-filter, .btn-icon { padding: .5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.06); color: #f1f5f9; font-size: .8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content:center; gap: .3rem; transition: background .2s;}
+    .btn-icon { width: 32px; height: 32px; padding: 0; color: rgba(241,245,249,.6); border:none; text-decoration:none; }
+    .btn-icon:hover { background: rgba(59,130,246,.1); color: #3b82f6; }
+    .btn-primary { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.25rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; text-decoration: none; }
+    
+    .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.25rem; }
+    .card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; overflow: hidden; display:flex; flex-direction:column; }
+    .card-header { padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .card-body { padding: 1.25rem; flex: 1; display:flex; flex-direction:column; gap:1rem;}
+    
+    .avatar { width: 40px; height: 40px; border-radius: 10px; background: rgba(59,130,246,.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1.1rem; }
+    
+    .soap-section { display: flex; flex-direction: column; gap: .6rem; }
+    .soap-row { font-size: .82rem; color: rgba(241,245,249,.75); display: flex; gap: .5rem; line-height: 1.4; }
+    .soap-label { font-weight: 700; color: rgba(241,245,249,.9); }
+    
+    .empty-state { text-align: center; padding: 4rem 1rem !important; color: rgba(241,245,249,.4); background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; grid-column: 1 / -1; }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; color: rgba(241,245,249,.2); }
+    .empty-state a { color: #3b82f6; text-decoration: none; }
+</style>
+
+{% endblock %}

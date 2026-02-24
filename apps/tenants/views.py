@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 
 from .serializers import TenantCreateSerializer
-from .models import Client, Domain, Tenant, SubscriptionPlan, TenantSubscription, Feature
+from .models import Client, Domain, Tenant, SubscriptionPlan, TenantSubscription, Feature, ClinicSettings
 
 User = get_user_model()
 
@@ -254,3 +254,122 @@ class SubAdminDashboardView(View):
             "test_requests": [],
         }
 
+
+# ──────────────────────────────────────────────
+# Settings — Organization Profile & Preferences
+# ──────────────────────────────────────────────
+class ClinicSettingsView(View):
+    """
+    CRUD for ClinicSettings. Displays Basic Info, Localization, Working Hours.
+    """
+    def get(self, request):
+        tenant = getattr(request.user, "tenant", None)
+        if not tenant:
+            return redirect("/dashboard/")
+
+        # Attempt to get or create settings
+        settings_obj, created = ClinicSettings.objects.get_or_create(tenant=tenant)
+
+        context = {
+            "settings": settings_obj,
+            "tenant": tenant,
+        }
+        return render(request, "dashboard/settings.html", context)
+
+    def post(self, request):
+        tenant = getattr(request.user, "tenant", None)
+        if not tenant:
+            return redirect("/dashboard/")
+
+        settings_obj, created = ClinicSettings.objects.get_or_create(tenant=tenant)
+
+        # 1. Basic Info
+        settings_obj.clinic_name = request.POST.get("clinic_name", settings_obj.clinic_name)
+        settings_obj.address = request.POST.get("address", settings_obj.address)
+        settings_obj.contact_phone = request.POST.get("contact_phone", settings_obj.contact_phone)
+        settings_obj.contact_email = request.POST.get("contact_email", settings_obj.contact_email)
+        settings_obj.registration_number = request.POST.get("registration_number", settings_obj.registration_number)
+        settings_obj.gst_number = request.POST.get("gst_number", settings_obj.gst_number)
+
+        # 2. Localization
+        settings_obj.timezone = request.POST.get("timezone", settings_obj.timezone)
+        settings_obj.currency = request.POST.get("currency", settings_obj.currency)
+        settings_obj.language = request.POST.get("language", settings_obj.language)
+        settings_obj.date_format = request.POST.get("date_format", settings_obj.date_format)
+
+        # 3. Working Hours (Construct JSON from form arrays)
+        days = request.POST.getlist("day")
+        start_times = request.POST.getlist("start_time")
+        end_times = request.POST.getlist("end_time")
+
+        working_hours = {}
+        for d, st, et in zip(days, start_times, end_times):
+            working_hours[d] = {"start": st, "end": et}
+        
+        settings_obj.working_hours = working_hours
+        settings_obj.emergency_available = request.POST.get("emergency_available") == "on"
+
+        settings_obj.save()
+
+        # Update actual tenant name too if clinic name changed
+        if "clinic_name" in request.POST:
+            tenant.name = request.POST.get("clinic_name")
+            tenant.save()
+
+        return redirect("/dashboard/settings/")
+
+
+class ClinicSettingsView(View):
+    """GET/POST clinic settings (org setup, localization, working hours)."""
+    template_name = "dashboard/settings.html"
+
+    def get(self, request):
+        tenant = getattr(request.user, "tenant", None)
+        if not tenant:
+            return redirect("/dashboard/")
+        settings_obj, _ = ClinicSettings.objects.get_or_create(tenant=tenant)
+        return render(request, self.template_name, {"settings": settings_obj, "saved": False})
+
+    def post(self, request):
+        import json
+        tenant = getattr(request.user, "tenant", None)
+        if not tenant:
+            return redirect("/dashboard/")
+        settings_obj, _ = ClinicSettings.objects.get_or_create(tenant=tenant)
+
+        # ── Basic Info ──
+        settings_obj.clinic_name = request.POST.get("clinic_name", "").strip()
+        settings_obj.address = request.POST.get("address", "").strip()
+        settings_obj.gst_number = request.POST.get("gst_number", "").strip()
+        settings_obj.registration_number = request.POST.get("registration_number", "").strip()
+        settings_obj.contact_phone = request.POST.get("contact_phone", "").strip()
+        settings_obj.contact_email = request.POST.get("contact_email", "").strip()
+
+        # ── Logo ──
+        if "logo" in request.FILES:
+            settings_obj.logo = request.FILES["logo"]
+
+        # ── Localization ──
+        settings_obj.timezone = request.POST.get("timezone", "Asia/Kolkata")
+        settings_obj.currency = request.POST.get("currency", "INR")
+        settings_obj.language = request.POST.get("language", "en")
+        settings_obj.date_format = request.POST.get("date_format", "DD/MM/YYYY")
+
+        # ── Working Hours (parse JSON from hidden field) ──
+        wh_raw = request.POST.get("working_hours", "{}")
+        try:
+            settings_obj.working_hours = json.loads(wh_raw) if wh_raw else {}
+        except json.JSONDecodeError:
+            settings_obj.working_hours = {}
+
+        # ── Holidays ──
+        holidays_raw = request.POST.get("holidays", "[]")
+        try:
+            settings_obj.holidays = json.loads(holidays_raw) if holidays_raw else []
+        except json.JSONDecodeError:
+            settings_obj.holidays = []
+
+        settings_obj.emergency_available = request.POST.get("emergency_available") == "on"
+
+        settings_obj.save()
+        return render(request, self.template_name, {"settings": settings_obj, "saved": True})

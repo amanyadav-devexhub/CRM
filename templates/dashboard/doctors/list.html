@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block nav_doctors %}active{% endblock %}
+{% block page_title %}Doctors <span>/ {{ total }} registered</span>{% endblock %}
+
+{% block content %}
+
+<!-- ─── Header ─── -->
+<div class="page-actions">
+    <div class="stat-pills">
+        <span class="pill green">{{ active }} Active</span>
+        <span class="pill muted">{{ total }} Total</span>
+    </div>
+    <a href="/dashboard/staff/create/" class="btn-primary">
+        <span class="material-icons-round">person_add</span>
+        Add Doctor
+    </a>
+</div>
+
+<!-- ─── Doctor Cards ─── -->
+<div class="doctor-grid">
+    {% for doc in doctors %}
+    <div class="doctor-card {% if not doc.is_active %}inactive{% endif %}">
+        <div class="doc-header">
+            <div class="doc-avatar">{{ doc.name|first }}</div>
+            <div>
+                <h3>Dr. {{ doc.name }}</h3>
+                <span class="spec-badge">{{ doc.specialization }}</span>
+            </div>
+        </div>
+        <div class="doc-details">
+            <div class="detail-row">
+                <span class="material-icons-round">payments</span>
+                <span>₹{{ doc.consultation_fee }} / consultation</span>
+            </div>
+            {% if doc.follow_up_fee %}
+            <div class="detail-row">
+                <span class="material-icons-round">replay</span>
+                <span>₹{{ doc.follow_up_fee }} / follow-up</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <span class="material-icons-round">{{ doc.tele_consult_enabled|yesno:"videocam,videocam_off" }}</span>
+                <span>Tele-consult: {{ doc.tele_consult_enabled|yesno:"Enabled,Disabled" }}</span>
+            </div>
+            {% if doc.phone %}
+            <div class="detail-row">
+                <span class="material-icons-round">phone</span>
+                <span>{{ doc.phone }}</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <span class="material-icons-round">event_available</span>
+                <span>{{ doc.slots.count }} slot(s) configured</span>
+            </div>
+        </div>
+        <div class="doc-footer">
+            {% if not doc.is_active %}
+            <span class="status inactive-label">Inactive</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state-block">
+        <span class="material-icons-round">medical_services</span>
+        <p>No doctors registered yet.</p>
+        <a href="/dashboard/staff/create/" class="btn-primary" style="margin-top:1rem;">Add Doctor</a>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .page-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .stat-pills { display: flex; gap: .5rem; }
+    .pill { padding: .35rem .8rem; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+    .pill.green { background: rgba(16,185,129,.12); color: #10b981; }
+    .pill.muted { background: rgba(255,255,255,.06); color: rgba(241,245,249,.5); }
+    .btn-primary { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.25rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; text-decoration: none; }
+
+    .doctor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
+
+    .doctor-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.5rem; transition: transform .15s, box-shadow .15s; }
+    .doctor-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.2); }
+    .doctor-card.inactive { opacity: .5; }
+
+    .doc-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+    .doc-avatar { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; background: rgba(16,185,129,.15); color: #10b981; }
+    .doc-header h3 { font-size: 1rem; font-weight: 600; margin-bottom: .2rem; }
+    .spec-badge { font-size: .72rem; padding: .2rem .5rem; border-radius: 5px; background: rgba(59,130,246,.1); color: #60a5fa; font-weight: 500; }
+
+    .doc-details { display: flex; flex-direction: column; gap: .5rem; }
+    .detail-row { display: flex; align-items: center; gap: .6rem; font-size: .825rem; color: rgba(241,245,249,.65); }
+    .detail-row .material-icons-round { font-size: 1rem; color: rgba(241,245,249,.35); }
+
+    .doc-footer { margin-top: 1rem; }
+    .inactive-label { font-size: .75rem; color: #ef4444; font-weight: 500; }
+
+    .empty-state-block { grid-column: 1 / -1; text-align: center; padding: 3rem; color: rgba(241,245,249,.4); }
+    .empty-state-block .material-icons-round { font-size: 3rem; margin-bottom: .5rem; }
+</style>
+
+{% endblock %}

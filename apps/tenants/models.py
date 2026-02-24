@@ -39,19 +39,89 @@ class Tenant(models.Model):
 
     def __str__(self):
         return self.name
-    
-    
+
+
+# ================================
+# CLINIC SETTINGS (Org Configuration)
+# ================================
+
+class ClinicSettings(models.Model):
+    """Per-tenant clinic configuration: branding, localization, working hours."""
+    tenant = models.OneToOneField(
+        "tenants.Tenant",
+        on_delete=models.CASCADE,
+        related_name="clinic_settings",
+    )
+
+    # ── Basic Info ──
+    clinic_name = models.CharField(max_length=255, blank=True)
+    logo = models.ImageField(upload_to="clinic_logos/", blank=True, null=True)
+    address = models.TextField(blank=True)
+    gst_number = models.CharField(max_length=20, blank=True)
+    registration_number = models.CharField(max_length=50, blank=True)
+    contact_phone = models.CharField(max_length=20, blank=True)
+    contact_email = models.EmailField(blank=True)
+
+    # ── Localization ──
+    timezone = models.CharField(max_length=50, default="Asia/Kolkata")
+    currency = models.CharField(max_length=10, default="INR")
+    language = models.CharField(max_length=10, default="en")
+    date_format = models.CharField(max_length=20, default="DD/MM/YYYY")
+
+    # ── Working Hours ──
+    # JSON example: {"mon": {"open": "09:00", "close": "18:00"}, "tue": {...}, ...}
+    working_hours = models.JSONField(default=dict, blank=True)
+    # JSON example: ["2026-01-26", "2026-08-15"]
+    holidays = models.JSONField(default=list, blank=True)
+    emergency_available = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Clinic Settings"
+        verbose_name_plural = "Clinic Settings"
+
+    def __str__(self):
+        return f"Settings for {self.tenant.name}"
+
+
+# ================================
+# SUBSCRIPTION PLANS
+# ================================
+
 class SubscriptionPlan(models.Model):
     PLAN_CHOICES = [
+        ('FREE', 'Free'),
         ('BASIC', 'Basic'),
+        ('GROWTH', 'Growth'),
         ('PRO', 'Pro'),
-        ('ENTERPRISE', 'Enterprise'),
     ]
 
-    name = models.CharField(max_length=50, choices=PLAN_CHOICES)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    max_doctors = models.IntegerField()
+    name = models.CharField(max_length=50, choices=PLAN_CHOICES, unique=True)
+    display_name = models.CharField(max_length=100, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    description = models.TextField(blank=True)
+
+    # ── Resource limits ──
+    max_doctors = models.IntegerField(default=1)
+    max_staff = models.IntegerField(default=2)
+    max_patients = models.IntegerField(default=300)
+    max_appointments_per_month = models.IntegerField(default=150)
+
+    # ── Feature flags ──
+    sms_enabled = models.BooleanField(default=False)
+    whatsapp_enabled = models.BooleanField(default=False)
     ai_enabled = models.BooleanField(default=False)
+    export_enabled = models.BooleanField(default=False)
+    custom_branding = models.BooleanField(default=False)
+    api_access = models.BooleanField(default=False)
+    advanced_reports = models.BooleanField(default=False)
+    pharmacy_addon = models.BooleanField(default=False)
+    lab_addon = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.get_name_display()
 
 
 class TenantSubscription(models.Model):

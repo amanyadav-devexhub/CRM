@@ -243,35 +243,35 @@ JWT_AUTH_SAMESITE = "Lax"
 
 # ── Logging ──────────────────────────────────────────────────────────
 # Show every incoming request (method + path + status) in the terminal
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "formatters": {
-#         "request_fmt": {
-#             "format": "\n🔹 [{asctime}] {message}",
-#             "style": "{",
-#             "datefmt": "%Y-%m-%d %H:%M:%S",
-#         },
-#     },
-#     "handlers": {
-#         "console": {
-#             "class": "logging.StreamHandler",
-#             "formatter": "request_fmt",
-#         },
-#     },
-#     "loggers": {
-#         "django.server": {
-#             "handlers": ["console"],
-#             "level": "INFO",
-#             "propagate": False,
-#         },
-#         "django.request": {
-#             "handlers": ["console"],
-#             "level": "INFO",
-#             "propagate": False,
-#         },
-#     },
-# }
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "request_fmt": {
+            "format": "\n🔹 [{asctime}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "request_fmt",
+        },
+    },
+    "loggers": {
+        "django.server": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
 
 # ──────────────────────────────────────────────
 # Authentication & Email

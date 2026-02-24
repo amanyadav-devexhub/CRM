@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block page_title %}Write Prescription{% endblock %}
+
+{% block content %}
+
+<form method="post" class="crud-form" autocomplete="off">
+    {% csrf_token %}
+
+    <div class="form-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon">prescriptions</span>
+            <div><h3>Prescription Details</h3><p>Patient and Doctor info</p></div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="patient">Patient *</label>
+                <select id="patient" name="patient" required>
+                    <option value="">— Select Patient —</option>
+                    {% for p in patients %}
+                    <option value="{{ p.pk }}" {% if p.pk|stringformat:"s" == selected_patient %}selected{% endif %}>{{ p.full_name }} ({{ p.patient_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="doctor">Doctor *</label>
+                <select id="doctor" name="doctor" required>
+                    <option value="">— Select Doctor —</option>
+                    {% for doc in doctors %}
+                    <option value="{{ doc.pk }}">Dr. {{ doc.name }} ({{ doc.specialization }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon" style="background:rgba(245,158,11,.1);color:#f59e0b;">medication</span>
+            <div><h3>Medicines</h3><p>Add drugs to the prescription</p></div>
+        </div>
+        
+        <div id="medicationItems">
+            <div class="med-row">
+                <div class="med-inputs">
+                    <input type="text" name="medicine_name" placeholder="Medicine Name (e.g. Paracetamol)" class="full" required>
+                    <input type="text" name="dosage" placeholder="Dosage (e.g. 500mg)" required>
+                    <input type="text" name="frequency" placeholder="Freq (e.g. 1-0-1)" required>
+                    <input type="text" name="duration" placeholder="Duration (e.g. 5 days)" required>
+                    <input type="text" name="instructions" placeholder="Instructions (e.g. After food)" class="full">
+                </div>
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()" title="Remove">
+                    <span class="material-icons-round">delete</span>
+                </button>
+            </div>
+        </div>
+        
+        <button type="button" class="add-item-btn" onclick="addMedication()">
+            <span class="material-icons-round">add</span> Add Another Medicine
+        </button>
+    </div>
+
+    <div class="form-section">
+        <div class="form-group full-width">
+            <label for="notes">General Instructions / Notes</label>
+            <textarea id="notes" name="notes" rows="3" placeholder="Dietary restrictions or general advice..."></textarea>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        {% if selected_patient %}
+            <a href="/patients/{{ selected_patient }}/" class="btn-secondary">Cancel</a>
+        {% else %}
+            <a href="javascript:history.back()" class="btn-secondary">Cancel</a>
+        {% endif %}
+        <button type="submit" class="btn-primary">
+            <span class="material-icons-round">print</span> Print & Save Prescription
+        </button>
+    </div>
+</form>
+
+<style>
+    .crud-form { max-width: 900px; }
+    .form-section { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; }
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .section-icon { font-size: 1.5rem; padding: .5rem; border-radius: 10px; background: rgba(59,130,246,.1); color: #3b82f6; }
+    .section-header h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .1rem; }
+    .section-header p { font-size: .78rem; color: rgba(241,245,249,.45); }
+    
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.15rem; }
+    .form-group label { display: block; font-size: .85rem; font-weight: 600; color: rgba(241,245,249,.7); margin-bottom: .35rem; }
+    .form-group select, .form-group textarea { width: 100%; padding: .65rem .85rem; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .85rem; font-family: inherit; }
+    .form-group select option { background: #111827; }
+    .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #3b82f6; }
+    
+    .med-row { display: flex; gap: 1rem; align-items: stretch; margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05); border-radius: 12px; position: relative; }
+    .med-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; width: 100%; }
+    .med-inputs .full { grid-column: 1 / -1; }
+    .med-inputs input { width: 100%; padding: .6rem .8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .85rem; }
+    .med-inputs input:focus { outline: none; border-color: #f59e0b; }
+    
+    .remove-btn { background: rgba(239,68,68,.1); color: #ef4444; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0 .75rem; transition: background .2s; }
+    .remove-btn:hover { background: rgba(239,68,68,.2); }
+    
+    .add-item-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.25rem; border-radius: 8px; border: 1px dashed rgba(255,255,255,.2); background: transparent; color: rgba(241,245,249,.7); font-size: .85rem; cursor: pointer; transition: all .2s; width: 100%; justify-content: center; }
+    .add-item-btn:hover { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,.05); }
+
+    .form-actions { display: flex; justify-content: flex-end; gap: .75rem; }
+    .btn-primary { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; border: none; cursor: pointer; }
+    .btn-secondary { padding: .65rem 1.25rem; border-radius: 10px; background: rgba(255,255,255,.06); color: rgba(241,245,249,.7); font-size: .875rem; text-decoration: none; border: 1px solid rgba(255,255,255,.08); }
+</style>
+
+<script>
+function addMedication() {
+    const container = document.getElementById('medicationItems');
+    const row = document.createElement('div');
+    row.className = 'med-row';
+    row.innerHTML = `
+        <div class="med-inputs">
+            <input type="text" name="medicine_name" placeholder="Medicine Name" class="full" required>
+            <input type="text" name="dosage" placeholder="Dosage" required>
+            <input type="text" name="frequency" placeholder="Freq" required>
+            <input type="text" name="duration" placeholder="Duration" required>
+            <input type="text" name="instructions" placeholder="Instructions" class="full">
+        </div>
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()" title="Remove">
+            <span class="material-icons-round">delete</span>
+        </button>
+    `;
+    container.appendChild(row);
+}
+</script>
+
+{% endblock %}

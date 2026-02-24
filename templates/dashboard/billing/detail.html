@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block nav_billing %}active{% endblock %}
+{% block page_title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+
+<div class="detail-grid">
+    <div class="detail-card">
+        <div class="card-header">
+            <span class="material-icons-round">receipt</span>
+            <div>
+                <h3>{{ invoice.invoice_number }}</h3>
+                <span class="status-pill {{ invoice.status|lower }}">{{ invoice.get_status_display }}</span>
+            </div>
+        </div>
+        <div class="detail-rows">
+            <div class="row"><span class="label">Patient</span><span>{{ invoice.patient.full_name|default:"—" }}</span></div>
+            <div class="row"><span class="label">Created</span><span>{{ invoice.created_at|date:"d M Y h:i A" }}</span></div>
+            {% if invoice.notes %}<div class="row"><span class="label">Notes</span><span>{{ invoice.notes }}</span></div>{% endif %}
+        </div>
+
+        <h4 style="margin:1.25rem 0 .75rem; font-size:.9rem;">Line Items</h4>
+        <table class="items-table">
+            <thead><tr><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for item in items %}
+                <tr><td>{{ item.description }}</td><td>{{ item.quantity }}</td><td>₹{{ item.unit_price }}</td><td>₹{{ item.total }}</td></tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><td colspan="3" style="text-align:right;font-weight:600;">Subtotal</td><td>₹{{ invoice.subtotal }}</td></tr>
+                {% if invoice.tax_amount %}<tr><td colspan="3" style="text-align:right;">Tax</td><td>₹{{ invoice.tax_amount }}</td></tr>{% endif %}
+                {% if invoice.discount %}<tr><td colspan="3" style="text-align:right;">Discount</td><td>-₹{{ invoice.discount }}</td></tr>{% endif %}
+                <tr class="grand"><td colspan="3" style="text-align:right;font-weight:700;">Grand Total</td><td style="font-weight:700;font-size:1.05rem;">₹{{ invoice.grand_total }}</td></tr>
+            </tfoot>
+        </table>
+
+        {% if payments %}
+        <h4 style="margin:1.25rem 0 .75rem; font-size:.9rem;">Payments Received</h4>
+        {% for pay in payments %}
+        <div class="pay-row">
+            <span>₹{{ pay.amount }} via {{ pay.get_method_display }}</span>
+            <span class="time-text">{{ pay.paid_at|date:"d M Y h:i A" }}</span>
+        </div>
+        {% endfor %}
+        <div class="pay-summary">
+            Paid: <strong>₹{{ paid_total }}</strong> / ₹{{ invoice.grand_total }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if invoice.status != "PAID" and invoice.status != "CANCELLED" %}
+    <div class="detail-card">
+        <div class="card-header">
+            <span class="material-icons-round">payments</span>
+            <h3>Collect Payment</h3>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="pay">
+            <div class="pay-form">
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" name="amount" step="0.01" min="0" required value="{{ invoice.grand_total }}">
+                </div>
+                <div class="form-group">
+                    <label>Method</label>
+                    <select name="method">
+                        {% for code, label in methods %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Reference</label>
+                    <input type="text" name="transaction_ref" placeholder="Transaction ID">
+                </div>
+                <button type="submit" class="action-btn green">
+                    <span class="material-icons-round">check_circle</span> Record Payment
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<div style="margin-top:1rem;">
+    <a href="/dashboard/billing/" class="btn-back">
+        <span class="material-icons-round">arrow_back</span> Back to Billing
+    </a>
+</div>
+
+<style>
+    .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
+    @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
+    .detail-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.5rem; }
+    .card-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+    .card-header .material-icons-round { color: #3b82f6; }
+    .card-header h3 { font-size: 1rem; font-weight: 600; }
+    .detail-rows { display: flex; flex-direction: column; gap: .5rem; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: .35rem 0; border-bottom: 1px solid rgba(255,255,255,.03); font-size: .84rem; }
+    .row .label { color: rgba(241,245,249,.45); font-weight: 500; }
+    .status-pill { padding: .2rem .5rem; border-radius: 5px; font-size: .72rem; font-weight: 600; margin-left: .5rem; }
+    .status-pill.draft { background: rgba(255,255,255,.08); color: rgba(241,245,249,.5); }
+    .status-pill.paid { background: rgba(16,185,129,.12); color: #10b981; }
+    .status-pill.partially_paid { background: rgba(245,158,11,.1); color: #f59e0b; }
+    .items-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .items-table th { text-align: left; padding: .5rem; color: rgba(241,245,249,.4); font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .items-table td { padding: .4rem .5rem; border-bottom: 1px solid rgba(255,255,255,.03); }
+    .items-table .grand td { border-top: 2px solid rgba(255,255,255,.08); }
+    .pay-row { display: flex; justify-content: space-between; padding: .4rem 0; font-size: .82rem; border-bottom: 1px solid rgba(255,255,255,.03); }
+    .time-text { color: rgba(241,245,249,.4); font-size: .75rem; }
+    .pay-summary { margin-top: .5rem; font-size: .85rem; color: #10b981; }
+    .pay-form { display: flex; flex-direction: column; gap: .75rem; }
+    .form-group label { display: block; font-size: .8rem; color: rgba(241,245,249,.55); margin-bottom: .3rem; }
+    .form-group input, .form-group select { width: 100%; padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .82rem; }
+    .form-group select option { background: #111827; }
+    .action-btn { width: 100%; padding: .6rem; border-radius: 10px; border: none; cursor: pointer; font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: .5rem; justify-content: center; }
+    .action-btn.green { background: rgba(16,185,129,.12); color: #10b981; }
+    .action-btn.green:hover { background: rgba(16,185,129,.2); }
+    .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: rgba(241,245,249,.5); text-decoration: none; }
+    .btn-back:hover { color: #3b82f6; }
+</style>
+
+{% endblock %}

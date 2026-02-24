@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block nav_appointments %}active{% endblock %}
+{% block page_title %}Appointments <span>/ {{ total }} total</span>{% endblock %}
+
+{% block content %}
+
+<!-- ─── Filters ─── -->
+<div class="page-actions">
+    <form method="get" class="filter-bar">
+        <input type="date" name="date" value="{{ selected_date }}" class="filter-input">
+        <select name="status" class="filter-input">
+            <option value="">All Status</option>
+            {% for code, label in status_choices %}
+            <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="doctor" class="filter-input">
+            <option value="">All Doctors</option>
+            {% for doc in doctors %}
+            <option value="{{ doc.pk }}">Dr. {{ doc.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-filter">
+            <span class="material-icons-round">filter_list</span> Filter
+        </button>
+    </form>
+    <a href="/dashboard/appointments/book/" class="btn-primary">
+        <span class="material-icons-round">add_circle</span>
+        Book Appointment
+    </a>
+</div>
+
+<!-- ─── Appointments Table ─── -->
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Fee</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for apt in appointments %}
+            <tr>
+                <td>
+                    <span class="name">{{ apt.display_name }}</span>
+                </td>
+                <td>Dr. {{ apt.doctor.name }}</td>
+                <td>{{ apt.appointment_date|date:"d M Y" }} <span class="time-text">{{ apt.appointment_time|time:"h:i A" }}</span></td>
+                <td><span class="type-pill {{ apt.appointment_type|lower }}">{{ apt.get_appointment_type_display }}</span></td>
+                <td><span class="status-pill {{ apt.status|lower }}">{{ apt.get_status_display }}</span></td>
+                <td>₹{{ apt.fee }}</td>
+                <td>
+                    <a href="/dashboard/appointments/{{ apt.pk }}/" class="btn-icon" title="View">
+                        <span class="material-icons-round">visibility</span>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <span class="material-icons-round">event_busy</span>
+                    <p>No appointments found. <a href="/dashboard/appointments/book/">Book one now</a>.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .page-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .filter-input { padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .8rem; font-family: inherit; }
+    .filter-input:focus { outline: none; border-color: #3b82f6; }
+    .filter-input option { background: #111827; }
+    .btn-filter { padding: .5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.06); color: #f1f5f9; font-size: .8rem; cursor: pointer; display: inline-flex; align-items: center; gap: .3rem; }
+    .btn-primary { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.25rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; text-decoration: none; }
+
+    .table-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { padding: .75rem 1rem; text-align: left; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: rgba(241,245,249,.4); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .data-table td { padding: .65rem 1rem; font-size: .84rem; border-bottom: 1px solid rgba(255,255,255,.03); }
+    .data-table tr:hover { background: rgba(255,255,255,.02); }
+    .name { font-weight: 500; }
+    .time-text { color: rgba(241,245,249,.45); font-size: .78rem; }
+
+    .type-pill, .status-pill { padding: .2rem .5rem; border-radius: 5px; font-size: .72rem; font-weight: 600; }
+    .type-pill.scheduled { background: rgba(59,130,246,.12); color: #60a5fa; }
+    .type-pill.walk_in { background: rgba(245,158,11,.12); color: #f59e0b; }
+    .type-pill.tele_consult { background: rgba(139,92,246,.12); color: #8b5cf6; }
+    .status-pill.scheduled { background: rgba(59,130,246,.1); color: #60a5fa; }
+    .status-pill.confirmed { background: rgba(16,185,129,.1); color: #10b981; }
+    .status-pill.in_progress { background: rgba(245,158,11,.1); color: #f59e0b; }
+    .status-pill.completed { background: rgba(16,185,129,.15); color: #10b981; }
+    .status-pill.cancelled { background: rgba(239,68,68,.1); color: #ef4444; }
+    .status-pill.no_show { background: rgba(239,68,68,.15); color: #ef4444; }
+
+    .btn-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: rgba(241,245,249,.6); text-decoration: none; }
+    .btn-icon:hover { background: rgba(59,130,246,.1); color: #3b82f6; }
+    .empty-state { text-align: center; padding: 3rem !important; color: rgba(241,245,249,.4); }
+    .empty-state .material-icons-round { font-size: 2.5rem; margin-bottom: .5rem; display: block; }
+    .empty-state a { color: #3b82f6; text-decoration: none; }
+</style>
+
+{% endblock %}

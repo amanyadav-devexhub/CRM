@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block nav_billing %}active{% endblock %}
+{% block page_title %}New Invoice{% endblock %}
+
+{% block content %}
+
+<form method="post" class="crud-form">
+    {% csrf_token %}
+
+    <div class="form-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon">receipt</span>
+            <div><h3>Invoice Details</h3><p>Select patient and add line items</p></div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="patient">Patient</label>
+                <select id="patient" name="patient">
+                    <option value="">— Select Patient —</option>
+                    {% for p in patients %}
+                    <option value="{{ p.pk }}">{{ p.full_name }} ({{ p.patient_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group full-width">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="Invoice notes..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon" style="background:rgba(16,185,129,.1);color:#10b981;">list_alt</span>
+            <div><h3>Line Items</h3><p>Add services and charges</p></div>
+        </div>
+        <div id="lineItems">
+            <div class="line-item-row">
+                <input type="text" name="item_desc" placeholder="Description" class="line-desc" required>
+                <input type="number" name="item_qty" value="1" min="1" class="line-qty">
+                <input type="number" name="item_price" step="0.01" min="0" placeholder="Price" class="line-price" required>
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()" title="Remove">×</button>
+            </div>
+        </div>
+        <button type="button" class="add-item-btn" onclick="addLineItem()">
+            <span class="material-icons-round">add</span> Add Item
+        </button>
+    </div>
+
+    <div class="form-actions">
+        <a href="/dashboard/billing/" class="btn-secondary">Cancel</a>
+        <button type="submit" class="btn-primary">
+            <span class="material-icons-round">receipt</span> Create Invoice
+        </button>
+    </div>
+</form>
+
+<style>
+    .crud-form { max-width: 800px; }
+    .form-section { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; }
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .section-icon { font-size: 1.5rem; padding: .5rem; border-radius: 10px; background: rgba(59,130,246,.1); color: #3b82f6; }
+    .section-header h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .1rem; }
+    .section-header p { font-size: .78rem; color: rgba(241,245,249,.45); }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.15rem; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 500; color: rgba(241,245,249,.55); margin-bottom: .35rem; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: .6rem .85rem; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .85rem; font-family: inherit; }
+    .form-group select option { background: #111827; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #3b82f6; }
+    .form-group textarea { resize: vertical; }
+
+    .line-item-row { display: grid; grid-template-columns: 3fr 1fr 1.5fr auto; gap: .5rem; margin-bottom: .5rem; align-items: center; }
+    .line-item-row input { padding: .55rem .75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .82rem; font-family: inherit; }
+    .line-item-row input:focus { outline: none; border-color: #3b82f6; }
+    .remove-btn { width: 30px; height: 30px; border-radius: 6px; border: none; background: rgba(239,68,68,.1); color: #ef4444; cursor: pointer; font-size: 1.1rem; }
+    .add-item-btn { display: inline-flex; align-items: center; gap: .3rem; padding: .5rem 1rem; border-radius: 8px; border: 1px dashed rgba(255,255,255,.15); background: transparent; color: rgba(241,245,249,.5); font-size: .82rem; cursor: pointer; margin-top: .5rem; }
+    .add-item-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+
+    .form-actions { display: flex; justify-content: flex-end; gap: .75rem; }
+    .btn-primary { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; border: none; cursor: pointer; }
+    .btn-secondary { padding: .65rem 1.25rem; border-radius: 10px; background: rgba(255,255,255,.06); color: rgba(241,245,249,.7); font-size: .875rem; text-decoration: none; border: 1px solid rgba(255,255,255,.08); }
+</style>
+
+<script>
+function addLineItem() {
+    const container = document.getElementById('lineItems');
+    const row = document.createElement('div');
+    row.className = 'line-item-row';
+    row.innerHTML = `
+        <input type="text" name="item_desc" placeholder="Description" class="line-desc" required>
+        <input type="number" name="item_qty" value="1" min="1" class="line-qty">
+        <input type="number" name="item_price" step="0.01" min="0" placeholder="Price" class="line-price" required>
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()" title="Remove">×</button>
+    `;
+    container.appendChild(row);
+}
+</script>
+
+{% endblock %}
