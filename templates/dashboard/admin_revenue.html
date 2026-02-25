@@ -1,0 +1,193 @@
+{% extends "base_admin.html" %}
+
+{% block nav_revenue %}active{% endblock %}
+{% block page_title %}Revenue <span>/ Financial Overview</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .revenue-hero {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+    .revenue-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08));
+        pointer-events: none;
+    }
+    .mrr-label {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+    .mrr-value {
+        font-size: 56px;
+        font-weight: 900;
+        background: linear-gradient(135deg, #818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1.1;
+    }
+    .mrr-sub {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-top: 8px;
+    }
+    .revenue-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .rev-stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        text-align: center;
+    }
+    .rev-stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+    .rev-stat-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .plan-revenue-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: transform 0.2s;
+    }
+    .plan-revenue-card:hover {
+        transform: translateY(-2px);
+    }
+    .plan-revenue-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .plan-revenue-info { flex: 1; }
+    .plan-revenue-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .plan-revenue-detail {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+    .plan-revenue-amount {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--accent-green);
+        text-align: right;
+    }
+    .plan-revenue-per {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- MRR Hero -->
+<div class="revenue-hero">
+    <div class="mrr-label">Monthly Recurring Revenue (MRR)</div>
+    <div class="mrr-value">₹{{ total_mrr|floatformat:0 }}</div>
+    <div class="mrr-sub">Based on {{ active_subs }} active subscription{{ active_subs|pluralize }}</div>
+</div>
+
+<!-- Quick Stats -->
+<div class="revenue-stats">
+    <div class="rev-stat">
+        <div class="rev-stat-value" style="color:var(--accent-blue);">{{ total_subs }}</div>
+        <div class="rev-stat-label">Total Subscriptions</div>
+    </div>
+    <div class="rev-stat">
+        <div class="rev-stat-value" style="color:var(--accent-green);">{{ active_subs }}</div>
+        <div class="rev-stat-label">Active / Trial</div>
+    </div>
+    <div class="rev-stat">
+        <div class="rev-stat-value" style="color:var(--accent-red);">{{ churned }}</div>
+        <div class="rev-stat-label">Churned</div>
+    </div>
+</div>
+
+<!-- Revenue by Plan -->
+<div class="card">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round">payments</span>
+            Revenue Breakdown by Plan
+        </h3>
+    </div>
+    <div class="card-body">
+        {% if revenue_data %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            {% for item in revenue_data %}
+            <div class="plan-revenue-card">
+                <div class="plan-revenue-icon" style="background:
+                    {% if item.plan.name == 'FREE' %}rgba(16,185,129,0.12)
+                    {% elif item.plan.name == 'BASIC' %}rgba(59,130,246,0.12)
+                    {% elif item.plan.name == 'GROWTH' %}rgba(168,85,247,0.12)
+                    {% else %}rgba(249,115,22,0.12){% endif %};">
+                    <span class="material-icons-round" style="font-size:24px; color:
+                        {% if item.plan.name == 'FREE' %}var(--accent-green)
+                        {% elif item.plan.name == 'BASIC' %}var(--accent-blue)
+                        {% elif item.plan.name == 'GROWTH' %}var(--accent-purple)
+                        {% else %}var(--accent-orange){% endif %};">
+                        {% if item.plan.name == 'FREE' %}volunteer_activism
+                        {% elif item.plan.name == 'BASIC' %}star_outline
+                        {% elif item.plan.name == 'GROWTH' %}trending_up
+                        {% else %}diamond{% endif %}
+                    </span>
+                </div>
+                <div class="plan-revenue-info">
+                    <div class="plan-revenue-name">{{ item.plan.get_name_display }}</div>
+                    <div class="plan-revenue-detail">
+                        ₹{{ item.plan.price|floatformat:0 }}/mo × {{ item.active_subs }} subscriber{{ item.active_subs|pluralize }}
+                    </div>
+                </div>
+                <div>
+                    <div class="plan-revenue-amount">₹{{ item.mrr|floatformat:0 }}</div>
+                    <div class="plan-revenue-per">per month</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">payments</div>
+            <p>No revenue data. Create plans and subscriptions first.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

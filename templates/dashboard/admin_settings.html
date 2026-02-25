@@ -1,0 +1,80 @@
+{% extends "base_admin.html" %}
+
+{% block nav_settings %}active{% endblock %}
+{% block page_title %}Platform Settings{% endblock %}
+
+{% block content %}
+
+<div class="content-grid equal">
+
+    <!-- Platform Overview -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">info</span>
+                Platform Overview
+            </h3>
+        </div>
+        <div class="card-body">
+            <ul class="sub-info">
+                <li>
+                    <span class="label">Platform</span>
+                    <span class="value">HealthCRM</span>
+                </li>
+                <li>
+                    <span class="label">Version</span>
+                    <span class="value">1.0.0</span>
+                </li>
+                <li>
+                    <span class="label">Total Tenants</span>
+                    <span class="value" style="color:var(--accent-blue);">{{ tenant_count }}</span>
+                </li>
+                <li>
+                    <span class="label">Total Features</span>
+                    <span class="value" style="color:var(--accent-green);">{{ feature_count }}</span>
+                </li>
+                <li>
+                    <span class="label">Subscription Plans</span>
+                    <span class="value" style="color:var(--accent-purple);">{{ plan_count }}</span>
+                </li>
+                <li>
+                    <span class="label">Environment</span>
+                    <span class="value" style="color:var(--accent-orange);">Development</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">link</span>
+                Quick Links
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="/admin-tenants/" class="action-btn" style="text-decoration:none;">
+                    <span class="icon material-icons-round">apartment</span>
+                    Manage Tenants
+                </a>
+                <a href="/admin-plans/" class="action-btn" style="text-decoration:none;">
+                    <span class="icon material-icons-round">workspace_premium</span>
+                    Edit Plans
+                </a>
+                <a href="/admin-features/" class="action-btn" style="text-decoration:none;">
+                    <span class="icon material-icons-round">toggle_on</span>
+                    Feature Flags
+                </a>
+                <a href="/admin/" class="action-btn primary" style="text-decoration:none;">
+                    <span class="icon material-icons-round">admin_panel_settings</span>
+                    Django Admin
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

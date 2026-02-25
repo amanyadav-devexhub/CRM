@@ -21,6 +21,17 @@ from apps.accounts.jwt_views import (
 from apps.accounts.onboarding_views import (
     OnboardingStep1View, OnboardingStep2View, OnboardingStep3View,
 )
+from apps.tenants.views import AdminDashboardView
+from apps.tenants.template_views import (
+    CategoryIndexView, CategoryListView,
+    TenantCreatePageView,
+)
+from apps.tenants.admin_views import (
+    AdminTenantListView, AdminSubscriptionListView,
+    AdminPlanListView, AdminFeatureListView, AdminSettingsView,
+    AdminAnalyticsView, AdminRevenueView,
+)
+from apps.notifications.template_views import NotificationCenterView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -55,6 +66,24 @@ urlpatterns = [
     path("onboarding/", OnboardingStep1View.as_view(), name="onboarding-step1"),
     path("onboarding/plan/", OnboardingStep2View.as_view(), name="onboarding-step2"),
     path("onboarding/confirm/", OnboardingStep3View.as_view(), name="onboarding-step3"),
+
+    # ── Admin Dashboard (Platform Owner / SuperAdmin) ──
+    path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path("admin-tenants/", AdminTenantListView.as_view(), name="admin-tenants"),
+    path("admin-subscriptions/", AdminSubscriptionListView.as_view(), name="admin-subscriptions"),
+    path("admin-plans/", AdminPlanListView.as_view(), name="admin-plans"),
+    path("admin-features/", AdminFeatureListView.as_view(), name="admin-features"),
+    path("admin-settings/", AdminSettingsView.as_view(), name="admin-settings"),
+    path("admin-analytics/", AdminAnalyticsView.as_view(), name="admin-analytics"),
+    path("admin-revenue/", AdminRevenueView.as_view(), name="admin-revenue"),
+
+    # ── SuperAdmin: Categories & Tenants ──
+    path("categories/", CategoryIndexView.as_view(), name="category-index"),
+    path("categories/list/<slug:category_slug>/", CategoryListView.as_view(), name="category-list"),
+    path("tenants/create/", TenantCreatePageView.as_view(), name="tenant-create-page"),
+
+    # ── Notifications ──
+    path("notifications/", NotificationCenterView.as_view(), name="notification-center"),
 
     # ── JWT Auth Endpoints ──
     path("api/auth/token/", JWTTokenObtainView.as_view(), name="token-obtain"),

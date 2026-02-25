@@ -1,0 +1,171 @@
+{% extends "base_admin.html" %}
+
+{% block nav_features %}active{% endblock %}
+{% block page_title %}Feature Flags <span>/ Platform Config</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        cursor: pointer;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .toggle-slider {
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,0.08);
+        border-radius: 24px;
+        transition: background 0.3s;
+    }
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+        background: var(--accent-green);
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(20px);
+    }
+    .create-feature-form {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 16px 0;
+    }
+    .create-feature-form input {
+        background: var(--bg-hover);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-primary);
+        padding: 10px 14px;
+        font-size: 13px;
+        outline: none;
+        flex: 1;
+    }
+    .create-feature-form input:focus {
+        border-color: var(--accent-blue);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Create New Feature -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round">add_circle</span>
+            Create New Feature
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post" class="create-feature-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <input type="text" name="code" placeholder="feature_code (e.g. sms_alerts)" required>
+            <input type="text" name="name" placeholder="Display Name (e.g. SMS Alerts)" required>
+            <button type="submit" class="action-btn primary" style="padding:10px 20px; white-space:nowrap;">
+                <span class="material-icons-round" style="font-size:16px;">add</span>
+                Create
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Feature Flags List -->
+<div class="card">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round">toggle_on</span>
+            Feature Flags
+            <span class="badge" style="margin-left:8px;">{{ total }}</span>
+        </h3>
+    </div>
+    <div class="card-body" style="padding:0">
+        {% if feature_data %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Code</th>
+                    <th>Tenants Using</th>
+                    <th>Global Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in feature_data %}
+                <tr>
+                    <td>
+                        <div class="patient-cell">
+                            <div style="width:36px; height:36px; border-radius:8px; display:flex;
+                                        align-items:center; justify-content:center;
+                                        background: {% if item.feature.is_active %}rgba(16,185,129,0.12){% else %}rgba(255,255,255,0.04){% endif %};">
+                                <span class="material-icons-round" style="font-size:18px;
+                                    color: {% if item.feature.is_active %}var(--accent-green){% else %}var(--text-muted){% endif %};">
+                                    {% if item.feature.is_active %}toggle_on{% else %}toggle_off{% endif %}
+                                </span>
+                            </div>
+                            <div>
+                                <div class="patient-name">{{ item.feature.name }}</div>
+                                <div class="patient-id">Created {{ item.feature.created_at|date:"d M Y" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><code style="color:var(--accent-cyan); font-size:12px;">{{ item.feature.code }}</code></td>
+                    <td>
+                        <span class="badge-tag active">{{ item.tenant_count }} tenant{{ item.tenant_count|pluralize }}</span>
+                    </td>
+                    <td>
+                        <form method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle">
+                            <input type="hidden" name="feature_id" value="{{ item.feature.pk }}">
+                            <button type="submit" style="background:none; border:none; cursor:pointer;">
+                                <label class="toggle-switch" style="pointer-events:none;">
+                                    <input type="checkbox" {% if item.feature.is_active %}checked{% endif %}>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="post" style="display:inline;"
+                            onsubmit="return confirm('Delete {{ item.feature.name }}?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="feature_id" value="{{ item.feature.pk }}">
+                            <button type="submit" class="action-btn" title="Delete"
+                                style="padding:6px 10px; font-size:12px; color:var(--accent-red);">
+                                <span class="material-icons-round" style="font-size:16px;">delete</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">flag</div>
+            <p>No feature flags configured. Create one above.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base_admin.html" %}
+
+{% block nav_tenants %}active{% endblock %}
+{% block page_title %}All Tenants <span>/ Management</span>{% endblock %}
+
+{% block content %}
+
+<!-- Search Bar -->
+<div class="card" style="margin-bottom: 20px; padding: 16px 20px;">
+    <form method="get" style="display:flex; gap:12px; align-items:center;">
+        <span class="material-icons-round" style="color:var(--text-muted);">search</span>
+        <input type="text" name="q" value="{{ search_query }}"
+            placeholder="Search tenants by name or subdomain…"
+            style="flex:1; background:transparent; border:none; color:var(--text-primary);
+                   font-size:14px; outline:none;">
+        <button type="submit" class="action-btn primary"
+            style="padding:8px 20px; font-size:13px;">Search</button>
+        {% if search_query %}
+        <a href="/admin-tenants/" class="action-btn" style="padding:8px 16px; font-size:13px; text-decoration:none;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Tenants Table -->
+<div class="card">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round">apartment</span>
+            All Tenants
+            <span class="badge" style="margin-left:8px;">{{ total }}</span>
+        </h3>
+    </div>
+    <div class="card-body" style="padding:0">
+        {% if tenant_data %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Category</th>
+                    <th>Subdomain</th>
+                    <th>Plan</th>
+                    <th>Sub Status</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tenant_data %}
+                <tr>
+                    <td>
+                        <div class="patient-cell">
+                            <div class="tenant-type-icon
+                                {% if item.tenant.category == 'CLINIC' %}clinic
+                                {% elif item.tenant.category == 'PHARMACY' %}pharmacy
+                                {% else %}hospital{% endif %}">
+                                <span class="material-icons-round" style="font-size:16px">
+                                    {% if item.tenant.category == 'CLINIC' %}local_hospital
+                                    {% elif item.tenant.category == 'PHARMACY' %}medication
+                                    {% elif item.tenant.category == 'LAB' %}biotech
+                                    {% else %}domain{% endif %}
+                                </span>
+                            </div>
+                            <div>
+                                <div class="patient-name">{{ item.tenant.name }}</div>
+                                <div class="patient-id">{{ item.tenant.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge-tag active">{{ item.tenant.category }}</span>
+                    </td>
+                    <td>
+                        <code style="color:var(--accent-cyan); font-size:12px;">{{ item.tenant.subdomain }}</code>
+                    </td>
+                    <td>{{ item.plan_name }}</td>
+                    <td>
+                        <span class="badge-tag
+                            {% if item.sub_status == 'ACTIVE' %}active
+                            {% elif item.sub_status == 'TRIAL' %}trial
+                            {% else %}expired{% endif %}">
+                            {{ item.sub_status }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge-tag {% if item.tenant.is_active %}active{% else %}expired{% endif %}">
+                            {% if item.tenant.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td>{{ item.tenant.created_at|date:"d M Y" }}</td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="tenant_id" value="{{ item.tenant.pk }}">
+                                {% if item.tenant.is_active %}
+                                <button type="submit" name="action" value="deactivate"
+                                    class="action-btn" title="Deactivate"
+                                    style="padding:6px 10px; font-size:12px; color:var(--accent-orange);">
+                                    <span class="material-icons-round" style="font-size:16px;">pause_circle</span>
+                                </button>
+                                {% else %}
+                                <button type="submit" name="action" value="activate"
+                                    class="action-btn" title="Activate"
+                                    style="padding:6px 10px; font-size:12px; color:var(--accent-green);">
+                                    <span class="material-icons-round" style="font-size:16px;">play_circle</span>
+                                </button>
+                                {% endif %}
+                            </form>
+                            <form method="post" style="display:inline;"
+                                onsubmit="return confirm('Delete {{ item.tenant.name }}? This cannot be undone.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="tenant_id" value="{{ item.tenant.pk }}">
+                                <button type="submit" name="action" value="delete"
+                                    class="action-btn" title="Delete"
+                                    style="padding:6px 10px; font-size:12px; color:var(--accent-red);">
+                                    <span class="material-icons-round" style="font-size:16px;">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">domain_disabled</div>
+            <p>No tenants found{% if search_query %} matching "{{ search_query }}"{% endif %}.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

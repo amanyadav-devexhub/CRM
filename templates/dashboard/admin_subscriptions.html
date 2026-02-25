@@ -1,0 +1,107 @@
+{% extends "base_admin.html" %}
+
+{% block nav_subscriptions %}active{% endblock %}
+{% block page_title %}Subscriptions <span>/ Management</span>{% endblock %}
+
+{% block content %}
+
+<!-- Stats Row -->
+<div class="stats-grid">
+    <div class="stat-card blue animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Total Subscriptions</div>
+            <div class="stat-value" data-target="{{ total }}">0</div>
+        </div>
+        <div class="stat-icon blue">
+            <span class="material-icons-round">credit_card</span>
+        </div>
+    </div>
+</div>
+
+<!-- Subscriptions Table -->
+<div class="card">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round">credit_card</span>
+            All Subscriptions
+        </h3>
+    </div>
+    <div class="card-body" style="padding:0">
+        {% if subscriptions %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Tenant</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Trial</th>
+                    <th>Change Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in subscriptions %}
+                <tr>
+                    <td>
+                        <div class="patient-cell">
+                            <div class="tenant-type-icon clinic">
+                                <span class="material-icons-round" style="font-size:16px">apartment</span>
+                            </div>
+                            <div>
+                                <div class="patient-name">{{ sub.tenant.name }}</div>
+                                <div class="patient-id">{{ sub.tenant.subdomain }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge-tag active">{{ sub.plan.get_name_display }}</span></td>
+                    <td>
+                        <span class="badge-tag
+                            {% if sub.status == 'ACTIVE' %}active
+                            {% elif sub.status == 'TRIAL' %}trial
+                            {% else %}expired{% endif %}">
+                            {{ sub.status }}
+                        </span>
+                    </td>
+                    <td>{{ sub.start_date|date:"d M Y" }}</td>
+                    <td>{{ sub.end_date|date:"d M Y" }}</td>
+                    <td>
+                        {% if sub.trial %}
+                        <span class="material-icons-round" style="color:var(--accent-green); font-size:18px;">check_circle</span>
+                        {% else %}
+                        <span class="material-icons-round" style="color:var(--text-muted); font-size:18px;">cancel</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" style="display:flex; gap:6px; align-items:center;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="change_status">
+                            <input type="hidden" name="sub_id" value="{{ sub.pk }}">
+                            <select name="new_status"
+                                style="background:var(--bg-card); color:var(--text-primary);
+                                       border:1px solid var(--border); border-radius:8px;
+                                       padding:6px 10px; font-size:12px; outline:none;">
+                                {% for s in status_choices %}
+                                <option value="{{ s }}" {% if s == sub.status %}selected{% endif %}>{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="action-btn primary"
+                                style="padding:6px 12px; font-size:12px;">
+                                <span class="material-icons-round" style="font-size:14px;">save</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">credit_card_off</div>
+            <p>No subscriptions found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

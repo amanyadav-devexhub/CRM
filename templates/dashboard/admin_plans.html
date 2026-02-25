@@ -1,0 +1,144 @@
+{% extends "base_admin.html" %}
+
+{% block nav_plans %}active{% endblock %}
+{% block page_title %}Plans & Pricing <span>/ Management</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plan-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    .plan-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .plan-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    .plan-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    .plan-price {
+        font-size: 28px;
+        font-weight: 800;
+        background: var(--gradient-blue);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 16px;
+    }
+    .plan-price.free {
+        background: var(--gradient-green);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .plan-limits {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+    }
+    .plan-limits li {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    .plan-limits li .limit-val {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+    .edit-input {
+        background: var(--bg-hover);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-primary);
+        padding: 6px 10px;
+        font-size: 13px;
+        width: 80px;
+        text-align: right;
+        outline: none;
+    }
+    .edit-input:focus {
+        border-color: var(--accent-blue);
+    }
+    .plan-subs {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="plan-grid">
+    {% for item in plan_data %}
+    <form method="post" class="plan-card">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="plan_id" value="{{ item.plan.pk }}">
+
+        <div class="plan-name">{{ item.plan.get_name_display }}</div>
+        <div class="plan-price {% if item.plan.price == 0 %}free{% endif %}">
+            ₹<input type="number" name="price" value="{{ item.plan.price|floatformat:0 }}"
+                class="edit-input" style="width:100px; font-size:24px; font-weight:800;
+                background:transparent; border:none; color:inherit; -webkit-text-fill-color:inherit;">
+            <span style="font-size:14px; font-weight:400;">/mo</span>
+        </div>
+
+        <ul class="plan-limits">
+            <li>
+                <span>Max Doctors</span>
+                <input type="number" name="max_doctors" value="{{ item.plan.max_doctors }}"
+                    class="edit-input">
+            </li>
+            <li>
+                <span>Max Staff</span>
+                <input type="number" name="max_staff" value="{{ item.plan.max_staff }}"
+                    class="edit-input">
+            </li>
+            <li>
+                <span>Max Patients</span>
+                <input type="number" name="max_patients" value="{{ item.plan.max_patients }}"
+                    class="edit-input">
+            </li>
+            <li>
+                <span>Appointments / Month</span>
+                <input type="number" name="max_appointments" value="{{ item.plan.max_appointments_per_month }}"
+                    class="edit-input">
+            </li>
+        </ul>
+
+        <button type="submit" class="action-btn primary" style="width:100%; justify-content:center; padding:10px;">
+            <span class="material-icons-round" style="font-size:16px;">save</span>
+            Save Changes
+        </button>
+
+        <div class="plan-subs">
+            <span class="material-icons-round" style="font-size:14px; vertical-align:middle;">people</span>
+            {{ item.subscriber_count }} active subscriber{{ item.subscriber_count|pluralize }}
+        </div>
+    </form>
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1;">
+        <div class="empty-state">
+            <div class="icon material-icons-round">credit_card_off</div>
+            <p>No subscription plans configured.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
