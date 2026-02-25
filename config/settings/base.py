@@ -46,22 +46,10 @@ SHARED_APPS = [
     "apps.tenants",
     "apps.accounts",
     "apps.core",
-    "apps.patients",
-    "apps.pharmacy",
-    "apps.clinical",
-    "apps.appointments",
-    "apps.labs",
-    "apps.billing",
-    "apps.communications",
-    "apps.analytics",
-    "apps.ai",
-    "apps.notifications",
-    "apps.utils",
-    "apps.hospitals",
-
 ]
 
 TENANT_APPS = [
+    "django.contrib.contenttypes",
     "rest_framework",
     "corsheaders",
 
@@ -200,8 +188,11 @@ TENANT_MODEL = "tenants.Client"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
 
 # Fall back to the public schema when no tenant matches the hostname.
-# This lets 127.0.0.1 / localhost work during development.
+# This lets 127.0.0.1 / localhost work during development for login/onboarding.
 SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
+
+# Public schema gets a restricted URL config (login, register, onboarding only)
+PUBLIC_SCHEMA_URLCONF = "config.urls_public"
 
 
 
@@ -284,6 +275,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "testampli2023@gmail.com"
-EMAIL_HOST_PASSWORD = "iopr mlgp lrnz umgf"
+EMAIL_HOST_USER = "saniyatanyal1@gmail.com"
+EMAIL_HOST_PASSWORD = "yibiguqicxrtuwxv"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

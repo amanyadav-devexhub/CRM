@@ -34,6 +34,14 @@ class Tenant(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=15)
 
+    # Link to django_tenants Client (schema holder)
+    client = models.OneToOneField(
+        "tenants.Client",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="tenant_record",
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

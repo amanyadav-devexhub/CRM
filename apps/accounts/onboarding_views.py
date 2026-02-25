@@ -209,16 +209,7 @@ class OnboardingStep3View(View):
             return redirect("/onboarding/")
 
         try:
-            # 1. Create Tenant record
-            tenant = Tenant.objects.create(
-                name=org_data["org_name"],
-                category=org_data["category"],
-                subdomain=org_data["subdomain"],
-                email=org_data["org_email"],
-                phone="",
-            )
-
-            # 2. Create Client (schema-per-tenant)
+            # 1. Create Client (schema-per-tenant) — auto_create_schema=True
             trial_end = timezone.now() + timedelta(days=14)
             client = Client.objects.create(
                 name=org_data["org_name"],
@@ -227,11 +218,21 @@ class OnboardingStep3View(View):
                 on_trial=True,
             )
 
-            # 3. Create Domain
+            # 2. Create Domain for subdomain routing
             Domain.objects.create(
                 domain=f"{org_data['subdomain']}.localhost",
                 tenant=client,
                 is_primary=True,
+            )
+
+            # 3. Create Tenant record (app-level) and link to Client
+            tenant = Tenant.objects.create(
+                name=org_data["org_name"],
+                category=org_data["category"],
+                subdomain=org_data["subdomain"],
+                email=org_data["org_email"],
+                phone="",
+                client=client,
             )
 
             # 4. Create subscription
@@ -259,12 +260,36 @@ class OnboardingStep3View(View):
             user.tenant = tenant
             user.save(update_fields=["tenant"])
 
-            # 6. Clean up session
+            # 6. Seed default data in the new tenant schema
+            from django_tenants.utils import schema_context
+            from apps.tenants.models import ClinicSettings
+
+            with schema_context(client.schema_name):
+                ClinicSettings.objects.create(
+                    tenant=tenant,
+                    clinic_name=org_data["org_name"],
+                    contact_email=org_data.get("org_email", ""),
+                    timezone="Asia/Kolkata",
+                    currency="INR",
+                    language="en",
+                    date_format="DD/MM/YYYY",
+                    working_hours={
+                        "mon": {"open": "09:00", "close": "18:00"},
+                        "tue": {"open": "09:00", "close": "18:00"},
+                        "wed": {"open": "09:00", "close": "18:00"},
+                        "thu": {"open": "09:00", "close": "18:00"},
+                        "fri": {"open": "09:00", "close": "18:00"},
+                        "sat": {"open": "09:00", "close": "14:00"},
+                    },
+                )
+
+            # 7. Clean up session
             for key in ["onboarding_org", "onboarding_plan"]:
                 request.session.pop(key, None)
 
-            # 7. Redirect to dashboard (category-aware rendering)
-            return redirect("/dashboard/")
+            # 8. Redirect to tenant subdomain dashboard
+            port = getattr(__import__('django.conf', fromlist=['settings']).settings, 'TENANT_PORT', '8000')
+            return redirect(f"http://{org_data['subdomain']}.localhost:{port}/dashboard/")
 
         except Exception as e:
             logger.error(f"Onboarding failed: {e}")

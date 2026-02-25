@@ -4,6 +4,7 @@ URL configuration for config project.
 
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
 from apps.tenants.views import AdminDashboardView, SubAdminDashboardView, ClinicSettingsView
 from apps.patients.template_views import (
     PatientListView, PatientDetailView,

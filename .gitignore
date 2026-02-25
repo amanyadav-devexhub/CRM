@@ -21,3 +21,4 @@ Thumbs.db
 # Generated data files
 generate_dummy_data.py
 HealthCRM_Dummy_Data.xlsx
+link_tenants.py

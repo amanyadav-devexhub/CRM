@@ -323,10 +323,20 @@ class LoginView(View):
         """Redirect to correct panel based on user role."""
         if user.is_superuser and user.tenant is None:
             return redirect("/admin-dashboard/")
-        elif user.tenant:
-            return redirect("/dashboard/")
+        elif user.tenant and user.tenant.subdomain:
+            # Redirect to tenant subdomain for schema isolation
+            host = self._get_tenant_host(user.tenant.subdomain)
+            return redirect(f"{host}/dashboard/")
         else:
-            return redirect("/dashboard/")
+            return redirect("/onboarding/")
+
+    @staticmethod
+    def _get_tenant_host(subdomain):
+        """Build the tenant host URL. Override in production settings."""
+        from django.conf import settings
+        port = getattr(settings, "TENANT_PORT", "8000")
+        scheme = "https" if getattr(settings, "TENANT_USE_HTTPS", False) else "http"
+        return f"{scheme}://{subdomain}.localhost:{port}"
 
 
 class LogoutView(View):

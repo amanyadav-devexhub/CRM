@@ -307,161 +307,68 @@
                 {% if org.setup %}
                 <div class="review-section">
                     <h4>{{ org.category }} Configuration</h4>
-
                     {% if org.category == "HOSPITAL" %}
                     <div class="setup-group-heading">Structure</div>
-                    <div class="review-row"><span class="label">Branches</span><span class="value">{{
-                            org.setup.h_branches }}</span></div>
-                    <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.h_doctors
-                            }}</span></div>
-                    <div class="review-row"><span class="label">Departments</span><span class="value">{{
-                            org.setup.h_departments }}</span></div>
-                    <div class="review-row"><span class="label">ICU Facilities</span><span
-                            class="value {% if org.setup.h_icu %}yes{% else %}no{% endif %}">{% if org.setup.h_icu
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">IPD Admissions</span><span
-                            class="value {% if org.setup.h_ipd %}yes{% else %}no{% endif %}">{% if org.setup.h_ipd
-                            %}Yes{% else %}No{% endif %}</span></div>
-
-                    <div class="setup-group-heading">Clinical & Operations</div>
-                    <div class="review-row"><span class="label">Full EMR</span><span
-                            class="value {% if org.setup.h_emr %}yes{% else %}no{% endif %}">{% if org.setup.h_emr
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">OT Management</span><span
-                            class="value {% if org.setup.h_ot %}yes{% else %}no{% endif %}">{% if org.setup.h_ot %}Yes{%
-                            else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Bed Management</span><span
-                            class="value {% if org.setup.h_beds %}yes{% else %}no{% endif %}">{% if org.setup.h_beds
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">In-house Lab</span><span
-                            class="value {% if org.setup.h_lab %}yes{% else %}no{% endif %}">{% if org.setup.h_lab
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">In-house Pharmacy</span><span
-                            class="value {% if org.setup.h_pharmacy %}yes{% else %}no{% endif %}">{% if
-                            org.setup.h_pharmacy %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Branches</span><span class="value">{{ org.setup.h_branches }}</span></div>
+                    <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.h_doctors }}</span></div>
+                    <div class="review-row"><span class="label">Departments</span><span class="value">{{ org.setup.h_departments }}</span></div>
+                    <div class="review-row"><span class="label">ICU Facilities</span><span class="value {% if org.setup.h_icu %}yes{% else %}no{% endif %}">{% if org.setup.h_icu %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">IPD Admissions</span><span class="value {% if org.setup.h_ipd %}yes{% else %}no{% endif %}">{% if org.setup.h_ipd %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="setup-group-heading">Clinical &amp; Operations</div>
+                    <div class="review-row"><span class="label">Full EMR</span><span class="value {% if org.setup.h_emr %}yes{% else %}no{% endif %}">{% if org.setup.h_emr %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">OT Management</span><span class="value {% if org.setup.h_ot %}yes{% else %}no{% endif %}">{% if org.setup.h_ot %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Bed Management</span><span class="value {% if org.setup.h_beds %}yes{% else %}no{% endif %}">{% if org.setup.h_beds %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">In-house Lab</span><span class="value {% if org.setup.h_lab %}yes{% else %}no{% endif %}">{% if org.setup.h_lab %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">In-house Pharmacy</span><span class="value {% if org.setup.h_pharmacy %}yes{% else %}no{% endif %}">{% if org.setup.h_pharmacy %}Yes{% else %}No{% endif %}</span></div>
                     <div class="setup-group-heading">Billing</div>
-                    <div class="review-row"><span class="label">Insurance & TPA</span><span
-                            class="value {% if org.setup.h_insurance %}yes{% else %}no{% endif %}">{% if
-                            org.setup.h_insurance %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Multi-dept Billing</span><span
-                            class="value {% if org.setup.h_multi_billing %}yes{% else %}no{% endif %}">{% if
-                            org.setup.h_multi_billing %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Package Billing</span><span
-                            class="value {% if org.setup.h_pkg_billing %}yes{% else %}no{% endif %}">{% if
-                            org.setup.h_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
-
-                    <div class="setup-group-heading">AI & Advanced</div>
-                    <div class="review-row"><span class="label">AI Clinical Notes</span><span
-                            class="value {% if org.setup.h_ai_notes %}yes{% else %}no{% endif %}">{% if
-                            org.setup.h_ai_notes %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">AI Risk Scoring</span><span
-                            class="value {% if org.setup.h_ai_risk %}yes{% else %}no{% endif %}">{% if
-                            org.setup.h_ai_risk %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Monthly Volume</span><span class="value">{{
-                            org.setup.h_volume }} patients</span></div>
-
+                    <div class="review-row"><span class="label">Insurance &amp; TPA</span><span class="value {% if org.setup.h_insurance %}yes{% else %}no{% endif %}">{% if org.setup.h_insurance %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Multi-dept Billing</span><span class="value {% if org.setup.h_multi_billing %}yes{% else %}no{% endif %}">{% if org.setup.h_multi_billing %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Package Billing</span><span class="value {% if org.setup.h_pkg_billing %}yes{% else %}no{% endif %}">{% if org.setup.h_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="setup-group-heading">AI &amp; Advanced</div>
+                    <div class="review-row"><span class="label">AI Clinical Notes</span><span class="value {% if org.setup.h_ai_notes %}yes{% else %}no{% endif %}">{% if org.setup.h_ai_notes %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">AI Risk Scoring</span><span class="value {% if org.setup.h_ai_risk %}yes{% else %}no{% endif %}">{% if org.setup.h_ai_risk %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Monthly Volume</span><span class="value">{{ org.setup.h_volume }} patients</span></div>
                     {% elif org.category == "CLINIC" %}
                     <div class="setup-group-heading">Basic Setup</div>
-                    <div class="review-row"><span class="label">Clinic Type</span><span class="value">{{
-                            org.setup.c_type|title }}</span></div>
-                    <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.c_doctors
-                            }}</span></div>
-                    <div class="review-row"><span class="label">Specialization</span><span class="value">{{
-                            org.setup.c_specialization|title }}</span></div>
-
+                    <div class="review-row"><span class="label">Clinic Type</span><span class="value">{{ org.setup.c_type|title }}</span></div>
+                    <div class="review-row"><span class="label">Doctors</span><span class="value">{{ org.setup.c_doctors }}</span></div>
+                    <div class="review-row"><span class="label">Specialization</span><span class="value">{{ org.setup.c_specialization|title }}</span></div>
                     <div class="setup-group-heading">Operations</div>
-                    <div class="review-row"><span class="label">Appointments</span><span
-                            class="value {% if org.setup.c_appointments %}yes{% else %}no{% endif %}">{% if
-                            org.setup.c_appointments %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Walk-in Tokens</span><span
-                            class="value {% if org.setup.c_walkin %}yes{% else %}no{% endif %}">{% if org.setup.c_walkin
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Basic EMR</span><span
-                            class="value {% if org.setup.c_emr %}yes{% else %}no{% endif %}">{% if org.setup.c_emr
-                            %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Appointments</span><span class="value {% if org.setup.c_appointments %}yes{% else %}no{% endif %}">{% if org.setup.c_appointments %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Walk-in Tokens</span><span class="value {% if org.setup.c_walkin %}yes{% else %}no{% endif %}">{% if org.setup.c_walkin %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Basic EMR</span><span class="value {% if org.setup.c_emr %}yes{% else %}no{% endif %}">{% if org.setup.c_emr %}Yes{% else %}No{% endif %}</span></div>
                     <div class="setup-group-heading">Billing</div>
-                    <div class="review-row"><span class="label">Insurance Billing</span><span
-                            class="value {% if org.setup.c_insurance %}yes{% else %}no{% endif %}">{% if
-                            org.setup.c_insurance %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Online Payments</span><span
-                            class="value {% if org.setup.c_online_pay %}yes{% else %}no{% endif %}">{% if
-                            org.setup.c_online_pay %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Insurance Billing</span><span class="value {% if org.setup.c_insurance %}yes{% else %}no{% endif %}">{% if org.setup.c_insurance %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Online Payments</span><span class="value {% if org.setup.c_online_pay %}yes{% else %}no{% endif %}">{% if org.setup.c_online_pay %}Yes{% else %}No{% endif %}</span></div>
                     <div class="setup-group-heading">Optional Modules</div>
-                    <div class="review-row"><span class="label">Pharmacy</span><span
-                            class="value {% if org.setup.c_pharmacy %}yes{% else %}no{% endif %}">{% if
-                            org.setup.c_pharmacy %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Lab Samples</span><span
-                            class="value {% if org.setup.c_lab %}yes{% else %}no{% endif %}">{% if org.setup.c_lab
-                            %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Pharmacy</span><span class="value {% if org.setup.c_pharmacy %}yes{% else %}no{% endif %}">{% if org.setup.c_pharmacy %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Lab Samples</span><span class="value {% if org.setup.c_lab %}yes{% else %}no{% endif %}">{% if org.setup.c_lab %}Yes{% else %}No{% endif %}</span></div>
                     {% elif org.category == "LAB" %}
                     <div class="setup-group-heading">Lab Details</div>
-                    <div class="review-row"><span class="label">Lab Type</span><span class="value">{{
-                            org.setup.l_type|title }}</span></div>
-                    <div class="review-row"><span class="label">In-house Collection</span><span
-                            class="value {% if org.setup.l_inhouse %}yes{% else %}no{% endif %}">{% if
-                            org.setup.l_inhouse %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Home Collection</span><span
-                            class="value {% if org.setup.l_home %}yes{% else %}no{% endif %}">{% if org.setup.l_home
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Hospital Integration</span><span
-                            class="value {% if org.setup.l_hospital_int %}yes{% else %}no{% endif %}">{% if
-                            org.setup.l_hospital_int %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Lab Type</span><span class="value">{{ org.setup.l_type|title }}</span></div>
+                    <div class="review-row"><span class="label">In-house Collection</span><span class="value {% if org.setup.l_inhouse %}yes{% else %}no{% endif %}">{% if org.setup.l_inhouse %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Home Collection</span><span class="value {% if org.setup.l_home %}yes{% else %}no{% endif %}">{% if org.setup.l_home %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Hospital Integration</span><span class="value {% if org.setup.l_hospital_int %}yes{% else %}no{% endif %}">{% if org.setup.l_hospital_int %}Yes{% else %}No{% endif %}</span></div>
                     <div class="setup-group-heading">Reporting</div>
-                    <div class="review-row"><span class="label">Auto Report Uploads</span><span
-                            class="value {% if org.setup.l_auto_report %}yes{% else %}no{% endif %}">{% if
-                            org.setup.l_auto_report %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Patient Portal</span><span
-                            class="value {% if org.setup.l_patient_portal %}yes{% else %}no{% endif %}">{% if
-                            org.setup.l_patient_portal %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">AI Abnormal Flagging</span><span
-                            class="value {% if org.setup.l_ai_abnormal %}yes{% else %}no{% endif %}">{% if
-                            org.setup.l_ai_abnormal %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Auto Report Uploads</span><span class="value {% if org.setup.l_auto_report %}yes{% else %}no{% endif %}">{% if org.setup.l_auto_report %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Patient Portal</span><span class="value {% if org.setup.l_patient_portal %}yes{% else %}no{% endif %}">{% if org.setup.l_patient_portal %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">AI Abnormal Flagging</span><span class="value {% if org.setup.l_ai_abnormal %}yes{% else %}no{% endif %}">{% if org.setup.l_ai_abnormal %}Yes{% else %}No{% endif %}</span></div>
                     <div class="setup-group-heading">Billing</div>
-                    <div class="review-row"><span class="label">Package Billing</span><span
-                            class="value {% if org.setup.l_pkg_billing %}yes{% else %}no{% endif %}">{% if
-                            org.setup.l_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Insurance</span><span
-                            class="value {% if org.setup.l_insurance %}yes{% else %}no{% endif %}">{% if
-                            org.setup.l_insurance %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Package Billing</span><span class="value {% if org.setup.l_pkg_billing %}yes{% else %}no{% endif %}">{% if org.setup.l_pkg_billing %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Insurance</span><span class="value {% if org.setup.l_insurance %}yes{% else %}no{% endif %}">{% if org.setup.l_insurance %}Yes{% else %}No{% endif %}</span></div>
                     {% elif org.category == "PHARMACY" %}
                     <div class="setup-group-heading">Pharmacy Setup</div>
-                    <div class="review-row"><span class="label">Pharmacy Type</span><span class="value">{{
-                            org.setup.p_type|title }}</span></div>
-                    <div class="review-row"><span class="label">Inventory Tracking</span><span
-                            class="value {% if org.setup.p_inventory %}yes{% else %}no{% endif %}">{% if
-                            org.setup.p_inventory %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Expiry Alerts</span><span
-                            class="value {% if org.setup.p_expiry %}yes{% else %}no{% endif %}">{% if org.setup.p_expiry
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Batch Tracking</span><span
-                            class="value {% if org.setup.p_batch %}yes{% else %}no{% endif %}">{% if org.setup.p_batch
-                            %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">Pharmacy Type</span><span class="value">{{ org.setup.p_type|title }}</span></div>
+                    <div class="review-row"><span class="label">Inventory Tracking</span><span class="value {% if org.setup.p_inventory %}yes{% else %}no{% endif %}">{% if org.setup.p_inventory %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Expiry Alerts</span><span class="value {% if org.setup.p_expiry %}yes{% else %}no{% endif %}">{% if org.setup.p_expiry %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Batch Tracking</span><span class="value {% if org.setup.p_batch %}yes{% else %}no{% endif %}">{% if org.setup.p_batch %}Yes{% else %}No{% endif %}</span></div>
                     <div class="setup-group-heading">Billing</div>
-                    <div class="review-row"><span class="label">GST Billing</span><span
-                            class="value {% if org.setup.p_gst %}yes{% else %}no{% endif %}">{% if org.setup.p_gst
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Online Payments</span><span
-                            class="value {% if org.setup.p_online_pay %}yes{% else %}no{% endif %}">{% if
-                            org.setup.p_online_pay %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Supplier Management</span><span
-                            class="value {% if org.setup.p_supplier %}yes{% else %}no{% endif %}">{% if
-                            org.setup.p_supplier %}Yes{% else %}No{% endif %}</span></div>
-
+                    <div class="review-row"><span class="label">GST Billing</span><span class="value {% if org.setup.p_gst %}yes{% else %}no{% endif %}">{% if org.setup.p_gst %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Online Payments</span><span class="value {% if org.setup.p_online_pay %}yes{% else %}no{% endif %}">{% if org.setup.p_online_pay %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Supplier Management</span><span class="value {% if org.setup.p_supplier %}yes{% else %}no{% endif %}">{% if org.setup.p_supplier %}Yes{% else %}No{% endif %}</span></div>
                     <div class="setup-group-heading">Integration</div>
-                    <div class="review-row"><span class="label">Prescription Integration</span><span
-                            class="value {% if org.setup.p_rx_int %}yes{% else %}no{% endif %}">{% if org.setup.p_rx_int
-                            %}Yes{% else %}No{% endif %}</span></div>
-                    <div class="review-row"><span class="label">Auto Stock Deduction</span><span
-                            class="value {% if org.setup.p_auto_deduct %}yes{% else %}no{% endif %}">{% if
-                            org.setup.p_auto_deduct %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Prescription Integration</span><span class="value {% if org.setup.p_rx_int %}yes{% else %}no{% endif %}">{% if org.setup.p_rx_int %}Yes{% else %}No{% endif %}</span></div>
+                    <div class="review-row"><span class="label">Auto Stock Deduction</span><span class="value {% if org.setup.p_auto_deduct %}yes{% else %}no{% endif %}">{% if org.setup.p_auto_deduct %}Yes{% else %}No{% endif %}</span></div>
                     {% endif %}
                 </div>
                 {% endif %}

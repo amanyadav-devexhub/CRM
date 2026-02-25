@@ -88,8 +88,7 @@
         <span class="material-icons-round">arrow_back</span>
     </a>
     <h2 style="font-size:22px; font-weight:700;">
-        {% if patient %}Edit Patient — {{ patient.first_name }} {{ patient.last_name }}{% else %}Register New Patient{%
-        endif %}
+        {% if patient %}Edit Patient — {{ patient.first_name }} {{ patient.last_name }}{% else %}Register New Patient{% endif %}
     </h2>
 </div>
 
@@ -207,5 +206,5 @@
         </div>
     </div>
 </form>
-{% endif %}
+{% comment %} {% endif %} {% endcomment %}
 {% endblock %}
