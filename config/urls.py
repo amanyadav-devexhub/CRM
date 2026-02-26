@@ -26,7 +26,7 @@ from apps.notifications.template_views import NotificationCenterView
 from apps.accounts.public_views import LandingPageView
 from apps.accounts.auth_views import (
     RegisterView, OTPVerifyView, ResendOTPView,
-    LoginView, LogoutView,
+    LoginView, LogoutView, AuthBridgeView,
 )
 from apps.accounts.jwt_views import (
     JWTTokenObtainView, JWTTokenRefreshView, JWTTokenVerifyView,
@@ -63,6 +63,7 @@ urlpatterns = [
     path("verify-otp/", OTPVerifyView.as_view(), name="verify-otp"),
     path("resend-otp/", ResendOTPView.as_view(), name="resend-otp"),
     path("logout/", LogoutView.as_view(), name="logout"),
+    path("auth-bridge/", AuthBridgeView.as_view(), name="auth-bridge"),
 
     # ── Password Reset ──
     path("password-reset/", auth_views.PasswordResetView.as_view(

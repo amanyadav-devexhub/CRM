@@ -1,9 +1,12 @@
 """
-Authentication views: Register, OTP Verification, Login, Logout.
+Authentication views: Register, OTP Verification, Login, Logout, AuthBridge.
 
 Uses JWT tokens stored in HTTP-only cookies for authentication.
 Django's authenticate() validates credentials, then JWT tokens are issued
 as cookies — no Django sessions needed for auth.
+
+AuthBridgeView handles cross-subdomain login by accepting a signed token
+in the URL and setting local cookies on the tenant subdomain.
 """
 import random
 import logging
@@ -13,6 +16,7 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core import signing
 from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger(__name__)
@@ -324,9 +328,10 @@ class LoginView(View):
         if user.is_superuser and user.tenant is None:
             return redirect("/admin-dashboard/")
         elif user.tenant and user.tenant.subdomain:
-            # Redirect to tenant subdomain for schema isolation
+            # Use auth bridge to transfer session to tenant subdomain
+            token = signing.dumps({"user_id": user.pk}, salt="auth-bridge")
             host = self._get_tenant_host(user.tenant.subdomain)
-            return redirect(f"{host}/dashboard/")
+            return redirect(f"{host}/auth-bridge/?token={token}")
         else:
             return redirect("/onboarding/")
 
@@ -342,14 +347,68 @@ class LoginView(View):
 class LogoutView(View):
     """Log the user out — clear JWT cookies and Django session."""
 
-    def get(self, request):
+    def _is_tenant_subdomain(self, request):
+        host = request.get_host().split(":")[0]
+        return host != "localhost" and host.endswith(".localhost")
+
+    def _public_url(self, path):
+        port = getattr(settings, "TENANT_PORT", "8000")
+        scheme = "https" if getattr(settings, "TENANT_USE_HTTPS", False) else "http"
+        return f"{scheme}://localhost:{port}{path}"
+
+    def _do_logout(self, request):
         logout(request)
-        response = redirect("/login/")
+        if self._is_tenant_subdomain(request):
+            # Clear cookies HERE, then redirect to public /logout/
+            # so the public-domain session also gets cleared.
+            response = redirect(self._public_url("/logout/"))
+        else:
+            # Already on public domain — just go to login
+            response = redirect("/login/")
         _clear_jwt_cookies(response)
         return response
 
+    def get(self, request):
+        return self._do_logout(request)
+
     def post(self, request):
-        logout(request)
-        response = redirect("/login/")
-        _clear_jwt_cookies(response)
+        return self._do_logout(request)
+
+
+class AuthBridgeView(View):
+    """
+    Cross-subdomain auth bridge.
+
+    After login on localhost:8000, the user is redirected to:
+        http://test-free.localhost:8000/auth-bridge/?token=<signed>
+
+    This view validates the signed token, logs the user in on THIS
+    subdomain (setting session + JWT cookies locally), then redirects
+    to /dashboard/.
+
+    The token expires after 60 seconds and can only be used once.
+    """
+
+    def get(self, request):
+        token = request.GET.get("token", "")
+        if not token:
+            return redirect("/login/")
+
+        try:
+            data = signing.loads(token, salt="auth-bridge", max_age=60)
+        except (signing.BadSignature, signing.SignatureExpired):
+            return redirect("/login/")
+
+        try:
+            user = User.objects.get(pk=data["user_id"])
+        except User.DoesNotExist:
+            return redirect("/login/")
+
+        # Create local session on this subdomain
+        login(request, user)
+
+        # Set JWT cookies for this subdomain
+        response = redirect("/dashboard/")
+        _set_jwt_cookies(response, user)
         return response
+
