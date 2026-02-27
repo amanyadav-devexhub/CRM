@@ -102,8 +102,7 @@
                 <tr>
                     <th>Feature</th>
                     <th>Code</th>
-                    <th>Tenants Using</th>
-                    <th>Global Status</th>
+                    <th>Categories Using</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -128,20 +127,32 @@
                     </td>
                     <td><code style="color:var(--accent-cyan); font-size:12px;">{{ item.feature.code }}</code></td>
                     <td>
-                        <span class="badge-tag active">{{ item.tenant_count }} tenant{{ item.tenant_count|pluralize }}</span>
-                    </td>
-                    <td>
-                        <form method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="toggle">
-                            <input type="hidden" name="feature_id" value="{{ item.feature.pk }}">
-                            <button type="submit" style="background:none; border:none; cursor:pointer;">
-                                <label class="toggle-switch" style="pointer-events:none;">
-                                    <input type="checkbox" {% if item.feature.is_active %}checked{% endif %}>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </button>
-                        </form>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            {% if item.category_counts %}
+                                {% for cat, count in item.category_counts.items %}
+                                <div class="patient-cell" style="padding: 4px; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; background: rgba(0,0,0,0.15);">
+                                    <div class="tenant-type-icon
+                                        {% if cat == 'CLINIC' %}clinic
+                                        {% elif cat == 'PHARMACY' %}pharmacy
+                                        {% else %}hospital{% endif %}"
+                                        style="width: 28px; height: 28px;">
+                                        <span class="material-icons-round" style="font-size:14px">
+                                            {% if cat == 'CLINIC' %}local_hospital
+                                            {% elif cat == 'PHARMACY' %}medication
+                                            {% elif cat == 'LAB' %}biotech
+                                            {% else %}domain{% endif %}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="patient-name" style="font-size:13px; font-weight:600;">{{ cat|title }}</div>
+                                        <div class="patient-id" style="font-size:11px;">{{ count }} tenant{{ count|pluralize }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <span class="badge-tag" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">None</span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td>
                         <form method="post" style="display:inline;"

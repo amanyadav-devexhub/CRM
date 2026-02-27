@@ -28,8 +28,13 @@ class JWTCookieMiddleware:
     3. Falls through to session auth for Django admin
     """
 
-    # Skip JWT auth on admin (session-based) and public asset routes
-    SKIP_PREFIXES = ("/admin/", "/static/", "/__debug__/")
+    # Skip JWT auth: admin uses sessions, auth pages shouldn't re-auth from stale JWTs
+    SKIP_PREFIXES = (
+        "/admin/", "/static/", "/__debug__/",
+        "/login/", "/register/", "/logout/",
+        "/verify-otp/", "/resend-otp/",
+        "/auth-bridge/", "/password-reset/",
+    )
 
     def __init__(self, get_response):
         self.get_response = get_response

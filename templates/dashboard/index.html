@@ -134,19 +134,19 @@
             </div>
             <div class="card-body">
                 <div class="quick-actions">
-                    <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
+                    <a href="{% url 'patient-create' %}" class="action-btn primary" style="text-decoration:none;">
                         <span class="icon material-icons-round">person_add</span>
                         New Patient
                     </a>
-                    <a href="#" class="action-btn" style="text-decoration:none;">
+                    <a href="{% url 'appointment-create' %}" class="action-btn" style="text-decoration:none;">
                         <span class="icon material-icons-round">event</span>
                         Book Appointment
                     </a>
-                    <a href="/patients/" class="action-btn" style="text-decoration:none;">
+                    <a href="{% url 'patient-list' %}" class="action-btn" style="text-decoration:none;">
                         <span class="icon material-icons-round">list_alt</span>
                         All Patients
                     </a>
-                    <a href="#" class="action-btn" style="text-decoration:none;">
+                    <a href="{% url 'lab-order-list' %}" class="action-btn" style="text-decoration:none;">
                         <span class="icon material-icons-round">biotech</span>
                         Lab Reports
                     </a>
@@ -166,7 +166,7 @@
                 <div class="empty-state">
                     <div class="icon material-icons-round">event_busy</div>
                     <p>No appointments for today.</p>
-                    <a href="#" class="action-btn primary"
+                    <a href="{% url 'appointment-create' %}" class="action-btn primary"
                         style="margin-top:16px; display:inline-flex; text-decoration:none;">
                         <span class="icon material-icons-round">event</span>
                         Book Appointment

@@ -99,15 +99,9 @@ class ClinicSettings(models.Model):
 # ================================
 
 class SubscriptionPlan(models.Model):
-    PLAN_CHOICES = [
-        ('FREE', 'Free'),
-        ('BASIC', 'Basic'),
-        ('GROWTH', 'Growth'),
-        ('PRO', 'Pro'),
-    ]
-
-    name = models.CharField(max_length=50, choices=PLAN_CHOICES, unique=True)
+    name = models.CharField(max_length=50, unique=True)
     display_name = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     description = models.TextField(blank=True)
 
@@ -129,7 +123,7 @@ class SubscriptionPlan(models.Model):
     lab_addon = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.get_name_display()
+        return self.display_name or self.name
 
 
 class TenantSubscription(models.Model):

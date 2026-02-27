@@ -29,7 +29,7 @@ from apps.tenants.template_views import (
 from apps.tenants.admin_views import (
     AdminTenantListView, AdminSubscriptionListView,
     AdminPlanListView, AdminFeatureListView, AdminSettingsView,
-    AdminAnalyticsView, AdminRevenueView,
+    AdminAnalyticsView, AdminRevenueView, AdminTenantDetailView,
 )
 from apps.notifications.template_views import NotificationCenterView
 
@@ -70,6 +70,7 @@ urlpatterns = [
     # ── Admin Dashboard (Platform Owner / SuperAdmin) ──
     path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
     path("admin-tenants/", AdminTenantListView.as_view(), name="admin-tenants"),
+    path("admin-tenants/<uuid:pk>/", AdminTenantDetailView.as_view(), name="admin-tenant-detail"),
     path("admin-subscriptions/", AdminSubscriptionListView.as_view(), name="admin-subscriptions"),
     path("admin-plans/", AdminPlanListView.as_view(), name="admin-plans"),
     path("admin-features/", AdminFeatureListView.as_view(), name="admin-features"),

@@ -62,7 +62,9 @@
                                 </span>
                             </div>
                             <div>
-                                <div class="patient-name">{{ item.tenant.name }}</div>
+                                <a href="{% url 'admin-tenant-detail' item.tenant.pk %}" style="text-decoration:none;">
+                                    <div class="patient-name" style="color:var(--accent-blue); font-weight:600;">{{ item.tenant.name }}</div>
+                                </a>
                                 <div class="patient-id">{{ item.tenant.email }}</div>
                             </div>
                         </div>
@@ -127,6 +129,24 @@
         <div class="empty-state">
             <div class="icon material-icons-round">domain_disabled</div>
             <p>No tenants found{% if search_query %} matching "{{ search_query }}"{% endif %}.</p>
+        </div>
+        {% endif %}
+
+        {% if tenant_data.has_other_pages %}
+        <div class="pagination" style="display:flex; justify-content:center; gap:8px; padding:16px;">
+            {% if tenant_data.has_previous %}
+            <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}" class="action-btn" style="text-decoration:none;">&laquo; First</a>
+            <a href="?page={{ tenant_data.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="action-btn" style="text-decoration:none;">Prev</a>
+            {% endif %}
+
+            <span style="align-self:center; font-size:14px; font-weight:500;">
+                Page {{ tenant_data.number }} of {{ tenant_data.paginator.num_pages }}
+            </span>
+
+            {% if tenant_data.has_next %}
+            <a href="?page={{ tenant_data.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="action-btn" style="text-decoration:none;">Next</a>
+            <a href="?page={{ tenant_data.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}" class="action-btn" style="text-decoration:none;">Last &raquo;</a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

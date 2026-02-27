@@ -328,7 +328,7 @@
                         {% if selected.plan_id == plan.pk|stringformat:"s" %}checked{% endif %} 
                         {% if plan.name == "PRO" and not selected.plan_id %}checked{% endif %}>
                         <div class="plan-card">
-                            <div class="plan-name">{{ plan.get_name_display }}</div>
+                            <div class="plan-name">{{ plan.display_name|default:plan.name }}</div>
                             <div class="plan-price">₹{{ plan.price }}<span>/mo</span></div>
                             <span
                                 class="plan-tag {% if plan.name == 'BASIC' %}basic{% elif plan.name == 'PRO' %}pro{% else %}enterprise{% endif %}">

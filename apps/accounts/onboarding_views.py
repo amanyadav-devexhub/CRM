@@ -125,6 +125,22 @@ class OnboardingStep1View(View):
         }
         request.session["onboarding_org"] = session_data
 
+        # If the user selected a plan from the landing page, skip step 2
+        preselected_plan_id = request.session.get("preselected_plan_id")
+        if preselected_plan_id:
+            try:
+                plan = SubscriptionPlan.objects.get(pk=preselected_plan_id)
+                request.session["onboarding_plan"] = {
+                    "plan_id": str(plan.pk),
+                    "plan_name": plan.display_name or plan.name,
+                    "plan_price": str(plan.price),
+                }
+                # Go directly to confirm step, pop the preselected_plan_id to avoid stale data later
+                request.session.pop("preselected_plan_id", None)
+                return redirect("/onboarding/confirm/")
+            except SubscriptionPlan.DoesNotExist:
+                pass
+
         return redirect("/onboarding/plan/")
 
 
@@ -170,7 +186,7 @@ class OnboardingStep2View(View):
 
         request.session["onboarding_plan"] = {
             "plan_id": str(plan.pk),
-            "plan_name": plan.get_name_display(),
+            "plan_name": plan.display_name or plan.name,
             "plan_price": str(plan.price),
         }
 
@@ -219,8 +235,11 @@ class OnboardingStep3View(View):
             )
 
             # 2. Create Domain for subdomain routing
+            # Use the actual host (works for localhost and ngrok)
+            request_host = request.get_host().split(":")[0]  # e.g. localhost or abc.ngrok-free.dev
+            tenant_domain = f"{org_data['subdomain']}.{request_host}"
             Domain.objects.create(
-                domain=f"{org_data['subdomain']}.localhost",
+                domain=tenant_domain,
                 tenant=client,
                 is_primary=True,
             )
@@ -287,9 +306,13 @@ class OnboardingStep3View(View):
             for key in ["onboarding_org", "onboarding_plan"]:
                 request.session.pop(key, None)
 
-            # 8. Redirect to tenant subdomain dashboard
-            port = getattr(__import__('django.conf', fromlist=['settings']).settings, 'TENANT_PORT', '8000')
-            return redirect(f"http://{org_data['subdomain']}.localhost:{port}/dashboard/")
+            # 8. Redirect to tenant subdomain via auth bridge
+            from django.core import signing
+            token = signing.dumps({"user_id": user.pk}, salt="auth-bridge")
+            scheme = "https" if request.is_secure() else "http"
+            port_part = request.get_host().split(":")[1] if ":" in request.get_host() else ""
+            port_suffix = f":{port_part}" if port_part else ""
+            return redirect(f"{scheme}://{tenant_domain}{port_suffix}/auth-bridge/?token={token}")
 
         except Exception as e:
             logger.error(f"Onboarding failed: {e}")

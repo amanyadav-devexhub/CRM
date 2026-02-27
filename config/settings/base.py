@@ -139,14 +139,18 @@ CACHES = {
 
 # Sessions — use DB backend (no Redis required)
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # ── Cross-subdomain auth ──
 # Cookies with domain=localhost do NOT work across subdomains in Chrome.
 # Auth transfer is handled via a signed token bridge instead (see auth_views.AuthBridgeView).
-# CSRF_TRUSTED_ORIGINS allows form submissions from tenant subdomains.
+# CSRF_TRUSTED_ORIGINS allows form submissions from tenant subdomains and ngrok.
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://*.localhost:8000",
+    "https://*.ngrok-free.app",
+    "https://*.ngrok-free.dev",
+    "https://*.ngrok.io",
 ]
 
 

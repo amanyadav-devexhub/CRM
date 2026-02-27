@@ -3,7 +3,8 @@
 Admin panel views — SuperAdmin-only pages for managing
 tenants, subscriptions, plans, features, and platform settings.
 """
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
 from django.views import View
 from django.contrib import messages
 from .models import (
@@ -30,12 +31,17 @@ class AdminTenantListView(View):
             tenant_data.append({
                 "tenant": t,
                 "subscription": sub,
-                "plan_name": sub.plan.get_name_display() if sub else "—",
+                "plan_name": (sub.plan.display_name or sub.plan.name) if sub else "—",
                 "sub_status": sub.status if sub else "—",
             })
 
+        # Pagination setup (10 tenants per page)
+        paginator = Paginator(tenant_data, 10)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
         return render(request, self.template_name, {
-            "tenant_data": tenant_data,
+            "tenant_data": page_obj,
             "search_query": q,
             "total": len(tenant_data),
         })
@@ -60,8 +66,16 @@ class AdminTenantListView(View):
             messages.success(request, f"{tenant.name} deactivated.")
         elif action == "delete":
             name = tenant.name
-            tenant.delete()
-            messages.success(request, f"{name} deleted.")
+            tenant.is_active = False
+            tenant.save(update_fields=["is_active"])
+            
+            # Optionally set their subscription to cancelled as well
+            sub = getattr(tenant, 'subscription', None)
+            if sub:
+                sub.status = 'CANCELLED'
+                sub.save(update_fields=['status'])
+                
+            messages.success(request, f"{name} has been soft-deleted (deactivated and subscription cancelled).")
 
         return redirect("/admin-tenants/")
 
@@ -77,8 +91,13 @@ class AdminSubscriptionListView(View):
             "tenant", "plan"
         ).order_by("-created_at")
 
+        # Pagination setup (10 subscriptions per page)
+        paginator = Paginator(subs, 10)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
         return render(request, self.template_name, {
-            "subscriptions": subs,
+            "subscriptions": page_obj,
             "status_choices": self.STATUS_CHOICES,
             "total": subs.count(),
         })
@@ -108,7 +127,7 @@ class AdminPlanListView(View):
     template_name = "dashboard/admin_plans.html"
 
     def get(self, request):
-        plans = SubscriptionPlan.objects.all()
+        plans = SubscriptionPlan.objects.filter(is_active=True)
         plan_data = []
         for p in plans:
             sub_count = TenantSubscription.objects.filter(plan=p).count()
@@ -122,6 +141,34 @@ class AdminPlanListView(View):
     def post(self, request):
         action = request.POST.get("action")
         plan_id = request.POST.get("plan_id")
+
+        if action == "create":
+            name = request.POST.get("name", "").strip().upper()
+            display_name = request.POST.get("display_name", "").strip()
+            price = request.POST.get("price", "0")
+            max_doctors = request.POST.get("max_doctors", "1")
+            max_staff = request.POST.get("max_staff", "2")
+            max_patients = request.POST.get("max_patients", "300")
+            max_appointments = request.POST.get("max_appointments", "150")
+
+            if name and display_name:
+                try:
+                    SubscriptionPlan.objects.create(
+                        name=name,
+                        display_name=display_name,
+                        price=price,
+                        max_doctors=max_doctors,
+                        max_staff=max_staff,
+                        max_patients=max_patients,
+                        max_appointments_per_month=max_appointments
+                    )
+                    messages.success(request, f"Plan '{display_name}' created successfully.")
+                except Exception as e:
+                    messages.error(request, f"Error creating plan: {e}")
+            else:
+                messages.error(request, "Name and Display Name are required.")
+            
+            return redirect("/admin-plans/")
 
         try:
             plan = SubscriptionPlan.objects.get(pk=plan_id)
@@ -138,7 +185,11 @@ class AdminPlanListView(View):
                 "max_appointments", plan.max_appointments_per_month
             )
             plan.save()
-            messages.success(request, f"{plan.get_name_display()} plan updated.")
+            messages.success(request, f"{plan.display_name} plan updated.")
+        elif action == "delete":
+            plan.is_active = False
+            plan.save(update_fields=["is_active"])
+            messages.success(request, f"{plan.display_name} plan soft-deleted.")
 
         return redirect("/admin-plans/")
 
@@ -150,11 +201,31 @@ class AdminFeatureListView(View):
     def get(self, request):
         features = Feature.objects.all().order_by("name")
         feature_data = []
+
+        # Get all distinct categories dynamically if possible, or use the model choices
+        categories = dict(Tenant.CATEGORY_CHOICES).keys()
+
         for f in features:
-            tenant_count = TenantFeature.objects.filter(
-                feature_name=f.code, is_enabled=True
-            ).count()
-            feature_data.append({"feature": f, "tenant_count": tenant_count})
+            category_counts = {}
+            total_count = 0
+
+            for cat in categories:
+                # Count tenants of this category that have this feature enabled
+                count = TenantFeature.objects.filter(
+                    feature_name=f.code,
+                    is_enabled=True,
+                    tenant__category=cat
+                ).count()
+                
+                if count > 0:
+                    category_counts[cat] = count
+                total_count += count
+
+            feature_data.append({
+                "feature": f, 
+                "total_count": total_count,
+                "category_counts": category_counts
+            })
 
         return render(request, self.template_name, {
             "feature_data": feature_data,
@@ -296,5 +367,17 @@ class AdminRevenueView(View):
             "total_subs": total_subs,
             "active_subs": active_subs,
             "churned": churned,
+        })
+
+class AdminTenantDetailView(View):
+    """View details of a specific tenant."""
+    template_name = "dashboard/admin_tenant_detail.html"
+
+    def get(self, request, pk):
+        tenant = get_object_or_404(Tenant, pk=pk)
+        subscription = TenantSubscription.objects.filter(tenant=tenant).first()
+        return render(request, self.template_name, {
+            "tenant": tenant,
+            "subscription": subscription,
         })
 

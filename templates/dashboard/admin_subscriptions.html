@@ -54,7 +54,7 @@
                             </div>
                         </div>
                     </td>
-                    <td><span class="badge-tag active">{{ sub.plan.get_name_display }}</span></td>
+                    <td><span class="badge-tag active">{{ sub.plan.display_name|default:sub.plan.name }}</span></td>
                     <td>
                         <span class="badge-tag
                             {% if sub.status == 'ACTIVE' %}active
@@ -99,6 +99,24 @@
         <div class="empty-state">
             <div class="icon material-icons-round">credit_card_off</div>
             <p>No subscriptions found.</p>
+        </div>
+        {% endif %}
+
+        {% if subscriptions.has_other_pages %}
+        <div class="pagination" style="display:flex; justify-content:center; gap:8px; padding:16px;">
+            {% if subscriptions.has_previous %}
+            <a href="?page=1" class="action-btn" style="text-decoration:none;">&laquo; First</a>
+            <a href="?page={{ subscriptions.previous_page_number }}" class="action-btn" style="text-decoration:none;">Prev</a>
+            {% endif %}
+
+            <span style="align-self:center; font-size:14px; font-weight:500;">
+                Page {{ subscriptions.number }} of {{ subscriptions.paginator.num_pages }}
+            </span>
+
+            {% if subscriptions.has_next %}
+            <a href="?page={{ subscriptions.next_page_number }}" class="action-btn" style="text-decoration:none;">Next</a>
+            <a href="?page={{ subscriptions.paginator.num_pages }}" class="action-btn" style="text-decoration:none;">Last &raquo;</a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

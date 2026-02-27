@@ -28,17 +28,14 @@ COOKIE_REFRESH = getattr(settings, "JWT_AUTH_REFRESH_COOKIE", "refresh_token")
 
 
 def _set_jwt_cookies(response, user):
-    """Issue JWT access + refresh tokens as HTTP-only cookies."""
+    """Issue JWT access + refresh tokens as HTTP-only session cookies."""
     refresh = RefreshToken.for_user(user)
     access = str(refresh.access_token)
 
-    access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
-    refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
-
+    # No max_age → session cookies → cleared when browser closes
     response.set_cookie(
         COOKIE_ACCESS,
         access,
-        max_age=access_max_age,
         httponly=getattr(settings, "JWT_AUTH_HTTPONLY", True),
         secure=getattr(settings, "JWT_AUTH_SECURE", False),
         samesite=getattr(settings, "JWT_AUTH_SAMESITE", "Lax"),
@@ -47,7 +44,6 @@ def _set_jwt_cookies(response, user):
     response.set_cookie(
         COOKIE_REFRESH,
         str(refresh),
-        max_age=refresh_max_age,
         httponly=getattr(settings, "JWT_AUTH_HTTPONLY", True),
         secure=getattr(settings, "JWT_AUTH_SECURE", False),
         samesite=getattr(settings, "JWT_AUTH_SAMESITE", "Lax"),
@@ -71,8 +67,20 @@ class RegisterView(View):
     template_name = "accounts/register.html"
 
     def get(self, request):
+        plan_id = request.GET.get("plan_id")
+        if plan_id:
+            request.session["preselected_plan_id"] = plan_id
+
         if request.user.is_authenticated:
-            return redirect("/dashboard/")
+            user = request.user
+            if user.is_superuser and user.tenant is None:
+                return redirect("/admin-dashboard/")
+            elif user.tenant and user.tenant.subdomain:
+                host = LoginView._get_tenant_host(user.tenant.subdomain, request)
+                token = signing.dumps({"user_id": user.pk}, salt="auth-bridge")
+                return redirect(f"{host}/auth-bridge/?token={token}")
+            else:
+                return redirect("/onboarding/")
         return render(request, self.template_name)
 
     def post(self, request):
@@ -292,7 +300,7 @@ class LoginView(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return self._redirect_by_role(request.user)
+            return self._redirect_by_role(request.user, request)
         return render(request, self.template_name)
 
     def post(self, request):
@@ -314,7 +322,7 @@ class LoginView(View):
             login(request, user)
 
             # Issue JWT cookies
-            response = self._redirect_by_role(user)
+            response = self._redirect_by_role(user, request)
             _set_jwt_cookies(response, user)
             return response
         else:
@@ -323,21 +331,32 @@ class LoginView(View):
                 "email": email,
             })
 
-    def _redirect_by_role(self, user):
+    def _redirect_by_role(self, user, request=None):
         """Redirect to correct panel based on user role."""
         if user.is_superuser and user.tenant is None:
             return redirect("/admin-dashboard/")
         elif user.tenant and user.tenant.subdomain:
             # Use auth bridge to transfer session to tenant subdomain
             token = signing.dumps({"user_id": user.pk}, salt="auth-bridge")
-            host = self._get_tenant_host(user.tenant.subdomain)
+            host = self._get_tenant_host(user.tenant.subdomain, request)
             return redirect(f"{host}/auth-bridge/?token={token}")
         else:
             return redirect("/onboarding/")
 
     @staticmethod
-    def _get_tenant_host(subdomain):
-        """Build the tenant host URL. Override in production settings."""
+    def _get_tenant_host(subdomain, request=None):
+        """Build the tenant host URL dynamically from the request."""
+        if request:
+            request_host = request.get_host()
+            base_host = request_host.split(":")[0]
+            port_part = request_host.split(":")[1] if ":" in request_host else ""
+            scheme = "https" if request.is_secure() else "http"
+            # Can't have subdomains on IP addresses — use localhost instead
+            if base_host in ("127.0.0.1", "0.0.0.0"):
+                base_host = "localhost"
+            port_suffix = f":{port_part}" if port_part else ""
+            return f"{scheme}://{subdomain}.{base_host}{port_suffix}"
+        # Fallback for when request is not available
         from django.conf import settings
         port = getattr(settings, "TENANT_PORT", "8000")
         scheme = "https" if getattr(settings, "TENANT_USE_HTTPS", False) else "http"
@@ -345,27 +364,59 @@ class LoginView(View):
 
 
 class LogoutView(View):
-    """Log the user out — clear JWT cookies and Django session."""
+    """Log the user out — clear ALL auth cookies and session."""
 
     def _is_tenant_subdomain(self, request):
         host = request.get_host().split(":")[0]
-        return host != "localhost" and host.endswith(".localhost")
+        return host != "localhost" and host != "127.0.0.1" and (
+            host.endswith(".localhost") or "." in host
+        )
 
-    def _public_url(self, path):
+    def _public_url(self, path, request=None):
+        if request:
+            request_host = request.get_host()
+            base_host = request_host.split(":")[0]
+            port_part = request_host.split(":")[1] if ":" in request_host else ""
+            scheme = "https" if request.is_secure() else "http"
+            # Extract root domain from subdomain (e.g., test-free.localhost → localhost)
+            parts = base_host.split(".")
+            if len(parts) > 1:
+                root_host = ".".join(parts[1:])  # drop first part (subdomain)
+            else:
+                root_host = base_host
+            if root_host in ("127.0.0.1", "0.0.0.0"):
+                root_host = "localhost"
+            port_suffix = f":{port_part}" if port_part else ""
+            return f"{scheme}://{root_host}{port_suffix}{path}"
         port = getattr(settings, "TENANT_PORT", "8000")
         scheme = "https" if getattr(settings, "TENANT_USE_HTTPS", False) else "http"
         return f"{scheme}://localhost:{port}{path}"
 
-    def _do_logout(self, request):
+    def _full_clear(self, request, response):
+        """Nuke every auth-related cookie."""
+        # 1. Django session flush
         logout(request)
-        if self._is_tenant_subdomain(request):
-            # Clear cookies HERE, then redirect to public /logout/
-            # so the public-domain session also gets cleared.
-            response = redirect(self._public_url("/logout/"))
-        else:
-            # Already on public domain — just go to login
-            response = redirect("/login/")
+        request.session.flush()
+
+        # 2. Delete JWT cookies
         _clear_jwt_cookies(response)
+
+        # 3. Also explicitly delete session + CSRF cookies
+        response.delete_cookie("sessionid", path="/")
+        response.delete_cookie("csrftoken", path="/")
+
+        return response
+
+    def _do_logout(self, request):
+        if self._is_tenant_subdomain(request):
+            # Step 1: Clear everything on THIS subdomain,
+            # then redirect to public /logout/ to clear that domain too.
+            response = redirect(self._public_url("/logout/", request))
+            self._full_clear(request, response)
+        else:
+            # Step 2 (or direct public logout): Clear and go to login
+            response = redirect("/login/")
+            self._full_clear(request, response)
         return response
 
     def get(self, request):

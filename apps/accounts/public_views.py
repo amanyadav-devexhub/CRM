@@ -8,5 +8,5 @@ class LandingPageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["plans"] = SubscriptionPlan.objects.all()
+        ctx["plans"] = SubscriptionPlan.objects.all().order_by("price")
         return ctx

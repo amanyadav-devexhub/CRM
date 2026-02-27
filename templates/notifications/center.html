@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends request.user.is_superuser|yesno:"base_admin.html,base.html" %}
 
 {% block title %}Notifications{% endblock %}
 {% block page_title %}Notification Center{% endblock %}

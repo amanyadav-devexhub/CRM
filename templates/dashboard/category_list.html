@@ -17,30 +17,45 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Business Name</th>
+                    <th>Organization</th>
                     <th>Subdomain</th>
-                    <th>Email</th>
+                    <th>Contact</th>
                     <th>Status</th>
-                    <th>Registration Date</th>
+                    <th>Created</th>
                 </tr>
             </thead>
             <tbody>
                 {% for tenant in tenants %}
                 <tr>
                     <td>
-                        <div class="tenant-name">
-                            <div class="avatar">{{ tenant.name|first }}</div>
-                            {{ tenant.name }}
+                        <div class="patient-cell">
+                            <div class="tenant-type-icon
+                                {% if tenant.category == 'CLINIC' %}clinic
+                                {% elif tenant.category == 'PHARMACY' %}pharmacy
+                                {% else %}hospital{% endif %}">
+                                <span class="material-icons-round" style="font-size:16px">
+                                    {% if tenant.category == 'CLINIC' %}local_hospital
+                                    {% elif tenant.category == 'PHARMACY' %}medication
+                                    {% elif tenant.category == 'LAB' %}biotech
+                                    {% else %}domain{% endif %}
+                                </span>
+                            </div>
+                            <div>
+                                <a href="{% url 'admin-tenant-detail' tenant.pk %}" style="text-decoration:none;">
+                                    <div class="patient-name" style="color:var(--accent-blue); font-weight:600;">{{ tenant.name }}</div>
+                                </a>
+                                <div class="patient-id">{{ tenant.email }}</div>
+                            </div>
                         </div>
                     </td>
-                    <td><code>{{ tenant.subdomain }}.healthcrm.com</code></td>
-                    <td>{{ tenant.email }}</td>
+                    <td><code style="color:var(--accent-cyan); font-size:12px;">{{ tenant.subdomain }}</code></td>
+                    <td>{{ tenant.phone|default:"—" }}</td>
                     <td>
                         <span class="badge-tag {% if tenant.is_active %}active{% else %}expired{% endif %}">
                             {% if tenant.is_active %}Active{% else %}Inactive{% endif %}
                         </span>
                     </td>
-                    <td>{{ tenant.created_at|date:"M d, Y" }}</td>
+                    <td>{{ tenant.created_at|date:"d M Y" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -50,6 +65,24 @@
             <div class="icon material-icons-round">business_off</div>
             <p>No {{ category_name|lower }} have been registered yet.</p>
             <a href="{% url 'tenant-create-page' %}" class="btn-outline">Register First Unit</a>
+        </div>
+        {% endif %}
+
+        {% if tenants.has_other_pages %}
+        <div class="pagination" style="display:flex; justify-content:center; gap:8px; padding:16px;">
+            {% if tenants.has_previous %}
+            <a href="?page=1" class="action-btn" style="text-decoration:none;">&laquo; First</a>
+            <a href="?page={{ tenants.previous_page_number }}" class="action-btn" style="text-decoration:none;">Prev</a>
+            {% endif %}
+
+            <span style="align-self:center; font-size:14px; font-weight:500;">
+                Page {{ tenants.number }} of {{ tenants.paginator.num_pages }}
+            </span>
+
+            {% if tenants.has_next %}
+            <a href="?page={{ tenants.next_page_number }}" class="action-btn" style="text-decoration:none;">Next</a>
+            <a href="?page={{ tenants.paginator.num_pages }}" class="action-btn" style="text-decoration:none;">Last &raquo;</a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

@@ -1,0 +1,67 @@
+{% extends "base_admin.html" %}
+
+{% block nav_tenants %}active{% endblock %}
+{% block page_title %}Tenant Details <span>/ {{ tenant.name }}</span>{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">business</span> Organization Info</h3>
+        </div>
+        <div class="card-body">
+            <ul class="sub-info">
+                <li><span class="label">Name</span> <span class="value">{{ tenant.name }}</span></li>
+                <li><span class="label">Category</span> <span class="value">{{ tenant.get_category_display }}</span></li>
+                <li><span class="label">Subdomain</span> <code style="color:var(--accent-cyan); font-size:12px;">{{ tenant.subdomain }}</code></li>
+                <li><span class="label">Email</span> <span class="value">{{ tenant.email }}</span></li>
+                <li><span class="label">Phone</span> <span class="value">{{ tenant.phone|default:"—" }}</span></li>
+                <li>
+                    <span class="label">Status</span> 
+                    <span class="badge-tag {% if tenant.is_active %}active{% else %}expired{% endif %}">
+                        {% if tenant.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </li>
+                <li><span class="label">Created At</span> <span class="value">{{ tenant.created_at|date:"d M Y, h:i A" }}</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">workspace_premium</span> Subscription Details</h3>
+        </div>
+        <div class="card-body">
+            {% if subscription %}
+            <ul class="sub-info">
+                <li><span class="label">Plan</span> <span class="value">{{ subscription.plan.display_name|default:subscription.plan.name }}</span></li>
+                <li>
+                    <span class="label">Status</span>
+                    <span class="badge-tag
+                        {% if subscription.status == 'ACTIVE' %}active
+                        {% elif subscription.status == 'TRIAL' %}trial
+                        {% else %}expired{% endif %}">
+                        {{ subscription.status }}
+                    </span>
+                </li>
+                <li><span class="label">Start Date</span> <span class="value">{{ subscription.start_date|date:"d M Y" }}</span></li>
+                <li><span class="label">End Date</span> <span class="value">{{ subscription.end_date|date:"d M Y" }}</span></li>
+                <li><span class="label">Is Trial?</span> <span class="value">{% if subscription.trial %}Yes{% else %}No{% endif %}</span></li>
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">credit_card_off</div>
+                <p>No active subscription record found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'admin-tenants' %}" class="action-btn">
+        <span class="icon material-icons-round">arrow_back</span>
+        Back to Tenants
+    </a>
+</div>
+{% endblock %}
