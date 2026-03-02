@@ -169,7 +169,7 @@
                     </span>
                 </div>
                 <div class="plan-revenue-info">
-                    <div class="plan-revenue-name">{{ item.plan.get_name_display }}</div>
+                    <div class="plan-revenue-name">{{ item.plan.display_name|default:item.plan.name }}</div>
                     <div class="plan-revenue-detail">
                         ₹{{ item.plan.price|floatformat:0 }}/mo × {{ item.active_subs }} subscriber{{ item.active_subs|pluralize }}
                     </div>

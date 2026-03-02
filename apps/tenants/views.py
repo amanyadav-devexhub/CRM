@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 
 from .serializers import TenantCreateSerializer
-from .models import Client, Domain, Tenant, SubscriptionPlan, TenantSubscription, Feature, ClinicSettings
+from .models import Client, Domain, Tenant, SubscriptionPlan, TenantSubscription, Feature, ClinicSettings, TenantFeature
 
 User = get_user_model()
 
@@ -81,12 +81,12 @@ class AdminDashboardView(View):
 
         # Tenant stats
         try:
-            tenants = Tenant.objects.all()
-            tenant_count = tenants.count()
+            all_tenants = Tenant.objects.all()
+            tenant_count = all_tenants.count()
             active_tenant_count = Tenant.objects.filter(is_active=True).count()
             inactive_tenant_count = tenant_count - active_tenant_count
         except Exception:
-            tenants = []
+            all_tenants = []
             tenant_count = 0
             active_tenant_count = 0
             inactive_tenant_count = 0
@@ -109,24 +109,45 @@ class AdminDashboardView(View):
         except Exception:
             plans = []
 
-        # Feature flags
+        # Feature flags (Recent 5 with category counts)
         try:
-            features = Feature.objects.all()
-            feature_count = features.count()
+            recent_features = Feature.objects.all().order_by("-created_at")[:5]
+            feature_count = Feature.objects.count()
+            
+            categories = dict(Tenant.CATEGORY_CHOICES).keys()
+            feature_data = []
+            
+            for f in recent_features:
+                category_counts = {}
+                for cat in categories:
+                    count = TenantFeature.objects.filter(
+                        feature_name=f.code,
+                        is_enabled=True,
+                        tenant__category=cat
+                    ).count()
+                    if count > 0:
+                        category_counts[cat] = count
+                feature_data.append({
+                    "feature": f,
+                    "category_counts": category_counts
+                })
+            
         except Exception:
-            features = []
+            feature_data = []
             feature_count = 0
 
         # Category totals
         try:
             categories = {
-                'CLINIC': tenants.filter(category='CLINIC').count(),
-                'PHARMACY': tenants.filter(category='PHARMACY').count(),
-                'HOSPITAL': tenants.filter(category='HOSPITAL').count(),
-                'LAB': tenants.filter(category='LAB').count(),
+                'CLINIC': all_tenants.filter(category='CLINIC').count(),
+                'PHARMACY': all_tenants.filter(category='PHARMACY').count(),
+                'HOSPITAL': all_tenants.filter(category='HOSPITAL').count(),
+                'LAB': all_tenants.filter(category='LAB').count(),
             }
+            tenants = all_tenants.order_by('-created_at')[:5]
         except Exception:
             categories = {'CLINIC': 0, 'PHARMACY': 0, 'HOSPITAL': 0, 'LAB': 0}
+            tenants = all_tenants[:5] if hasattr(all_tenants, '__getitem__') else []
 
         context = {
             "patient_count": patient_count,
@@ -137,7 +158,7 @@ class AdminDashboardView(View):
             "subscription_count": subscription_count,
             "trial_count": trial_count,
             "plans": plans,
-            "features": features,
+            "feature_data": feature_data,
             "feature_count": feature_count,
             "categories": categories,
         }

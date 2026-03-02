@@ -1040,68 +1040,86 @@
             </div>
 
             <div class="pricing-grid">
-                <!-- Basic -->
-                <div class="price-card animate-in">
-                    <div class="price-plan-name">Basic</div>
+                {% for plan in plans %}
+                <div class="price-card {% if plan.name == 'PRO' %}featured{% endif %} animate-in">
+                    <div class="price-plan-name">{{ plan.display_name|default:plan.name }}</div>
                     <div class="price-amount">
-                        {% for plan in plans %}{% if plan.name == "BASIC" %}₹{{ plan.price }}{% endif %}{% endfor %}
-                        {% if not plans %}₹999{% endif %}
-                        <span>/month</span>
+                        {% if plan.price == 0 %}Free{% else %}₹{{ plan.price|floatformat:0 }}{% endif %}
+                        {% if plan.price != 0 %}<span>/month</span>{% endif %}
                     </div>
-                    <div class="price-desc">Perfect for small clinics with 1–5 doctors</div>
-                    <ul class="price-features">
-                        <li><span class="material-icons-round">check_circle</span> Patient Management</li>
-                        <li><span class="material-icons-round">check_circle</span> Appointments & Scheduling</li>
-                        <li><span class="material-icons-round">check_circle</span> Basic Billing</li>
-                        <li><span class="material-icons-round">check_circle</span> SMS Notifications</li>
-                        <li><span class="material-icons-round">check_circle</span> Up to 5 Staff Users</li>
-                        <li class="disabled"><span class="material-icons-round">cancel</span> AI Features</li>
-                        <li class="disabled"><span class="material-icons-round">cancel</span> Advanced Analytics</li>
-                    </ul>
-                    <a href="/register/" class="btn-plan secondary">Start Free Trial</a>
-                </div>
+                    <div class="price-desc">{{ plan.description|default:"Perfect for your healthcare practice" }}</div>
 
-                <!-- Pro -->
-                <div class="price-card featured animate-in">
-                    <div class="price-plan-name">Pro</div>
-                    <div class="price-amount">
-                        {% for plan in plans %}{% if plan.name == "PRO" %}₹{{ plan.price }}{% endif %}{% endfor %}
-                        {% if not plans %}₹2,999{% endif %}
-                        <span>/month</span>
-                    </div>
-                    <div class="price-desc">For growing hospitals & multi-specialty clinics</div>
                     <ul class="price-features">
-                        <li><span class="material-icons-round">check_circle</span> Everything in Basic</li>
-                        <li><span class="material-icons-round">check_circle</span> Lab & Pharmacy Modules</li>
-                        <li><span class="material-icons-round">check_circle</span> WhatsApp Integration</li>
-                        <li><span class="material-icons-round">check_circle</span> Campaign Management</li>
-                        <li><span class="material-icons-round">check_circle</span> Up to 50 Staff Users</li>
-                        <li><span class="material-icons-round">check_circle</span> Advanced Analytics</li>
-                        <li class="disabled"><span class="material-icons-round">cancel</span> AI Features</li>
-                    </ul>
-                    <a href="/register/" class="btn-plan primary">Start Free Trial</a>
-                </div>
+                        <!-- Resource Limits -->
+                        <li>
+                            <span class="material-icons-round">check_circle</span>
+                            Up to {{ plan.max_doctors }} Doctor{{ plan.max_doctors|pluralize }}
+                        </li>
+                        <li>
+                            <span class="material-icons-round">check_circle</span>
+                            Up to {{ plan.max_staff }} Staff User{{ plan.max_staff|pluralize }}
+                        </li>
+                        <li>
+                            <span class="material-icons-round">check_circle</span>
+                            {{ plan.max_patients }} Patient{{ plan.max_patients|pluralize }}
+                        </li>
+                        <li>
+                            <span class="material-icons-round">check_circle</span>
+                            {{ plan.max_appointments_per_month }} Appointments/mo
+                        </li>
 
-                <!-- Enterprise -->
-                <div class="price-card animate-in">
-                    <div class="price-plan-name">Enterprise</div>
-                    <div class="price-amount">
-                        {% for plan in plans %}{% if plan.name == "ENTERPRISE" %}₹{{ plan.price }}{% endif %}{% endfor %}
-                        {% if not plans %}₹9,999{% endif %}
-                        <span>/month</span>
-                    </div>
-                    <div class="price-desc">For large hospitals & healthcare chains</div>
-                    <ul class="price-features">
-                        <li><span class="material-icons-round">check_circle</span> Everything in Pro</li>
-                        <li><span class="material-icons-round">check_circle</span> AI-Powered Insights</li>
-                        <li><span class="material-icons-round">check_circle</span> Multi-Branch Support</li>
-                        <li><span class="material-icons-round">check_circle</span> Custom Integrations</li>
-                        <li><span class="material-icons-round">check_circle</span> Unlimited Staff Users</li>
-                        <li><span class="material-icons-round">check_circle</span> Priority Support</li>
-                        <li><span class="material-icons-round">check_circle</span> HIPAA Compliance</li>
+                        <!-- Feature Flags -->
+                        <li class="{% if not plan.sms_enabled %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.sms_enabled %}check_circle{% else %}cancel{% endif %}</span>
+                            SMS Notifications
+                        </li>
+                        <li class="{% if not plan.whatsapp_enabled %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.whatsapp_enabled %}check_circle{% else %}cancel{% endif %}</span>
+                            WhatsApp Integration
+                        </li>
+                        <li class="{% if not plan.pharmacy_addon %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.pharmacy_addon %}check_circle{% else %}cancel{% endif %}</span>
+                            Pharmacy Module
+                        </li>
+                        <li class="{% if not plan.lab_addon %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.lab_addon %}check_circle{% else %}cancel{% endif %}</span>
+                            Lab Management
+                        </li>
+                        <li class="{% if not plan.advanced_reports %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.advanced_reports %}check_circle{% else %}cancel{% endif %}</span>
+                            Advanced Reports
+                        </li>
+                        <li class="{% if not plan.ai_enabled %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.ai_enabled %}check_circle{% else %}cancel{% endif %}</span>
+                            AI-Powered Insights
+                        </li>
+                        <li class="{% if not plan.export_enabled %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.export_enabled %}check_circle{% else %}cancel{% endif %}</span>
+                            Data Export
+                        </li>
+                        <li class="{% if not plan.custom_branding %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.custom_branding %}check_circle{% else %}cancel{% endif %}</span>
+                            Custom Branding
+                        </li>
+                        <li class="{% if not plan.api_access %}disabled{% endif %}">
+                            <span class="material-icons-round">{% if plan.api_access %}check_circle{% else %}cancel{% endif %}</span>
+                            API Access
+                        </li>
                     </ul>
-                    <a href="/register/" class="btn-plan secondary">Contact Sales</a>
+                    <a href="/register/?plan_id={{ plan.id }}" class="btn-plan {% if plan.name == 'PRO' %}primary{% else %}secondary{% endif %}">
+                        Avail Now →
+                    </a>
                 </div>
+                {% empty %}
+                <!-- Fallback if no plans in DB -->
+                <div class="price-card animate-in">
+                    <div class="price-plan-name">Coming Soon</div>
+                    <div class="price-amount">—</div>
+                    <div class="price-desc">Plans are being configured. Check back soon!</div>
+                    <ul class="price-features"></ul>
+                    <a href="/register/" class="btn-plan secondary">Register →</a>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </section>

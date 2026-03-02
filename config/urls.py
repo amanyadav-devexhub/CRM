@@ -10,13 +10,19 @@ from apps.patients.template_views import (
     PatientListView, PatientDetailView,
     PatientCreateView, PatientEditView, PatientDeleteView,
 )
+from apps.tenants.admin_views import (
+    AdminTenantListView, AdminSubscriptionListView, AdminPlanListView,
+    AdminFeatureListView, AdminSettingsView, AdminAnalyticsView,
+    AdminRevenueView, AdminTenantDetailView,
+)
 from apps.tenants.template_views import (
     TenantCreatePageView,
     CategoryIndexView, CategoryClinicView, CategoryPharmacyView,
     CategoryListView,
     PharmacyInventoryView, PharmacySalesView, PharmacyPrescriptionsView,
     ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
-    ClinicDashboardAPIView,CategoryLabsView
+    ClinicDashboardAPIView,CategoryLabsView,
+    CategoryLabsTestCatalogView, CategoryLabsOrderListView
 )
 from apps.communications.template_views import (
     CommunicationsIndexView, MessageListView,
@@ -101,6 +107,14 @@ urlpatterns = [
 
     # ── Admin Dashboard (Platform Owner / SuperAdmin) ──
     path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path("admin-tenants/", AdminTenantListView.as_view(), name="admin-tenants"),
+    path("admin-tenants/<uuid:pk>/", AdminTenantDetailView.as_view(), name="admin-tenant-detail"),
+    path("admin-subscriptions/", AdminSubscriptionListView.as_view(), name="admin-subscriptions"),
+    path("admin-plans/", AdminPlanListView.as_view(), name="admin-plans"),
+    path("admin-features/", AdminFeatureListView.as_view(), name="admin-features"),
+    path("admin-settings/", AdminSettingsView.as_view(), name="admin-settings"),
+    path("admin-analytics/", AdminAnalyticsView.as_view(), name="admin-analytics"),
+    path("admin-revenue/", AdminRevenueView.as_view(), name="admin-revenue"),
 
     # ── Sub-Admin Dashboard (Tenant / Clinic) ──
     path("dashboard/", SubAdminDashboardView.as_view(), name="dashboard"),
@@ -168,6 +182,8 @@ urlpatterns = [
     path("categories/pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
     path("categories/pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
     path("categories/labs/", CategoryLabsView.as_view(), name="category-labs"),
+    path("categories/labs/catalog/", CategoryLabsTestCatalogView.as_view(), name="lab-test-catalog"),
+    path("categories/labs/orders/", CategoryLabsOrderListView.as_view(), name="lab-order-list"),
 
     # ── Communications HTML pages ──
     path("communications/", CommunicationsIndexView.as_view(), name="communications-index"),

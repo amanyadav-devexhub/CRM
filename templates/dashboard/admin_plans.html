@@ -85,12 +85,17 @@
 
 <div class="plan-grid">
     {% for item in plan_data %}
-    <form method="post" class="plan-card">
+    <form method="post" class="plan-card" style="position:relative;">
         {% csrf_token %}
         <input type="hidden" name="action" value="update">
         <input type="hidden" name="plan_id" value="{{ item.plan.pk }}">
 
-        <div class="plan-name">{{ item.plan.get_name_display }}</div>
+        <!-- Delete button -->
+        <button type="submit" name="action" value="delete" class="action-btn" style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px;" onclick="return confirm('Are you sure you want to delete this plan?');">
+            <span class="material-icons-round" style="font-size:18px;">delete</span>
+        </button>
+
+        <div class="plan-name">{{ item.plan.display_name|default:item.plan.name }}</div>
         <div class="plan-price {% if item.plan.price == 0 %}free{% endif %}">
             ₹<input type="number" name="price" value="{{ item.plan.price|floatformat:0 }}"
                 class="edit-input" style="width:100px; font-size:24px; font-weight:800;
@@ -139,6 +144,52 @@
         </div>
     </div>
     {% endfor %}
+
+    <!-- Create New Plan Card -->
+    <form method="post" class="plan-card" style="border: 2px dashed var(--border); display:flex; flex-direction:column; justify-content:space-between; height: 100%;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+
+        <div style="margin-bottom: 20px;">
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="font-size:12px; color:var(--text-muted);">Internal Name (e.g. BASIC)</label>
+                <input type="text" name="name" class="form-control" required style="padding:8px; font-size:14px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="font-size:12px; color:var(--text-muted);">Display Name (e.g. Basic Plan)</label>
+                <input type="text" name="display_name" class="form-control" required style="padding:8px; font-size:14px;">
+            </div>
+        </div>
+
+        <ul class="plan-limits">
+            <li>
+                <span>Price (₹/mo)</span>
+                <input type="number" name="price" value="0" class="edit-input" required>
+            </li>
+            <li>
+                <span>Max Doctors</span>
+                <input type="number" name="max_doctors" value="1" class="edit-input" required>
+            </li>
+            <li>
+                <span>Max Staff</span>
+                <input type="number" name="max_staff" value="2" class="edit-input" required>
+            </li>
+            <li>
+                <span>Max Patients</span>
+                <input type="number" name="max_patients" value="300" class="edit-input" required>
+            </li>
+            <li>
+                <span>Appointments / Month</span>
+                <input type="number" name="max_appointments" value="150" class="edit-input" required>
+            </li>
+        </ul>
+
+        <button type="submit" class="action-btn success" style="width:100%; justify-content:center; padding:10px;">
+            <span class="material-icons-round" style="font-size:16px;">add</span>
+            Create Plan
+        </button>
+    </form>
+
 </div>
 
 {% endblock %}

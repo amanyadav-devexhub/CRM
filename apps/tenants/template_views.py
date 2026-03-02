@@ -3,6 +3,7 @@
 Template-based views for Tenant management and Category hubs.
 """
 from django.shortcuts import render, redirect
+from django.core.paginator import Paginator
 from django.views import View
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -443,13 +444,39 @@ class CategoryLabsView(View):
     def get(self, request):
 
         context = {
-            "pending_tests": pending_tests,
-            "samples_received": samples_received,
-            "tat_score": tat_score,
-            "revenue_today": f"₹{revenue:,.0f}",
-            "test_requests": test_requests,
+            "pending_tests": 0,
+            "samples_received": 0,
+            "tat_score": "—",
+            "revenue_today": "₹0",
+            "test_requests": [],
         }
         return render(request, "categories/labs.html", context)
+
+
+class CategoryLabsTestCatalogView(View):
+    """Placeholder view for Lab Test Catalog."""
+    def get(self, request):
+        return render(request, "categories/labs.html", {
+            "pending_tests": 0,
+            "samples_received": 0,
+            "tat_score": "—",
+            "revenue_today": "₹0",
+            "test_requests": [],
+            "alert": "Test Catalog is under construction",
+        })
+
+
+class CategoryLabsOrderListView(View):
+    """Placeholder view for Lab Orders List."""
+    def get(self, request):
+        return render(request, "categories/labs.html", {
+            "pending_tests": 0,
+            "samples_received": 0,
+            "tat_score": "—",
+            "revenue_today": "₹0",
+            "test_requests": [],
+            "alert": "Order list is under construction",
+        })
 
 
 # ──────────────────────────────────────────────
@@ -474,13 +501,18 @@ class CategoryListView(View):
             })
 
         category_code, category_display = category_map[category_slug]
-        tenants = Tenant.objects.filter(category=category_code).order_by("-created_at")
+        tenants_query = Tenant.objects.filter(category=category_code).order_by("-created_at")
+        
+        # Pagination setup (10 tenants per page)
+        paginator = Paginator(tenants_query, 10)
+        page_number = request.GET.get('page', 1)
+        tenants = paginator.get_page(page_number)
 
         context = {
             "category_name": category_display,
             "category_slug": category_slug,
             "tenants": tenants,
-            "tenant_count": tenants.count(),
+            "tenant_count": tenants_query.count(),
         }
         return render(request, self.template_name, context)
 
