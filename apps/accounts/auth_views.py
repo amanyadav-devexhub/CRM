@@ -351,11 +351,19 @@ class LoginView(View):
             base_host = request_host.split(":")[0]
             port_part = request_host.split(":")[1] if ":" in request_host else ""
             scheme = "https" if request.is_secure() else "http"
+            
+            # Extract root domain from subdomain (e.g., test.localhost → localhost)
+            parts = base_host.split(".")
+            if len(parts) > 1 and parts[0] != "127" and parts[0] != "localhost":
+                root_host = ".".join(parts[1:])
+            else:
+                root_host = base_host
+                
             # Can't have subdomains on IP addresses — use localhost instead
-            if base_host in ("127.0.0.1", "0.0.0.0"):
-                base_host = "localhost"
+            if root_host in ("127.0.0.1", "0.0.0.0"):
+                root_host = "localhost"
             port_suffix = f":{port_part}" if port_part else ""
-            return f"{scheme}://{subdomain}.{base_host}{port_suffix}"
+            return f"{scheme}://{subdomain}.{root_host}{port_suffix}"
         # Fallback for when request is not available
         from django.conf import settings
         port = getattr(settings, "TENANT_PORT", "8000")
