@@ -11,10 +11,22 @@
         <h2 style="font-size:22px; font-weight:700;">Patient Registry</h2>
         <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">{{ patients|length }} patient{{ patients|length|pluralize }} registered</p>
     </div>
+    
+    {% if request.user.is_superuser %}
     <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
         <span class="icon material-icons-round">person_add</span>
         Add New Patient
     </a>
+    {% elif request.user.role %}
+        {% for perm in request.user.role.permissions.all %}
+            {% if perm.code == 'patient.create' %}
+            <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
+                <span class="icon material-icons-round">person_add</span>
+                Add New Patient
+            </a>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 </div>
 
 <!-- ─── Filters ─── -->
@@ -102,9 +114,12 @@
                             <a href="/patients/{{ p.id }}/" class="tbl-action" title="View">
                                 <span class="material-icons-round">visibility</span>
                             </a>
+                            
+                            {% if request.user.is_superuser %}
                             <a href="/patients/{{ p.id }}/edit/" class="tbl-action" title="Edit">
                                 <span class="material-icons-round">edit</span>
                             </a>
+                            
                             <form method="post" action="/patients/{{ p.id }}/delete/" style="display:inline;"
                                 onsubmit="return confirm('Delete patient {{ p.first_name }} {{ p.last_name }}?');">
                                 {% csrf_token %}
@@ -112,6 +127,25 @@
                                     <span class="material-icons-round">delete</span>
                                 </button>
                             </form>
+                            {% elif request.user.role %}
+                                {% for perm in request.user.role.permissions.all %}
+                                    {% if perm.code == 'patient.update' %}
+                                    <a href="/patients/{{ p.id }}/edit/" class="tbl-action" title="Edit">
+                                        <span class="material-icons-round">edit</span>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perm.code == 'patient.delete' %}
+                                    <form method="post" action="/patients/{{ p.id }}/delete/" style="display:inline;"
+                                        onsubmit="return confirm('Delete patient {{ p.first_name }} {{ p.last_name }}?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="tbl-action danger" title="Delete">
+                                            <span class="material-icons-round">delete</span>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
                         </div>
                     </td>
                 </tr>

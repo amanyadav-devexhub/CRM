@@ -474,10 +474,79 @@
             <form method="post" action="/onboarding/">
                 {% csrf_token %}
 
+                <div class="dyn-group-heading" style="margin-top: 0; padding-top: 0; border: none; font-size: 1rem; color: #fff; margin-bottom: 0.25rem;">Basic Clinic Info</div>
+                <div style="font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem;">Your clinic's identity and contact details</div>
+                
+                <div class="category-grid">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Clinic Name</label>
+                        <input type="text" name="org_name" placeholder="Enterprise Clinic" value="{{ data.org_name|default:'' }}" required autofocus>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Contact Phone</label>
+                        <input type="text" name="contact_phone" placeholder="+91 98765 43210" value="{{ data.contact_phone|default:'' }}" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Contact Email</label>
+                        <input type="email" name="contact_email" placeholder="enterprise@yopmail.com" value="{{ data.contact_email|default:'' }}" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>GST / Tax Number</label>
+                        <input type="text" name="gst_number" placeholder="29ABCDE1234F1ZH" value="{{ data.gst_number|default:'' }}">
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>Organization Name</label>
-                    <input type="text" name="org_name" placeholder="City Health Clinic"
-                        value="{{ data.org_name|default:'' }}" required autofocus>
+                    <label>Registration Number</label>
+                    <input type="text" name="registration_number" placeholder="REG-12345" value="{{ data.registration_number|default:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea name="address" rows="3" placeholder="123, Main Street, City, State, PIN" style="width: 100%; padding: .7rem 1rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .04); color: var(--text); font-size: .9rem; font-family: inherit; transition: border-color .2s, box-shadow .2s; resize: vertical;">{{ data.address|default:'' }}</textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2.5rem;">
+                    <label>Clinic Logo</label>
+                    <input type="file" name="logo" accept="image/*" style="padding: 0.5rem; cursor: pointer;">
+                </div>
+
+                <div class="dyn-group-heading" style="margin-top: 1.5rem; padding-top: 0; border: none; font-size: 1rem; color: #fff; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"><span class="material-icons-round" style="color: var(--accent); background: rgba(59, 130, 246, 0.15); padding: 4px; border-radius: 8px; font-size: 1.2rem;">language</span> Localization</div>
+                <div style="font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem;">Regional settings for your clinic</div>
+
+                <div class="category-grid" style="margin-bottom: 2rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Timezone</label>
+                        <select name="timezone" class="q-select" style="width: 100%;">
+                            <option value="Asia/Kolkata" {% if data.timezone == 'Asia/Kolkata' or not data.timezone %}selected{% endif %}>Asia/Kolkata (IST)</option>
+                            <option value="US/Eastern" {% if data.timezone == 'US/Eastern' %}selected{% endif %}>US/Eastern (EST)</option>
+                            <option value="Europe/London" {% if data.timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Currency</label>
+                        <select name="currency" class="q-select" style="width: 100%;">
+                            <option value="INR" {% if data.currency == 'INR' or not data.currency %}selected{% endif %}>₹ INR (Indian Rupee)</option>
+                            <option value="USD" {% if data.currency == 'USD' %}selected{% endif %}>$ USD (US Dollar)</option>
+                            <option value="EUR" {% if data.currency == 'EUR' %}selected{% endif %}>€ EUR (Euro)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Language</label>
+                        <select name="language" class="q-select" style="width: 100%;">
+                            <option value="en" {% if data.language == 'en' or not data.language %}selected{% endif %}>English</option>
+                            <option value="hi" {% if data.language == 'hi' %}selected{% endif %}>Hindi</option>
+                            <option value="es" {% if data.language == 'es' %}selected{% endif %}>Spanish</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Date Format</label>
+                        <select name="date_format" class="q-select" style="width: 100%;">
+                            <option value="DD/MM/YYYY" {% if data.date_format == 'DD/MM/YYYY' or not data.date_format %}selected{% endif %}>DD/MM/YYYY</option>
+                            <option value="MM/DD/YYYY" {% if data.date_format == 'MM/DD/YYYY' %}selected{% endif %}>MM/DD/YYYY</option>
+                            <option value="YYYY-MM-DD" {% if data.date_format == 'YYYY-MM-DD' %}selected{% endif %}>YYYY-MM-DD</option>
+                        </select>
+                    </div>
                 </div>
 
                 <label class="field-label">What type of organization are you registering as?</label>

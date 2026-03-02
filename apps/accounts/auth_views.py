@@ -458,8 +458,18 @@ class AuthBridgeView(View):
         # Create local session on this subdomain
         login(request, user)
 
+        # Determine dashboard based on employee type/role if applicable
+        dashboard_url = "/dashboard/"
+        if hasattr(user, "employee_profile"):
+            etype = user.employee_profile.employee_type
+            if etype == "DOCTOR":
+                dashboard_url = "/dashboard/doctor/"
+            elif etype == "RECEPTIONIST":
+                dashboard_url = "/dashboard/reception/"
+            # (HR, Accountant, etc., can be added here)
+
         # Set JWT cookies for this subdomain
-        response = redirect("/dashboard/")
+        response = redirect(dashboard_url)
         _set_jwt_cookies(response, user)
         return response
 

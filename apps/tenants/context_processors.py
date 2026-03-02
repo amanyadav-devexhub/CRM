@@ -43,7 +43,13 @@ def tenant_features(request):
         if tenant.has_feature(code):
             enabled.add(code)
 
+    # Fetch User Permissions for Sidebar Gating
+    user_permissions = set()
+    if not request.user.is_superuser and getattr(request.user, "role", None):
+        user_permissions = set(request.user.role.permissions.values_list("code", flat=True))
+
     return {
         "enabled_features": enabled,
         "all_features": ALL_FEATURE_CODES,
+        "user_permissions": user_permissions,
     }

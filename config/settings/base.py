@@ -148,6 +148,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://*.localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://*.127.0.0.1:8000",
     "https://*.ngrok-free.app",
     "https://*.ngrok-free.dev",
     "https://*.ngrok.io",

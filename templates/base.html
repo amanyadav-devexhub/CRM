@@ -51,7 +51,11 @@
                 <div class="brand-icon">{% block brand_icon_letter %}H{% endblock %}</div>
                 <div>
                     <h2>{% block brand_name %}HealthCRM{% endblock %}</h2>
-                    <span>{% block brand_subtitle %}Clinic Dashboard{% endblock %}</span>
+                    <span>{% block brand_subtitle %}
+                        {% if request.user.is_superuser %}Admin View
+                        {% elif request.user.role and "dashboard.clinic" not in user_permissions %}{{ request.user.role.name }}
+                        {% else %}Clinic Admin{% endif %}
+                    {% endblock %}</span>
                 </div>
             </div>
 
@@ -59,7 +63,7 @@
                 {% block sidebar_nav %}
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="/dashboard/" class="nav-item {% block nav_dashboard %}{% endblock %}">
+                    <a href="{% if not request.user.is_superuser and 'dashboard.clinic' not in user_permissions %}{% if 'dashboard.reception' in user_permissions %}/dashboard/reception/{% elif 'dashboard.doctor' in user_permissions %}/dashboard/doctor/{% else %}/dashboard/{% endif %}{% else %}/dashboard/{% endif %}" class="nav-item {% block nav_dashboard %}{% endblock %}">
                         <span class="icon material-icons-round">dashboard</span>
                         Dashboard
                     </a>
@@ -74,6 +78,8 @@
                         <span class="icon material-icons-round">lock</span> Patients 🔒
                     </span>
                     {% endif %}
+                    
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions or "dashboard.hr" in user_permissions %}
                     {% if "staff" in enabled_features %}
                     <a href="/dashboard/staff/" class="nav-item {% block nav_staff %}{% endblock %}">
                         <span class="icon material-icons-round">badge</span>
@@ -84,10 +90,14 @@
                         <span class="icon material-icons-round">lock</span> Staff 🔒
                     </span>
                     {% endif %}
+                    {% endif %}
+                    
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions %}
                     <a href="/dashboard/doctors/" class="nav-item {% block nav_doctors %}{% endblock %}">
                         <span class="icon material-icons-round">stethoscope</span>
                         Doctors
                     </a>
+                    {% endif %}
                 </div>
 
                 <div class="nav-section">
@@ -102,6 +112,8 @@
                         <span class="icon material-icons-round">lock</span> Appointments 🔒
                     </span>
                     {% endif %}
+                    
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions or "billing.view" in user_permissions %}
                     {% if "billing" in enabled_features %}
                     <a href="/dashboard/billing/" class="nav-item {% block nav_billing %}{% endblock %}">
                         <span class="icon material-icons-round">receipt_long</span>
@@ -112,6 +124,8 @@
                         <span class="icon material-icons-round">lock</span> Billing 🔒
                     </span>
                     {% endif %}
+                    {% endif %}
+                    
                     {% if "prescriptions" in enabled_features %}
                     <a href="/dashboard/clinical/prescriptions/" class="nav-item {% block nav_prescriptions %}{% endblock %}">
                         <span class="icon material-icons-round">description</span>
@@ -126,6 +140,7 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Clinical</div>
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions or "dashboard.doctor" in user_permissions %}
                     {% if "clinical_notes" in enabled_features %}
                     <a href="/dashboard/clinical/notes/" class="nav-item {% block nav_clinical %}{% endblock %}">
                         <span class="icon material-icons-round">medical_services</span>
@@ -136,6 +151,9 @@
                         <span class="icon material-icons-round">lock</span> Clinical Notes 🔒
                     </span>
                     {% endif %}
+                    {% endif %}
+                    
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions or "dashboard.pharmacy" in user_permissions %}
                     {% if "pharmacy" in enabled_features %}
                     <a href="/categories/pharmacy/" class="nav-item {% block nav_pharmacy %}{% endblock %}">
                         <span class="icon material-icons-round">medication</span>
@@ -146,6 +164,9 @@
                         <span class="icon material-icons-round">lock</span> Pharmacy 🔒
                     </span>
                     {% endif %}
+                    {% endif %}
+                    
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions or "dashboard.lab" in user_permissions %}
                     {% if "lab" in enabled_features %}
                     <a href="/categories/labs/" class="nav-item {% block nav_labs %}{% endblock %}">
                         <span class="icon material-icons-round">biotech</span>
@@ -156,10 +177,12 @@
                         <span class="icon material-icons-round">lock</span> Lab Reports 🔒
                     </span>
                     {% endif %}
+                    {% endif %}
                 </div>
 
                 <div class="nav-section">
                     <div class="nav-section-title">Insights</div>
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions %}
                     {% if "analytics" in enabled_features %}
                     <a href="/dashboard/analytics/" class="nav-item {% block nav_analytics %}{% endblock %}">
                         <span class="icon material-icons-round">bar_chart</span>
@@ -180,16 +203,25 @@
                         <span class="icon material-icons-round">lock</span> Communications 🔒
                     </span>
                     {% endif %}
+                    {% endif %}
+                    
                     {% if "notifications" in enabled_features %}
                     <a href="/notifications/" class="nav-item {% block nav_notifications %}{% endblock %}">
                         <span class="icon material-icons-round">notifications</span>
                         Notifications
                     </a>
                     {% endif %}
+                    
+                    {% if request.user.is_superuser or "dashboard.clinic" in user_permissions %}
                     <a href="/dashboard/settings/" class="nav-item {% block nav_settings %}{% endblock %}">
                         <span class="icon material-icons-round">settings</span>
-                        Settings
+                        Clinic Settings
                     </a>
+                    <a href="/dashboard/settings/roles/" class="nav-item {% block nav_roles %}{% endblock %}">
+                        <span class="icon material-icons-round">security</span>
+                        Roles & Permissions
+                    </a>
+                    {% endif %}
                 </div>
                 {% endblock %}
         </aside>
@@ -218,7 +250,7 @@
                             style="background: {% block user_avatar_gradient %}var(--gradient-green){% endblock %};">{% firstof request.user.email.0 'S' %}</div>
                         <div class="user-info">
                             <div class="name">{{ request.user.email|default:'Staff' }}</div>
-                            <div class="role">{% if request.user.is_superuser %}Admin View{% else %}Sub Admin{% endif %}
+                            <div class="role">{% if request.user.is_superuser %}Admin View{% elif request.user.employee_profile %}{{ request.user.employee_profile.get_employee_type_display }}{% elif request.user.role %}{{ request.user.role.name }}{% else %}Sub Admin{% endif %}
                             </div>
                         </div>
                     </div>
