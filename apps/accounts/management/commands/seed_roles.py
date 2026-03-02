@@ -52,7 +52,10 @@ class Command(BaseCommand):
 
         if doctor:
             perms = Permission.objects.filter(code__startswith="patient.") | \
-                    Permission.objects.filter(code__startswith="appointment.")
+                    Permission.objects.filter(code__startswith="appointment.") | \
+                    Permission.objects.filter(code="dashboard.doctor") | \
+                    Permission.objects.filter(code="dashboard.lab") | \
+                    Permission.objects.filter(code="dashboard.pharmacy")
             role.permissions.set(perms)
 
         if receptionist:
@@ -61,6 +64,9 @@ class Command(BaseCommand):
                 "patient.create",
                 "appointment.view",
                 "appointment.create",
+                "billing.view",
+                "billing.create",
+                "dashboard.reception",
             ])
             role.permissions.set(perms)
 

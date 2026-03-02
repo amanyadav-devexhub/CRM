@@ -6,6 +6,7 @@ from django.views import View
 from django.contrib.auth import get_user_model
 from apps.accounts.models import Employee, Role
 from apps.clinical.models import Doctor, DoctorSlot
+from apps.accounts.utils import generate_secure_password, send_staff_welcome_email
 
 User = get_user_model()
 
@@ -67,7 +68,6 @@ class StaffCreateView(View):
         last_name = request.POST.get("last_name", "").strip()
         email = request.POST.get("email", "").strip()
         username = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "")
         employee_type = request.POST.get("employee_type", "")
         department = request.POST.get("department", "").strip()
         phone = request.POST.get("phone", "").strip()
@@ -78,8 +78,6 @@ class StaffCreateView(View):
             errors.append("First name is required.")
         if not username:
             errors.append("Username is required.")
-        if not password or len(password) < 6:
-            errors.append("Password must be at least 6 characters.")
         if User.objects.filter(username=username).exists():
             errors.append("Username already taken.")
         if email and User.objects.filter(email=email).exists():
@@ -94,11 +92,14 @@ class StaffCreateView(View):
                 "form_data": request.POST,
             })
 
+        # Generate secure credentials
+        raw_password = generate_secure_password()
+
         # Create user
         user = User.objects.create_user(
             username=username,
             email=email,
-            password=password,
+            password=raw_password,
             first_name=first_name,
             last_name=last_name,
             tenant=tenant,
@@ -134,6 +135,13 @@ class StaffCreateView(View):
                 consultation_fee=consultation_fee or 0,
             )
 
+        # Dispatch credentials via email
+        try:
+            send_staff_welcome_email(user, raw_password, request)
+        except Exception as e:
+            # Non-blocking error logging here if preferred
+            pass
+
         return redirect("/dashboard/staff/")
 
 
@@ -152,6 +160,15 @@ class StaffEditView(View):
             "employee_types": Employee.EMPLOYEE_TYPES,
             "roles": roles,
             "editing": True,
+            "form_data": {
+                "first_name": "",
+                "last_name": "",
+                "email": "",
+                "username": "",
+                "employee_type": "",
+                "department": "",
+                "phone": "",
+            },
         }
         return render(request, "dashboard/staff/form.html", context)
 

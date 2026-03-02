@@ -25,10 +25,22 @@
             <span class="material-icons-round">filter_list</span> Filter
         </button>
     </form>
+    
+    {% if request.user.is_superuser %}
     <a href="/dashboard/appointments/book/" class="btn-primary">
         <span class="material-icons-round">add_circle</span>
         Book Appointment
     </a>
+    {% elif request.user.role %}
+        {% for perm in request.user.role.permissions.all %}
+            {% if perm.code == 'appointment.create' %}
+            <a href="/dashboard/appointments/book/" class="btn-primary">
+                <span class="material-icons-round">add_circle</span>
+                Book Appointment
+            </a>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 </div>
 
 <!-- ─── Appointments Table ─── -->

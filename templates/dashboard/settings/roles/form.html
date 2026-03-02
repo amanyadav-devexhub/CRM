@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block nav_roles %}active{% endblock %}
+{% block page_title %}{% if editing %}Edit Role{% else %}Create Role{% endif %}{% endblock %}
+
+{% block content %}
+
+{% if errors %}
+<div class="error-card">
+    <span class="material-icons-round">error_outline</span>
+    <ul>
+        {% for error in errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<form method="post" class="crud-form" autocomplete="off">
+    {% csrf_token %}
+
+    <div class="form-section">
+        <div class="section-header">
+            <span class="material-icons-round section-icon">badge</span>
+            <div>
+                <h3>Role Details</h3>
+                <p>Name and describe this custom role</p>
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="name">Role Name *</label>
+                <input type="text" id="name" name="name" required
+                       value="{{ role.name|default:form_data.name }}"
+                       {% if role.is_system_role %}readonly style="opacity:.6;"{% endif %}>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description"
+                       value="{{ role.description|default:form_data.description }}"
+                       placeholder="e.g. Can register patients, view schedules">
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Grid -->
+    <div class="form-section">
+        <div class="section-header" style="margin-bottom: 2rem;">
+            <span class="material-icons-round section-icon" style="background:rgba(16,185,129,.1);color:#10b981;">shield</span>
+            <div>
+                <h3>Access Permissions</h3>
+                <p>Select what users with this role can do or see</p>
+            </div>
+        </div>
+        
+        <div class="permissions-container">
+            {% for prefix, perms in grouped_perms.items %}
+            <div class="perm-group">
+                <h4 class="perm-group-title">{{ prefix|title }} Permissions</h4>
+                <div class="perm-grid">
+                    {% for p in perms %}
+                    <label class="perm-label">
+                        <input type="checkbox" name="permissions" value="{{ p.id }}"
+                            {% if p.id in role_perm_ids %}checked{% endif %}>
+                        <div class="perm-text">
+                            <span class="perm-name">{{ p.name }}</span>
+                            <span class="perm-code">{{ p.code }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a href="{% url 'role-list' %}" class="btn-secondary">Cancel</a>
+        <button type="submit" class="btn-primary">
+            <span class="material-icons-round">{% if editing %}save{% else %}add_moderator{% endif %}</span>
+            {% if editing %}Save Permissions{% else %}Create Role{% endif %}
+        </button>
+    </div>
+</form>
+
+<style>
+    .crud-form { max-width: 900px; }
+    .error-card { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: .75rem; }
+    .error-card .material-icons-round { color: #ef4444; font-size: 1.25rem; margin-top: .1rem; }
+    .error-card ul { list-style: none; }
+    .error-card li { font-size: .85rem; color: #ef4444; padding: .15rem 0; }
+
+    .form-section { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; }
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .section-icon { font-size: 1.5rem; padding: .5rem; border-radius: 10px; background: rgba(59,130,246,.1); color: #3b82f6; }
+    .section-header h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .1rem; }
+    .section-header p { font-size: .78rem; color: rgba(241,245,249,.45); }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.15rem; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 500; color: rgba(241,245,249,.55); margin-bottom: .35rem; }
+    .form-group input {
+        width: 100%; padding: .6rem .85rem; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04);
+        color: #f1f5f9; font-size: .85rem; font-family: inherit; transition: border-color .2s;
+    }
+    .form-group input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+
+    .permissions-container { display: flex; flex-direction: column; gap: 1.5rem; }
+    .perm-group { background: rgba(255,255,255,.02); border-radius: 12px; padding: 1.25rem; border: 1px solid rgba(255,255,255,.04); }
+    .perm-group-title { font-size: .9rem; font-weight: 600; color: #3b82f6; margin-bottom: 1rem; border-bottom: 1px solid rgba(59,130,246,.2); padding-bottom: .5rem; }
+    
+    .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .perm-label {
+        display: flex; align-items: flex-start; gap: .75rem; cursor: pointer;
+        padding: .75rem; border-radius: 8px; transition: background .2s;
+    }
+    .perm-label:hover { background: rgba(255,255,255,.05); }
+    .perm-label input[type="checkbox"] { margin-top: .2rem; width: 16px; height: 16px; accent-color: #10b981; cursor: pointer; }
+    
+    .perm-text { display: flex; flex-direction: column; }
+    .perm-name { font-size: .85rem; font-weight: 500; color: #f1f5f9; }
+    .perm-code { font-size: .7rem; color: rgba(241,245,249,.4); font-family: monospace; margin-top: .1rem; }
+
+    .form-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1rem; }
+    .btn-primary { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; border: none; cursor: pointer; }
+    .btn-secondary { padding: .65rem 1.25rem; border-radius: 10px; background: rgba(255,255,255,.06); color: rgba(241,245,249,.7); font-size: .875rem; text-decoration: none; border: 1px solid rgba(255,255,255,.08); }
+</style>
+{% endblock %}

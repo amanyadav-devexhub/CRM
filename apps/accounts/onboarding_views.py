@@ -109,6 +109,15 @@ class OnboardingStep1View(View):
         if errors:
             data = {
                 "org_name": org_name, "category": category,
+                "contact_phone": request.POST.get("contact_phone", "").strip(),
+                "contact_email": request.POST.get("contact_email", "").strip(),
+                "gst_number": request.POST.get("gst_number", "").strip(),
+                "registration_number": request.POST.get("registration_number", "").strip(),
+                "address": request.POST.get("address", "").strip(),
+                "timezone": request.POST.get("timezone", "Asia/Kolkata"),
+                "currency": request.POST.get("currency", "INR"),
+                "language": request.POST.get("language", "en"),
+                "date_format": request.POST.get("date_format", "DD/MM/YYYY"),
             }
             data.update(setup_answers)
             return render(request, self.template_name, {
@@ -119,7 +128,15 @@ class OnboardingStep1View(View):
         session_data = {
             "org_name": org_name,
             "category": category,
-            "org_email": request.user.email,
+            "org_email": request.POST.get("contact_email", request.user.email).strip(),
+            "contact_phone": request.POST.get("contact_phone", "").strip(),
+            "gst_number": request.POST.get("gst_number", "").strip(),
+            "registration_number": request.POST.get("registration_number", "").strip(),
+            "address": request.POST.get("address", "").strip(),
+            "timezone": request.POST.get("timezone", "Asia/Kolkata"),
+            "currency": request.POST.get("currency", "INR"),
+            "language": request.POST.get("language", "en"),
+            "date_format": request.POST.get("date_format", "DD/MM/YYYY"),
             "subdomain": subdomain,
             "setup": setup_answers,
         }
@@ -235,9 +252,16 @@ class OnboardingStep3View(View):
             )
 
             # 2. Create Domain for subdomain routing
-            # Use the actual host (works for localhost and ngrok)
-            request_host = request.get_host().split(":")[0]  # e.g. localhost or abc.ngrok-free.dev
-            tenant_domain = f"{org_data['subdomain']}.{request_host}"
+            request_host = request.get_host()
+            base_host = request_host.split(":")[0]
+            # If request_host already has the subdomain (eg test.localhost), extract the root
+            parts = base_host.split(".")
+            if len(parts) > 1 and parts[0] != "127" and parts[0] != "localhost":
+                root_host = ".".join(parts[1:])
+            else:
+                root_host = base_host
+                
+            tenant_domain = f"{org_data['subdomain']}.{root_host}"
             Domain.objects.create(
                 domain=tenant_domain,
                 tenant=client,
@@ -288,10 +312,14 @@ class OnboardingStep3View(View):
                     tenant=tenant,
                     clinic_name=org_data["org_name"],
                     contact_email=org_data.get("org_email", ""),
-                    timezone="Asia/Kolkata",
-                    currency="INR",
-                    language="en",
-                    date_format="DD/MM/YYYY",
+                    contact_phone=org_data.get("contact_phone", ""),
+                    gst_number=org_data.get("gst_number", ""),
+                    registration_number=org_data.get("registration_number", ""),
+                    address=org_data.get("address", ""),
+                    timezone=org_data.get("timezone", "Asia/Kolkata"),
+                    currency=org_data.get("currency", "INR"),
+                    language=org_data.get("language", "en"),
+                    date_format=org_data.get("date_format", "DD/MM/YYYY"),
                     working_hours={
                         "mon": {"open": "09:00", "close": "18:00"},
                         "tue": {"open": "09:00", "close": "18:00"},

@@ -394,3 +394,48 @@ class ClinicSettingsView(View):
 
         settings_obj.save()
         return render(request, self.template_name, {"settings": settings_obj, "saved": True})
+
+
+# ==========================================
+# Role-Specific Dashboards (Phase 3 & 4)
+# ==========================================
+
+from apps.utils.mixins import HasTenantPermissionMixin
+
+class DoctorDashboardView(HasTenantPermissionMixin, View):
+    """Tailored dashboard for doctors."""
+    required_permission = "dashboard.doctor"
+
+    def get(self, request):
+        tenant = getattr(request.user, "tenant", None)
+        
+        context = {
+            "tenant_category": tenant.category if tenant else "CLINIC",
+            "today_appointments": 0,
+            "pending_labs": 0,
+        }
+        return render(request, "dashboard/roles/doctor.html", context)
+
+
+class ReceptionDashboardView(HasTenantPermissionMixin, View):
+    """Tailored dashboard for receptionists / front desk."""
+    required_permission = "dashboard.reception"
+
+    def get(self, request):
+        tenant = getattr(request.user, "tenant", None)
+        
+        try:
+            from apps.patients.models import Patient
+            patient_count = Patient.objects.count()
+            recent_patients = Patient.objects.order_by("-created_at")[:5]
+        except Exception:
+            patient_count = 0
+            recent_patients = []
+            
+        context = {
+            "tenant_category": tenant.category if tenant else "CLINIC",
+            "patient_count": patient_count,
+            "recent_patients": recent_patients,
+            "today_appointments": 0,
+        }
+        return render(request, "dashboard/roles/reception.html", context)

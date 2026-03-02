@@ -5,7 +5,10 @@ URL configuration for config project.
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from apps.tenants.views import AdminDashboardView, SubAdminDashboardView, ClinicSettingsView
+from apps.tenants.views import (
+    AdminDashboardView, SubAdminDashboardView, ClinicSettingsView,
+    DoctorDashboardView, ReceptionDashboardView
+)
 from apps.patients.template_views import (
     PatientListView, PatientDetailView,
     PatientCreateView, PatientEditView, PatientDeleteView,
@@ -43,6 +46,9 @@ from apps.accounts.onboarding_views import (
 from apps.accounts.staff_views import (
     StaffListView, StaffCreateView, StaffEditView, StaffDeleteView,
     DoctorListView,
+)
+from apps.accounts.role_views import (
+    RoleListView, RoleCreateView, RoleEditView, RoleDeleteView
 )
 from apps.appointments.views import (
     AppointmentListView, AppointmentCreateView, AppointmentDetailView,
@@ -118,6 +124,8 @@ urlpatterns = [
 
     # ── Sub-Admin Dashboard (Tenant / Clinic) ──
     path("dashboard/", SubAdminDashboardView.as_view(), name="dashboard"),
+    path("dashboard/doctor/", DoctorDashboardView.as_view(), name="doctor-dashboard"),
+    path("dashboard/reception/", ReceptionDashboardView.as_view(), name="reception-dashboard"),
     path("dashboard/settings/", ClinicSettingsView.as_view(), name="clinic-settings"),
 
     # ── Staff / Employee CRUD ──
@@ -125,6 +133,12 @@ urlpatterns = [
     path("dashboard/staff/create/", StaffCreateView.as_view(), name="staff-create"),
     path("dashboard/staff/<uuid:pk>/edit/", StaffEditView.as_view(), name="staff-edit"),
     path("dashboard/staff/<uuid:pk>/delete/", StaffDeleteView.as_view(), name="staff-delete"),
+
+    # ── Roles & Permissions ──
+    path("dashboard/settings/roles/", RoleListView.as_view(), name="role-list"),
+    path("dashboard/settings/roles/create/", RoleCreateView.as_view(), name="role-create"),
+    path("dashboard/settings/roles/<int:pk>/edit/", RoleEditView.as_view(), name="role-edit"),
+    path("dashboard/settings/roles/<int:pk>/delete/", RoleDeleteView.as_view(), name="role-delete"),
 
     # ── Doctors ──
     path("dashboard/doctors/", DoctorListView.as_view(), name="doctor-list"),

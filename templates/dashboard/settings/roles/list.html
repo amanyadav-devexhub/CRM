@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block nav_roles %}active{% endblock %}
+{% block page_title %}Roles & Permissions{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round" style="color:#10b981;">security</span>
+            Custom Roles
+        </h3>
+        <a href="{% url 'role-create' %}" class="btn-primary" style="text-decoration:none; padding: .5rem 1rem; border-radius:8px;">
+            <span class="material-icons-round" style="font-size:1rem;">add</span>
+            Create Role
+        </a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if roles %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Role Name</th>
+                    <th>Permissions</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ role.name }}</div>
+                        <div style="font-size: .8rem; color: rgba(255,255,255,.5);">{{ role.description|default:"No description" }}</div>
+                    </td>
+                    <td>
+                        {% if role.is_system_role %}
+                        <span class="badge" style="background: rgba(59,130,246,.2); color: #3b82f6;">All / Predefined</span>
+                        {% else %}
+                        <span class="badge" style="background: rgba(16,185,129,.2); color: #10b981;">{{ role.permissions.count }} Assigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if role.is_system_role %}
+                        <span class="badge" style="background: rgba(239,68,68,.1); color: #ef4444; border: 1px solid rgba(239,68,68,.3);">System Default</span>
+                        {% else %}
+                        <span class="badge" style="background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);">Custom</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: .5rem;">
+                            <a href="{% url 'role-edit' role.pk %}" class="btn-icon" title="Edit Role">
+                                <span class="material-icons-round">edit</span>
+                            </a>
+                            {% if not role.is_system_role %}
+                            <form method="post" action="{% url 'role-delete' role.pk %}" onsubmit="return confirm('Delete this custom role?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-icon" style="color: #ef4444;" title="Delete Role">
+                                    <span class="material-icons-round">delete</span>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">security</div>
+            <p>No custom roles created. Build a role to restrict staff access.</p>
+            <a href="{% url 'role-create' %}" class="btn-primary" style="margin-top:1rem; display:inline-flex; text-decoration:none;">Create First Role</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .btn-icon {
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 8px;
+        color: var(--text);
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+    }
+    .btn-icon:hover {
+        background: rgba(255,255,255,.1);
+    }
+    .btn-icon .material-icons-round { font-size: 1.1rem; }
+    
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: .4rem; 
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
+        color: #fff; font-size: .875rem; font-weight: 600; cursor: pointer;
+        transition: transform .2s, box-shadow .2s; border: none;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,.3); }
+</style>
+{% endblock %}

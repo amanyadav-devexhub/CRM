@@ -24,6 +24,14 @@ class Command(BaseCommand):
             ("billing.view", "View Billing"),
             ("billing.create", "Create Invoice"),
             ("billing.collect_payment", "Collect Payment"),
+
+            # Dashboards
+            ("dashboard.clinic", "Clinic Admin Dashboard"),
+            ("dashboard.doctor", "Doctor Dashboard"),
+            ("dashboard.reception", "Receptionist Dashboard"),
+            ("dashboard.hr", "HR Dashboard"),
+            ("dashboard.lab", "Lab Dashboard"),
+            ("dashboard.pharmacy", "Pharmacy Dashboard"),
         ]
 
         for code, name in permissions:
