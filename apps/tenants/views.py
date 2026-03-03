@@ -400,11 +400,10 @@ class ClinicSettingsView(View):
 # Role-Specific Dashboards (Phase 3 & 4)
 # ==========================================
 
-from apps.utils.mixins import HasTenantPermissionMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-class DoctorDashboardView(HasTenantPermissionMixin, View):
+class DoctorDashboardView(LoginRequiredMixin, View):
     """Tailored dashboard for doctors."""
-    required_permission = "dashboard.doctor"
 
     def get(self, request):
         tenant = getattr(request.user, "tenant", None)
@@ -417,9 +416,8 @@ class DoctorDashboardView(HasTenantPermissionMixin, View):
         return render(request, "dashboard/roles/doctor.html", context)
 
 
-class ReceptionDashboardView(HasTenantPermissionMixin, View):
+class ReceptionDashboardView(LoginRequiredMixin, View):
     """Tailored dashboard for receptionists / front desk."""
-    required_permission = "dashboard.reception"
 
     def get(self, request):
         tenant = getattr(request.user, "tenant", None)
@@ -439,3 +437,4 @@ class ReceptionDashboardView(HasTenantPermissionMixin, View):
             "today_appointments": 0,
         }
         return render(request, "dashboard/roles/reception.html", context)
+

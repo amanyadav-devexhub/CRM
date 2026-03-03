@@ -120,24 +120,7 @@
                         <span class="icon material-icons-round">medication</span>
                         Write Prescription
                     </a>
-                    
-                    {% if request.user.role %}
-                        {% for perm in request.user.role.permissions.all %}
-                            {% if perm.code == 'patient.create' %}
-                                <a href="{% url 'patient-create' %}" class="action-btn" style="text-decoration:none;">
-                                    <span class="icon material-icons-round">person_add</span>
-                                    Add Patient
-                                </a>
-                            {% endif %}
-                            
-                            {% if perm.code == 'appointment.create' %}
-                                <a href="{% url 'appointment-create' %}" class="action-btn" style="text-decoration:none;">
-                                    <span class="icon material-icons-round">event</span>
-                                    Book Appointment
-                                </a>
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
+
 
                     <a href="{% url 'patient-list' %}" class="action-btn" style="text-decoration:none;">
                         <span class="icon material-icons-round">people</span>
