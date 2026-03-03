@@ -13,41 +13,51 @@ from apps.tenants.models import (
     Tenant, Client, Domain, SubscriptionPlan, TenantSubscription,
 )
 from django.contrib.auth import get_user_model
+from django.db import connection
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
-
 
 class OnboardingStep1View(View):
     """Step 1: Organization details."""
     template_name = "onboarding/step1_org.html"
 
     def get(self, request):
+        print("\n===== STEP 1 GET DEBUG =====")
+        print("Schema:", connection.schema_name)
+        print("Session key:", request.session.session_key)
+        print("Existing session data:", request.session.get("onboarding_org"))
+        print("============================\n")
+
         if not request.user.is_authenticated:
             return redirect("/login/")
-        # Pre-fill from session if returning
+
         data = request.session.get("onboarding_org", {})
         return render(request, self.template_name, {"data": data})
 
     def post(self, request):
+        print("\n===== STEP 1 POST DEBUG =====")
+        print("Schema:", connection.schema_name)
+        print("Session key (before save):", request.session.session_key)
+        print("User:", request.user)
+        print("POST category RAW:", request.POST.get("category"))
+        print("============================\n")
+
         if not request.user.is_authenticated:
             return redirect("/login/")
 
         org_name = request.POST.get("org_name", "").strip()
         category = request.POST.get("category", "CLINIC")
 
+        print("Normalized category:", category)
+
         errors = []
         if not org_name:
             errors.append("Organization name is required.")
 
-        # Check subdomain availability
         subdomain = slugify(org_name)
-        if not subdomain:
-            errors.append("Organization name must contain valid characters.")
-        elif Tenant.objects.filter(subdomain=subdomain).exists():
-            errors.append(f"Subdomain '{subdomain}' is already taken. Try a different name.")
 
-        # Collect all dynamic question answers
+        # Collect dynamic answers
         setup_answers = {}
         if category == "HOSPITAL":
             setup_answers = {
@@ -68,63 +78,10 @@ class OnboardingStep1View(View):
                 "h_ai_risk": "h_ai_risk" in request.POST,
                 "h_volume": request.POST.get("h_volume", "500"),
             }
-        elif category == "CLINIC":
-            setup_answers = {
-                "c_type": request.POST.get("c_type", "single"),
-                "c_doctors": request.POST.get("c_doctors", "1"),
-                "c_specialization": request.POST.get("c_specialization", "general"),
-                "c_appointments": "c_appointments" in request.POST,
-                "c_walkin": "c_walkin" in request.POST,
-                "c_emr": "c_emr" in request.POST,
-                "c_insurance": "c_insurance" in request.POST,
-                "c_online_pay": "c_online_pay" in request.POST,
-                "c_pharmacy": "c_pharmacy" in request.POST,
-                "c_lab": "c_lab" in request.POST,
-            }
-        elif category == "LAB":
-            setup_answers = {
-                "l_type": request.POST.get("l_type", "diagnostic"),
-                "l_inhouse": "l_inhouse" in request.POST,
-                "l_home": "l_home" in request.POST,
-                "l_hospital_int": "l_hospital_int" in request.POST,
-                "l_auto_report": "l_auto_report" in request.POST,
-                "l_patient_portal": "l_patient_portal" in request.POST,
-                "l_ai_abnormal": "l_ai_abnormal" in request.POST,
-                "l_pkg_billing": "l_pkg_billing" in request.POST,
-                "l_insurance": "l_insurance" in request.POST,
-            }
-        elif category == "PHARMACY":
-            setup_answers = {
-                "p_type": request.POST.get("p_type", "standalone"),
-                "p_inventory": "p_inventory" in request.POST,
-                "p_expiry": "p_expiry" in request.POST,
-                "p_batch": "p_batch" in request.POST,
-                "p_gst": "p_gst" in request.POST,
-                "p_online_pay": "p_online_pay" in request.POST,
-                "p_supplier": "p_supplier" in request.POST,
-                "p_rx_int": "p_rx_int" in request.POST,
-                "p_auto_deduct": "p_auto_deduct" in request.POST,
-            }
 
-        if errors:
-            data = {
-                "org_name": org_name, "category": category,
-                "contact_phone": request.POST.get("contact_phone", "").strip(),
-                "contact_email": request.POST.get("contact_email", "").strip(),
-                "gst_number": request.POST.get("gst_number", "").strip(),
-                "registration_number": request.POST.get("registration_number", "").strip(),
-                "address": request.POST.get("address", "").strip(),
-                "timezone": request.POST.get("timezone", "Asia/Kolkata"),
-                "currency": request.POST.get("currency", "INR"),
-                "language": request.POST.get("language", "en"),
-                "date_format": request.POST.get("date_format", "DD/MM/YYYY"),
-            }
-            data.update(setup_answers)
-            return render(request, self.template_name, {
-                "errors": errors, "data": data,
-            })
+        print("Setup answers collected:", setup_answers)
 
-        # Save to session — use logged-in user's email as org email
+        # Save to session
         session_data = {
             "org_name": org_name,
             "category": category,
@@ -140,23 +97,14 @@ class OnboardingStep1View(View):
             "subdomain": subdomain,
             "setup": setup_answers,
         }
-        request.session["onboarding_org"] = session_data
 
-        # If the user selected a plan from the landing page, skip step 2
-        preselected_plan_id = request.session.get("preselected_plan_id")
-        if preselected_plan_id:
-            try:
-                plan = SubscriptionPlan.objects.get(pk=preselected_plan_id)
-                request.session["onboarding_plan"] = {
-                    "plan_id": str(plan.pk),
-                    "plan_name": plan.display_name or plan.name,
-                    "plan_price": str(plan.price),
-                }
-                # Go directly to confirm step, pop the preselected_plan_id to avoid stale data later
-                request.session.pop("preselected_plan_id", None)
-                return redirect("/onboarding/confirm/")
-            except SubscriptionPlan.DoesNotExist:
-                pass
+        request.session["onboarding_org"] = session_data
+        request.session.modified = True  # force save
+
+        print("\nSaved session data:")
+        print(request.session["onboarding_org"])
+        print("Session key (after save):", request.session.session_key)
+        print("=================================\n")
 
         return redirect("/onboarding/plan/")
 
@@ -236,6 +184,7 @@ class OnboardingStep3View(View):
             return redirect("/login/")
 
         org_data = request.session.get("onboarding_org")
+        print(org_data, "=======")
         plan_data = request.session.get("onboarding_plan")
 
         if not org_data or not plan_data:
@@ -256,11 +205,13 @@ class OnboardingStep3View(View):
             base_host = request_host.split(":")[0]
             # If request_host already has the subdomain (eg test.localhost), extract the root
             parts = base_host.split(".")
-            if len(parts) > 1 and parts[0] != "127" and parts[0] != "localhost":
+            if base_host in ("127.0.0.1", "0.0.0.0"):
+                root_host = "localhost"
+            elif len(parts) > 1 and parts[0] != "localhost":
                 root_host = ".".join(parts[1:])
             else:
                 root_host = base_host
-                
+
             tenant_domain = f"{org_data['subdomain']}.{root_host}"
             Domain.objects.create(
                 domain=tenant_domain,
