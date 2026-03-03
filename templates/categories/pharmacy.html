@@ -1,11 +1,19 @@
-{% extends "categories/base_mgmt.html" %}
+{% extends "base.html" %}
 
-{% block mgmt_color %}var(--accent-orange){% endblock %}
-{% block mgmt_gradient %}linear-gradient(135deg, #f59e0b, #ef4444){% endblock %}
-{% block hub_icon %}medication{% endblock %}
-{% block hub_name %}PharmTrack{% endblock %}
+{% block brand_gradient %}linear-gradient(135deg, #f59e0b, #ef4444){% endblock %}
+{% block brand_text_gradient %}linear-gradient(135deg, #fbbf24, #f97316){% endblock %}
+{% block nav_active_bg %}rgba(245, 158, 11, 0.12){% endblock %}
+{% block nav_active_color %}var(--accent-orange){% endblock %}
+{% block badge_bg %}var(--accent-orange){% endblock %}
+{% block brand_icon_letter %}P{% endblock %}
+{% block brand_name %}PharmTrack{% endblock %}
+{% block brand_subtitle %}Pharmacy Dashboard{% endblock %}
+{% block user_avatar_gradient %}linear-gradient(135deg, #f59e0b, #ef4444){% endblock %}
 
-{% block hub_nav %}
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Dashboard <span>/ Pharmacy Overview</span>{% endblock %}
+
+{% block sidebar_nav %}
 <div class="nav-section">
     <div class="nav-section-title">Operations</div>
     <a href="{% url 'category-pharmacy' %}" class="nav-item active">
@@ -32,21 +40,11 @@
         <span class="icon material-icons-round">analytics</span>
         Sales Report
     </a>
-    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item" style="color: var(--accent-orange);">
+    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item">
         <span class="icon material-icons-round">warning</span>
         Expiry Alerts
     </a>
 </div>
-{% endblock %}
-
-{% block page_title %}Pharmacy Dashboard{% endblock %}
-{% block page_subtitle %}
-<span style="display: inline-flex; align-items: center; gap: 6px;">
-    Real-time inventory overview
-    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #f59e0b;">
-        <span class="status-dot" style="width:8px;height:8px;border-radius:50%;background:#f59e0b;animation:livePulse 1.5s ease-in-out infinite;"></span> LIVE
-    </span>
-</span>
 {% endblock %}
 
 {% block extra_css %}
@@ -70,7 +68,7 @@
     <div class="stat-card green animate-in">
         <div class="stat-info">
             <div class="stat-label">Total SKUs</div>
-            <div class="stat-value">{{ total_skus }}</div>
+            <div class="stat-value" data-target="{{ total_skus }}">0</div>
             <div class="stat-sub">Medicines in stock</div>
         </div>
         <div class="stat-icon green">
@@ -80,7 +78,7 @@
     <div class="stat-card orange animate-in">
         <div class="stat-info">
             <div class="stat-label">Low Stock</div>
-            <div class="stat-value">{{ low_stock_count }}</div>
+            <div class="stat-value" data-target="{{ low_stock_count }}">0</div>
             <div class="stat-sub">Needs reorder</div>
         </div>
         <div class="stat-icon orange">
@@ -90,7 +88,7 @@
     <div class="stat-card purple animate-in">
         <div class="stat-info">
             <div class="stat-label">Expiring Soon</div>
-            <div class="stat-value">{{ expiring_soon_count }}</div>
+            <div class="stat-value" data-target="{{ expiring_soon_count }}">0</div>
             <div class="stat-sub">Within 30 days</div>
         </div>
         <div class="stat-icon purple">
@@ -112,10 +110,12 @@
 <div class="content-grid">
     <!-- Inventory Highlights -->
     <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>Inventory Highlights</h3>
-            <a href="{% url 'pharmacy-inventory' %}"
-                style="font-size: 13px; color: #3742fa; text-decoration: none; font-weight: 500;">View All →</a>
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">medication</span>
+                Inventory Highlights
+            </h3>
+            <a href="{% url 'pharmacy-inventory' %}" class="card-action">View All →</a>
         </div>
         <div class="card-body" style="padding:0">
             <table class="data-table">
@@ -154,8 +154,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No medicines
-                            in inventory yet.</td>
+                        <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No medicines in inventory yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -164,28 +163,81 @@
     </div>
 
     <!-- Management Tools -->
-    <div class="card">
-        <div class="card-header">
-            <h3>Management Tools</h3>
+    <div>
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">bolt</span>
+                    Management Tools
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="{% url 'pharmacy-inventory' %}" class="action-btn primary" style="text-decoration: none;">
+                        <span class="icon material-icons-round">inventory_2</span>
+                        Inventory
+                    </a>
+                    <a href="{% url 'pharmacy-sales' %}" class="action-btn" style="text-decoration: none;">
+                        <span class="icon material-icons-round">point_of_sale</span>
+                        Sales & POS
+                    </a>
+                    <a href="{% url 'pharmacy-prescriptions' %}" class="action-btn" style="text-decoration: none;">
+                        <span class="icon material-icons-round">receipt_long</span>
+                        Prescriptions
+                    </a>
+                    <button class="action-btn">
+                        <span class="icon material-icons-round">analytics</span>
+                        Reports
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="quick-actions">
-                <a href="{% url 'pharmacy-inventory' %}" class="action-btn" style="text-decoration: none;">
-                    <span class="material-icons-round">inventory_2</span>
-                    Inventory
-                </a>
-                <a href="{% url 'pharmacy-sales' %}" class="action-btn" style="text-decoration: none;">
-                    <span class="material-icons-round">point_of_sale</span>
-                    Sales & POS
-                </a>
-                <a href="{% url 'pharmacy-prescriptions' %}" class="action-btn" style="text-decoration: none;">
-                    <span class="material-icons-round">receipt_long</span>
-                    Prescriptions
-                </a>
-                <button class="action-btn">
-                    <span class="material-icons-round">analytics</span>
-                    Reports
-                </button>
+
+        <!-- Stock Alerts -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">notifications_active</span>
+                    Stock Alerts
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if low_stock_count or expiring_soon_count or expired_count %}
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% if low_stock_count %}
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,165,2,0.06); border-radius: 10px; border-left: 3px solid #ffa502;">
+                        <span class="material-icons-round" style="color: #ffa502;">warning</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ low_stock_count }} Low Stock</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Reorder soon</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if expiring_soon_count %}
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,71,87,0.06); border-radius: 10px; border-left: 3px solid #ff4757;">
+                        <span class="material-icons-round" style="color: #ff4757;">event_busy</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ expiring_soon_count }} Expiring Soon</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Within 30 days</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if expired_count %}
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(239,68,68,0.06); border-radius: 10px; border-left: 3px solid var(--accent-red);">
+                        <span class="material-icons-round" style="color: var(--accent-red);">dangerous</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ expired_count }} Expired</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Remove from shelf</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="icon material-icons-round">check_circle</div>
+                    <p>All stock levels healthy!</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

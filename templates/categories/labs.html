@@ -1,11 +1,19 @@
-{% extends "categories/base_mgmt.html" %}
+{% extends "base.html" %}
 
-{% block mgmt_color %}var(--accent-purple){% endblock %}
-{% block mgmt_gradient %}var(--gradient-purple){% endblock %}
-{% block hub_icon %}biotech{% endblock %}
-{% block hub_name %}LabFlow{% endblock %}
+{% block brand_gradient %}linear-gradient(135deg, #8b5cf6, #6366f1){% endblock %}
+{% block brand_text_gradient %}linear-gradient(135deg, #a78bfa, #c4b5fd){% endblock %}
+{% block nav_active_bg %}rgba(139, 92, 246, 0.12){% endblock %}
+{% block nav_active_color %}var(--accent-purple){% endblock %}
+{% block badge_bg %}var(--accent-purple){% endblock %}
+{% block brand_icon_letter %}L{% endblock %}
+{% block brand_name %}LabFlow{% endblock %}
+{% block brand_subtitle %}Laboratory Dashboard{% endblock %}
+{% block user_avatar_gradient %}linear-gradient(135deg, #8b5cf6, #6366f1){% endblock %}
 
-{% block hub_nav %}
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Dashboard <span>/ Laboratory Overview</span>{% endblock %}
+
+{% block sidebar_nav %}
 <div class="nav-section">
     <div class="nav-section-title">Operations</div>
     <a href="{% url 'category-labs' %}" class="nav-item active">
@@ -29,16 +37,6 @@
 </div>
 {% endblock %}
 
-{% block page_title %}Laboratory Dashboard{% endblock %}
-{% block page_subtitle %}
-<span style="display: inline-flex; align-items: center; gap: 6px;">
-    Real-time diagnostics overview
-    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #8b5cf6;">
-        <span style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;animation:livePulse 1.5s ease-in-out infinite;"></span> LIVE
-    </span>
-</span>
-{% endblock %}
-
 {% block extra_css %}
 <style>
     @keyframes livePulse {
@@ -60,7 +58,7 @@
     <div class="stat-card purple animate-in">
         <div class="stat-info">
             <div class="stat-label">Pending Tests</div>
-            <div class="stat-value">{{ pending_tests }}</div>
+            <div class="stat-value" data-target="{{ pending_tests }}">0</div>
             <div class="stat-sub">In queue today</div>
         </div>
         <div class="stat-icon purple">
@@ -70,7 +68,7 @@
     <div class="stat-card blue animate-in">
         <div class="stat-info">
             <div class="stat-label">Samples Recv.</div>
-            <div class="stat-value">{{ samples_received }}</div>
+            <div class="stat-value" data-target="{{ samples_received }}">0</div>
             <div class="stat-sub">Today</div>
         </div>
         <div class="stat-icon blue">
@@ -102,9 +100,12 @@
 <div class="content-grid">
     <!-- Recent Test Requests -->
     <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>Recent Test Requests</h3>
-            <a href="{% url 'lab-order-list' %}" class="btn-text">View All</a>
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">assignment</span>
+                Recent Test Requests
+            </h3>
+            <a href="{% url 'lab-order-list' %}" class="card-action">View All →</a>
         </div>
         <div class="card-body" style="padding:0">
             <table class="data-table">
@@ -150,35 +151,76 @@
         </div>
     </div>
 
-    <!-- Lab Workflows -->
-    <div class="card">
-        <div class="card-header">
-            <h3>Management Tools</h3>
+    <!-- Management Tools -->
+    <div>
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">bolt</span>
+                    Management Tools
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="{% url 'lab-order-list' %}" class="action-btn primary" style="text-decoration:none;">
+                        <span class="icon material-icons-round">add_task</span>
+                        New Order
+                    </a>
+                    <a href="{% url 'lab-test-catalog' %}" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">biotech</span>
+                        Manage Catalog
+                    </a>
+                    <button class="action-btn">
+                        <span class="icon material-icons-round">qr_code_2</span>
+                        Label Sample
+                    </button>
+                    <button class="action-btn">
+                        <span class="icon material-icons-round">inventory_2</span>
+                        Reagent Stock
+                    </button>
+                    <button class="action-btn">
+                        <span class="icon material-icons-round">analytics</span>
+                        Reports
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="quick-actions">
-                <a href="{% url 'lab-order-list' %}" class="action-btn" style="text-decoration:none;">
-                    <span class="material-icons-round">add_task</span>
-                    New Order
-                </a>
-                <a href="{% url 'lab-test-catalog' %}" class="action-btn" style="text-decoration:none;">
-                    <span class="material-icons-round">biotech</span>
-                    Manage Catalog
-                </a>
-                <button class="action-btn">
-                    <span class="material-icons-round">qr_code_2</span>
-                    Label Sample
-                </button>
-                <button class="action-btn">
-                    <span class="material-icons-round">inventory_2</span>
-                    Reagent Stock
-                </button>
-                <button class="action-btn">
-                    <span class="material-icons-round">analytics</span>
-                    Reports
-                </button>
+
+        <!-- Lab Status -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">monitor_heart</span>
+                    Lab Status
+                </h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(139,92,246,0.06); border-radius: 10px; border-left: 3px solid #8b5cf6;">
+                        <span class="material-icons-round" style="color: #8b5cf6;">hourglass_top</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ pending_tests }} Pending</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Tests in queue</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(46,213,115,0.06); border-radius: 10px; border-left: 3px solid #2ed573;">
+                        <span class="material-icons-round" style="color: #2ed573;">speed</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ tat_score }} TAT</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Turnaround score</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(55,66,250,0.06); border-radius: 10px; border-left: 3px solid #3742fa;">
+                        <span class="material-icons-round" style="color: #3742fa;">science</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">{{ samples_received }} Samples</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Received today</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

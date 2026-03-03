@@ -75,7 +75,7 @@
                     </span>
                     {% endif %}
                     
-                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' %}
+                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' and request.user.employee_profile.employee_type != 'RECEPTIONIST' and request.user.role.name != 'Receptionist' %}
                     {% if "staff" in enabled_features %}
                     <a href="/dashboard/staff/" class="nav-item {% block nav_staff %}{% endblock %}">
                         <span class="icon material-icons-round">badge</span>
@@ -144,7 +144,7 @@
                     </span>
                     {% endif %}
                     
-                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' %}
+                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' and request.user.employee_profile.employee_type != 'RECEPTIONIST' and request.user.role.name != 'Receptionist' %}
                     {% if "pharmacy" in enabled_features %}
                     <a href="/categories/pharmacy/" class="nav-item {% block nav_pharmacy %}{% endblock %}">
                         <span class="icon material-icons-round">medication</span>
@@ -171,7 +171,7 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Insights</div>
-                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' %}
+                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' and request.user.employee_profile.employee_type != 'RECEPTIONIST' and request.user.role.name != 'Receptionist' %}
                     {% if "analytics" in enabled_features %}
                     <a href="/dashboard/analytics/" class="nav-item {% block nav_analytics %}{% endblock %}">
                         <span class="icon material-icons-round">bar_chart</span>
@@ -201,7 +201,7 @@
                     </a>
                     {% endif %}
                     
-                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' %}
+                    {% if request.user.employee_profile.employee_type != 'DOCTOR' and request.user.role.name != 'Doctor' and request.user.employee_profile.employee_type != 'RECEPTIONIST' and request.user.role.name != 'Receptionist' %}
                     <a href="/dashboard/settings/" class="nav-item {% block nav_settings %}{% endblock %}">
                         <span class="icon material-icons-round">settings</span>
                         Clinic Settings
