@@ -71,16 +71,7 @@ class RegisterView(View):
         if plan_id:
             request.session["preselected_plan_id"] = plan_id
 
-        if request.user.is_authenticated:
-            user = request.user
-            if user.is_superuser and user.tenant is None:
-                return redirect("/admin-dashboard/")
-            elif user.tenant and user.tenant.subdomain:
-                host = LoginView._get_tenant_host(user.tenant.subdomain, request)
-                token = signing.dumps({"user_id": user.pk}, salt="auth-bridge")
-                return redirect(f"{host}/auth-bridge/?token={token}")
-            else:
-                return redirect("/onboarding/")
+        # Always show registration form — don't auto-redirect on stale session.
         return render(request, self.template_name)
 
     def post(self, request):
@@ -299,8 +290,8 @@ class LoginView(View):
     template_name = "accounts/login.html"
 
     def get(self, request):
-        if request.user.is_authenticated:
-            return self._redirect_by_role(request.user, request)
+        # Always show login form — never auto-redirect based on stale session.
+        # Users must enter credentials every time they visit /login/.
         return render(request, self.template_name)
 
     def post(self, request):
