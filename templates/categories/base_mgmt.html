@@ -3,6 +3,12 @@
 <html lang="en">
 
 <head>
+    <script>
+        // Apply theme early to prevent flash
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Management{% endblock %} — HealthCRM</title>
@@ -87,6 +93,10 @@
                     <input type="text" placeholder="{% block search_placeholder %}Search...{% endblock %}">
                 </div>
                 <div class="top-bar-actions">
+                    <button class="icon-btn theme-toggle" id="themeToggle" title="Toggle Theme"
+                        style="border: none; background: transparent; cursor: pointer;">
+                        <span class="material-icons-round" id="themeIcon">light_mode</span>
+                    </button>
                     <button class="icon-btn">
                         <span class="material-icons-round">notifications</span>
                         <span class="notification-dot"></span>
@@ -163,7 +173,29 @@
     </script>
 
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const themeToggle = document.getElementById("themeToggle");
+            const themeIcon = document.getElementById("themeIcon");
+            if (themeToggle && themeIcon) {
+                if (document.documentElement.getAttribute("data-theme") === "light") {
+                    themeIcon.textContent = "dark_mode";
+                } else {
+                    themeIcon.textContent = "light_mode";
+                }
+                themeToggle.addEventListener("click", () => {
+                    let current = document.documentElement.getAttribute("data-theme");
+                    let newTheme = current === "light" ? "dark" : "light";
+                    document.documentElement.setAttribute("data-theme", newTheme);
+                    localStorage.setItem("theme", newTheme);
+                    themeIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
+                    window.dispatchEvent(new Event("themeChanged"));
+                });
+            }
+        });
+    </script>
     {% block extra_js %}{% endblock %}
+
 </body>
 
 </html>

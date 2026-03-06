@@ -8,6 +8,12 @@
     <meta name="description" content="Healthcare CRM — Clinic Dashboard">
     <title>{% block title %}Dashboard{% endblock %} — HealthCRM</title>
 
+    <script>
+        // Apply theme early to prevent flash
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <style>
@@ -231,6 +237,9 @@
                         <span class="icon material-icons-round">search</span>
                         <input type="text" placeholder="Search patients, appointments…">
                     </div>
+                    <button class="topbar-btn theme-toggle" id="themeToggle" title="Toggle Theme" style="border: none;">
+                        <span class="material-icons-round" id="themeIcon">light_mode</span>
+                    </button>
                     <a href="/notifications/" class="topbar-btn" title="Notifications" style="text-decoration:none;">
                         <span class="material-icons-round">notifications</span>
                     </a>
@@ -257,6 +266,29 @@
     </div>
 
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (themeToggle && themeIcon) {
+                // Update icon to match initial theme
+                if (document.documentElement.getAttribute('data-theme') === 'light') {
+                    themeIcon.textContent = 'dark_mode';
+                } else {
+                    themeIcon.textContent = 'light_mode';
+                }
+
+                themeToggle.addEventListener('click', () => {
+                    let currentTheme = document.documentElement.getAttribute('data-theme');
+                    let newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    themeIcon.textContent = newTheme === 'light' ? 'dark_mode' : 'light_mode';
+                });
+            }
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 

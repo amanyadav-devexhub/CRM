@@ -35,6 +35,31 @@
     --sidebar-width: 260px;
     --topbar-height: 64px;
     --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --hover-bg: rgba(255, 255, 255, 0.04);
+    --hover-bg-strong: rgba(255, 255, 255, 0.08);
+    --hover-bg-strongest: rgba(255, 255, 255, 0.14);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --subtle-bg: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --bg-sidebar: #ffffff;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --hover-bg: rgba(0, 0, 0, 0.04);
+    --hover-bg-strong: rgba(0, 0, 0, 0.08);
+    --hover-bg-strongest: rgba(0, 0, 0, 0.14);
+    --input-border: rgba(0, 0, 0, 0.1);
+    --subtle-bg: rgba(0, 0, 0, 0.02);
 }
 
 /* ── Reset ── */
@@ -163,7 +188,7 @@ a:hover {
 }
 
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--hover-bg);
     color: var(--text-primary);
 }
 
@@ -399,7 +424,7 @@ a:hover {
 .stat-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--input-border);
 }
 
 .stat-info .stat-label {
@@ -546,7 +571,7 @@ a:hover {
 }
 
 .data-table tr:hover td {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--subtle-bg);
 }
 
 .patient-cell {
@@ -718,7 +743,7 @@ a:hover {
 
 .action-btn:hover {
     background: var(--bg-card-hover);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--input-border);
     transform: translateY(-1px);
 }
 
@@ -922,10 +947,37 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--hover-bg-strong);
     border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.14);
+    background: var(--hover-bg-strongest);
+}
+
+/* Global floating theme button overrides */
+.theme-toggle-floating {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.theme-toggle-floating:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: var(--bg-card-hover);
 }

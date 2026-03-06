@@ -3,6 +3,12 @@
 <html lang="en">
 
 <head>
+    <script>
+        // Apply theme early to prevent flash
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify OTP — HealthCRM</title>
@@ -21,12 +27,32 @@
             --bg: #0a0e17;
             --card: #111827;
             --border: rgba(255, 255, 255, .06);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.04);
+            --input-focus-shadow: rgba(59, 130, 246, 0.15);
+            --input-placeholder: rgba(255, 255, 255, 0.25);
+            --error-bg: rgba(239, 68, 68, 0.08);
+            --error-border: rgba(239, 68, 68, 0.2);
             --text: #f1f5f9;
             --muted: rgba(241, 245, 249, .5);
             --accent: #3b82f6;
             --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
             --error: #ef4444;
             --green: #10b981;
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: rgba(0, 0, 0, .08);
+            --input-border: rgba(0, 0, 0, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.04);
+            --input-focus-shadow: rgba(59, 130, 246, 0.15);
+            --input-placeholder: rgba(0, 0, 0, 0.4);
+            --error-bg: rgba(239, 68, 68, 0.08);
+            --error-border: rgba(239, 68, 68, 0.2);
+            --text: #0f172a;
+            --muted: rgba(15, 23, 42, .6);
         }
 
         body {
@@ -150,8 +176,8 @@
             font-size: 1.5rem;
             font-weight: 700;
             font-family: inherit;
-            background: rgba(255, 255, 255, .04);
-            border: 1px solid rgba(255, 255, 255, .1);
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
             border-radius: 12px;
             color: var(--text);
             transition: border-color .2s, box-shadow .2s;
@@ -160,7 +186,7 @@
         .otp-inputs input:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+            box-shadow: 0 0 0 3px var(--input-focus-shadow);
         }
 
         /* Hidden full OTP input for form submission */
@@ -171,8 +197,8 @@
         }
 
         .error-list {
-            background: rgba(239, 68, 68, .08);
-            border: 1px solid rgba(239, 68, 68, .2);
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
             border-radius: 10px;
             padding: .75rem 1rem;
             margin-bottom: 1.25rem;
@@ -319,6 +345,37 @@
             hidden.value = Array.from(digits).map(d => d.value).join('');
         }
     </script>
+
+    
+
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" title="Toggle Theme"
+        style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #111827); color: var(--text, #f1f5f9); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        <span class="material-icons-round" id="themeIcon" style="font-size: 1.2rem;">light_mode</span>
+    </button>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggleBtn = document.getElementById("themeToggle");
+            const toggleIcon = document.getElementById("themeIcon");
+            if (toggleBtn && toggleIcon) {
+                if (document.documentElement.getAttribute("data-theme") === "light") {
+                    toggleIcon.textContent = "dark_mode";
+                } else {
+                    toggleIcon.textContent = "light_mode";
+                }
+                toggleBtn.addEventListener("click", () => {
+                    let current = document.documentElement.getAttribute("data-theme");
+                    let newTheme = current === "light" ? "dark" : "light";
+                    document.documentElement.setAttribute("data-theme", newTheme);
+                    localStorage.setItem("theme", newTheme);
+                    toggleIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
+                    window.dispatchEvent(new Event("themeChanged"));
+                });
+            }
+        });
+    </script>
+
 </body>
 
 </html>

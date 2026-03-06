@@ -3,6 +3,12 @@
 <html lang="en">
 
 <head>
+    <script>
+        // Apply theme early to prevent flash
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirm Setup — HealthCRM</title>
@@ -399,6 +405,37 @@
                 </form>
             </div>
         </div>
+
+    
+
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" title="Toggle Theme"
+        style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #111827); color: var(--text, #f1f5f9); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        <span class="material-icons-round" id="themeIcon" style="font-size: 1.2rem;">light_mode</span>
+    </button>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggleBtn = document.getElementById("themeToggle");
+            const toggleIcon = document.getElementById("themeIcon");
+            if (toggleBtn && toggleIcon) {
+                if (document.documentElement.getAttribute("data-theme") === "light") {
+                    toggleIcon.textContent = "dark_mode";
+                } else {
+                    toggleIcon.textContent = "light_mode";
+                }
+                toggleBtn.addEventListener("click", () => {
+                    let current = document.documentElement.getAttribute("data-theme");
+                    let newTheme = current === "light" ? "dark" : "light";
+                    document.documentElement.setAttribute("data-theme", newTheme);
+                    localStorage.setItem("theme", newTheme);
+                    toggleIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
+                    window.dispatchEvent(new Event("themeChanged"));
+                });
+            }
+        });
+    </script>
+
 </body>
 
 </html>

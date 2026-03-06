@@ -3,6 +3,12 @@
 <html lang="en">
 
 <head>
+    <script>
+        // Apply theme early to prevent flash
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Healthcare CRM — Platform Admin">
@@ -179,11 +185,15 @@
                         <span class="icon material-icons-round">search</span>
                         <input type="text" placeholder="Search tenants, plans…">
                     </div>
+                    <button class="topbar-btn theme-toggle" id="themeToggle" title="Toggle Theme" style="border: none;">
+                        <span class="material-icons-round" id="themeIcon">light_mode</span>
+                    </button>
                     <a href="/notifications/" class="topbar-btn" title="Notifications" style="text-decoration:none;">
                         <span class="material-icons-round">notifications</span>
                     </a>
                     <div class="user-pill">
-                        <div class="user-avatar" style="background: var(--gradient-purple);">{% firstof request.user.email.0 'P' %}</div>
+                        <div class="user-avatar" style="background: var(--gradient-purple);">{% firstof
+                            request.user.email.0 'P' %}</div>
                         <div class="user-info">
                             <div class="name">{{ request.user.email|default:'Platform Owner' }}</div>
                             <div class="role">Super Admin</div>
@@ -203,7 +213,29 @@
     </div>
 
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const themeToggle = document.getElementById("themeToggle");
+            const themeIcon = document.getElementById("themeIcon");
+            if (themeToggle && themeIcon) {
+                if (document.documentElement.getAttribute("data-theme") === "light") {
+                    themeIcon.textContent = "dark_mode";
+                } else {
+                    themeIcon.textContent = "light_mode";
+                }
+                themeToggle.addEventListener("click", () => {
+                    let current = document.documentElement.getAttribute("data-theme");
+                    let newTheme = current === "light" ? "dark" : "light";
+                    document.documentElement.setAttribute("data-theme", newTheme);
+                    localStorage.setItem("theme", newTheme);
+                    themeIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
+                    window.dispatchEvent(new Event("themeChanged"));
+                });
+            }
+        });
+    </script>
     {% block extra_js %}{% endblock %}
+
 </body>
 
 </html>
