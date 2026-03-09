@@ -30,7 +30,7 @@ from apps.tenants.admin_views import (
     AdminTenantListView, AdminSubscriptionListView,
     AdminPlanListView, AdminFeatureListView, AdminSettingsView,
     AdminAnalyticsView, AdminRevenueView, AdminTenantDetailView,
-    AdminCategoryListView,
+    AdminCategoryListView, AdminRolesPermissionsView,
 )
 from apps.notifications.template_views import NotificationCenterView
 
@@ -80,6 +80,7 @@ urlpatterns = [
     path("admin-analytics/", AdminAnalyticsView.as_view(), name="admin-analytics"),
     path("admin-revenue/", AdminRevenueView.as_view(), name="admin-revenue"),
     path("admin-categories/", AdminCategoryListView.as_view(), name="admin-categories"),
+    path("admin-roles/", AdminRolesPermissionsView.as_view(), name="admin-roles"),
 
     # ── SuperAdmin: Categories & Tenants ──
     path("categories/", CategoryIndexView.as_view(), name="category-index"),

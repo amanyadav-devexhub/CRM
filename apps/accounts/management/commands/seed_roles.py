@@ -1,75 +1,45 @@
 from django.core.management.base import BaseCommand
-from apps.accounts.models import Role, Permission
-from apps.tenants.models import Tenant
+from apps.accounts.models import Role
+from apps.tenants.models import Tenant, CategoryRoleTemplate
 
 
 class Command(BaseCommand):
-    help = "Seed default roles for all tenants"
+    help = "Seed default roles for all tenants based on their category templates"
 
     def handle(self, *args, **kwargs):
-
         tenants = Tenant.objects.all()
 
         for tenant in tenants:
+            # Check if tenant has a category object, otherwise fallback to CLINIC string
+            category_obj = tenant.category_obj
+            category_code = tenant.category
+            
+            if category_obj:
+                templates = CategoryRoleTemplate.objects.filter(category=category_obj)
+            else:
+                templates = CategoryRoleTemplate.objects.filter(category__code=category_code)
 
-            admin_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Admin",
-                defaults={"is_system_role": True}
-            )
+            if not templates.exists():
+                self.stdout.write(self.style.WARNING(f"No templates found for {category_code}, falling back to CLINIC templates for {tenant.name}"))
+                templates = CategoryRoleTemplate.objects.filter(category__code="CLINIC")
+                
+                if not templates.exists():
+                    self.stdout.write(self.style.ERROR("No CLINIC fallback templates found either! Run seed_role_templates first."))
+                    continue
 
-            doctor_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Doctor",
-                defaults={"is_system_role": True}
-            )
+            for template in templates:
+                role, created = Role.objects.get_or_create(
+                    tenant=tenant,
+                    name=template.name,
+                    defaults={"is_system_role": True}
+                )
 
-            receptionist_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Receptionist",
-                defaults={"is_system_role": True}
-            )
-
-            billing_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Billing Staff",
-                defaults={"is_system_role": True}
-            )
-
-            # Assign Permissions
-            self.assign_permissions(admin_role, all_permissions=True)
-            self.assign_permissions(doctor_role, doctor=True)
-            self.assign_permissions(receptionist_role, receptionist=True)
-            self.assign_permissions(billing_role, billing=True)
+                # Assign permissions
+                role.permissions.set(template.permissions.all())
+                
+                if created:
+                    self.stdout.write(self.style.SUCCESS(f"Created role '{role.name}' for {tenant.name}"))
+                else:
+                    self.stdout.write(f"Updated role '{role.name}' for {tenant.name}")
 
         self.stdout.write(self.style.SUCCESS("Roles seeded successfully"))
-
-    def assign_permissions(self, role, all_permissions=False, doctor=False, receptionist=False, billing=False):
-
-        if all_permissions:
-            role.permissions.set(Permission.objects.all())
-            return
-
-        if doctor:
-            perms = Permission.objects.filter(code__startswith="patient.") | \
-                    Permission.objects.filter(code__startswith="appointment.") | \
-                    Permission.objects.filter(code="dashboard.doctor") | \
-                    Permission.objects.filter(code="dashboard.lab") | \
-                    Permission.objects.filter(code="dashboard.pharmacy")
-            role.permissions.set(perms)
-
-        if receptionist:
-            perms = Permission.objects.filter(code__in=[
-                "patient.view",
-                "patient.create",
-                "appointment.view",
-                "appointment.create",
-                "billing.view",
-                "billing.create",
-                "dashboard.reception",
-            ])
-            role.permissions.set(perms)
-
-        if billing:
-            perms = Permission.objects.filter(code__startswith="billing.")
-            role.permissions.set(perms)

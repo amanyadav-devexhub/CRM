@@ -26,7 +26,10 @@ class AdminCategoryListView(View):
 
         cat_data = []
         for cat in categories:
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            from django.db.models import Q
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             cat_data.append({
                 "category": cat,
                 "tenant_count": tenant_count,
@@ -112,7 +115,9 @@ class AdminCategoryListView(View):
             messages.success(request, f"'{cat.name}' deactivated.")
 
         elif action == "delete":
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             if tenant_count > 0:
                 messages.error(request, f"Cannot delete '{cat.name}' — {tenant_count} tenant(s) are using it. Deactivate it instead.")
             else:
@@ -720,3 +725,275 @@ class AdminTenantDetailView(View):
             "subscription": subscription,
         })
 
+
+class AdminRolesPermissionsView(View):
+    """SuperAdmin view for managing global permissions and tenant-scoped roles."""
+    template_name = "dashboard/admin_roles.html"
+
+    def get(self, request):
+        from apps.accounts.models import Permission, Role
+        from apps.tenants.models import CategoryRoleTemplate, Category
+
+        # ── Permissions tab data ──
+        all_permissions = Permission.objects.all().order_by("code")
+        grouped_perms = {}
+        for p in all_permissions:
+            prefix = p.code.split(".")[0]
+            if prefix not in grouped_perms:
+                grouped_perms[prefix] = []
+            grouped_perms[prefix].append(p)
+
+        # ── Roles tab data ──
+        all_tenants = Tenant.objects.all().order_by("name")
+        selected_tenant_id = request.GET.get("tenant")
+        selected_tenant = None
+        roles = []
+        role_data = []
+
+        if selected_tenant_id:
+            try:
+                selected_tenant = Tenant.objects.get(pk=selected_tenant_id)
+                roles = Role.objects.filter(tenant=selected_tenant).order_by("name")
+
+                for role in roles:
+                    role_perm_ids = set(role.permissions.values_list("id", flat=True))
+                    user_count = role.users.count()
+                    role_data.append({
+                        "role": role,
+                        "user_count": user_count,
+                        "perm_ids": role_perm_ids,
+                    })
+            except Tenant.DoesNotExist:
+                pass
+
+        # Build tenant options with selection state
+        tenant_options = []
+        for t in all_tenants:
+            tenant_options.append({
+                "pk": str(t.pk),
+                "name": t.name,
+                "category": t.category,
+                "is_selected": str(t.pk) == str(selected_tenant_id),
+            })
+
+        # Build category options for templates tab
+        all_categories = Category.objects.all().order_by("name")
+        selected_category_id = request.GET.get("category_id")
+        selected_category = None
+        category_templates = []
+        
+        if selected_category_id:
+            try:
+                selected_category = Category.objects.get(pk=selected_category_id)
+                templates = CategoryRoleTemplate.objects.filter(category=selected_category).order_by("-is_admin_role", "name")
+                
+                for tmpl in templates:
+                    tmpl_perm_ids = set(tmpl.permissions.values_list("id", flat=True))
+                    category_templates.append({
+                        "template": tmpl,
+                        "perm_ids": tmpl_perm_ids,
+                    })
+            except Category.DoesNotExist:
+                pass
+
+        active_tab = request.GET.get("tab", "permissions")
+
+        return render(request, self.template_name, {
+            "grouped_perms": grouped_perms,
+            "total_permissions": all_permissions.count(),
+            "all_permissions": all_permissions,
+            "tenant_options": tenant_options,
+            "selected_tenant": selected_tenant,
+            "role_data": role_data,
+            "total_roles": len(role_data),
+            "all_categories": all_categories,
+            "selected_category": selected_category,
+            "category_templates": category_templates,
+            "active_tab": active_tab,
+        })
+
+    def post(self, request):
+        from apps.accounts.models import Permission, Role
+        from apps.tenants.models import CategoryRoleTemplate, Category
+        
+        action = request.POST.get("action")
+        active_tab = request.POST.get("active_tab", "permissions")
+        selected_tenant_id = request.POST.get("selected_tenant_id", "")
+        selected_category_id = request.POST.get("selected_category_id", "")
+
+        redirect_url = f"/admin-roles/?tab={active_tab}"
+        if active_tab == "roles" and selected_tenant_id:
+            redirect_url += f"&tenant={selected_tenant_id}"
+        elif active_tab == "templates" and selected_category_id:
+            redirect_url += f"&category_id={selected_category_id}"
+
+        # ── Permission CRUD ──
+        if action == "create_permission":
+            code = request.POST.get("code", "").strip().lower()
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            if code and name:
+                if Permission.objects.filter(code=code).exists():
+                    messages.error(request, f"Permission '{code}' already exists.")
+                else:
+                    Permission.objects.create(code=code, name=name, description=description)
+                    messages.success(request, f"Permission '{name}' created.")
+            else:
+                messages.error(request, "Code and name are required.")
+            return redirect(redirect_url)
+
+        elif action == "delete_permission":
+            perm_id = request.POST.get("permission_id")
+            try:
+                perm = Permission.objects.get(pk=perm_id)
+                # Check if any role is using this permission
+                role_count = perm.roles.count()
+                if role_count > 0:
+                    messages.error(request, f"Cannot delete '{perm.name}' — it's assigned to {role_count} role(s). Remove it from all roles first.")
+                else:
+                    name = perm.name
+                    perm.delete()
+                    messages.success(request, f"Permission '{name}' deleted.")
+            except Permission.DoesNotExist:
+                messages.error(request, "Permission not found.")
+            return redirect(redirect_url)
+            
+        elif action == "update_permission":
+            perm_id = request.POST.get("permission_id")
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            if name:
+                try:
+                    perm = Permission.objects.get(pk=perm_id)
+                    perm.name = name
+                    perm.description = description
+                    perm.save(update_fields=["name", "description"])
+                    messages.success(request, f"Permission '{name}' updated.")
+                except Permission.DoesNotExist:
+                    messages.error(request, "Permission not found.")
+            else:
+                messages.error(request, "Permission name is required.")
+            return redirect(redirect_url)
+
+        # ── Role CRUD ──
+        elif action == "create_role":
+            tenant_id = request.POST.get("tenant_id")
+            role_name = request.POST.get("role_name", "").strip()
+            if not tenant_id or not role_name:
+                messages.error(request, "Tenant and role name are required.")
+                return redirect(redirect_url)
+            try:
+                tenant = Tenant.objects.get(pk=tenant_id)
+                if Role.objects.filter(tenant=tenant, name=role_name).exists():
+                    messages.error(request, f"Role '{role_name}' already exists for {tenant.name}.")
+                else:
+                    selected_perms = request.POST.getlist("permissions")
+                    role = Role.objects.create(tenant=tenant, name=role_name, is_system_role=False)
+                    if selected_perms:
+                        role.permissions.set(selected_perms)
+                    messages.success(request, f"Role '{role_name}' created for {tenant.name}.")
+            except Tenant.DoesNotExist:
+                messages.error(request, "Tenant not found.")
+            return redirect(redirect_url)
+
+        elif action == "update_role":
+            role_id = request.POST.get("role_id")
+            try:
+                role = Role.objects.get(pk=role_id)
+                selected_perms = request.POST.getlist("permissions")
+                role.permissions.set(selected_perms)
+
+                new_name = request.POST.get("role_name", "").strip()
+                if new_name and not role.is_system_role:
+                    role.name = new_name
+                    role.save(update_fields=["name"])
+
+                messages.success(request, f"Role '{role.name}' updated.")
+            except Role.DoesNotExist:
+                messages.error(request, "Role not found.")
+            return redirect(redirect_url)
+
+        elif action == "delete_role":
+            role_id = request.POST.get("role_id")
+            try:
+                role = Role.objects.get(pk=role_id)
+                if role.is_system_role:
+                    messages.error(request, f"Cannot delete system role '{role.name}'.")
+                elif role.users.exists():
+                    messages.error(request, f"Cannot delete '{role.name}' — {role.users.count()} user(s) assigned. Reassign them first.")
+                else:
+                    name = role.name
+                    role.delete()
+                    messages.success(request, f"Role '{name}' deleted.")
+            except Role.DoesNotExist:
+                messages.error(request, "Role not found.")
+            return redirect(redirect_url)
+
+        # ── Category Templates CRUD ──
+        elif action == "create_template":
+            cat_id = request.POST.get("category_id")
+            name = request.POST.get("name", "").strip()
+            desc = request.POST.get("description", "").strip()
+            is_admin = request.POST.get("is_admin_role") == "on"
+            
+            if not cat_id or not name:
+                messages.error(request, "Category and template name are required.")
+                return redirect(redirect_url)
+                
+            try:
+                category = Category.objects.get(pk=cat_id)
+                if CategoryRoleTemplate.objects.filter(category=category, name=name).exists():
+                    messages.error(request, f"Template '{name}' already exists for {category.name}.")
+                else:
+                    # If this is set to admin, turn off admin for others in this category
+                    if is_admin:
+                        CategoryRoleTemplate.objects.filter(category=category, is_admin_role=True).update(is_admin_role=False)
+                        
+                    tmpl = CategoryRoleTemplate.objects.create(
+                        category=category, name=name, description=desc, is_admin_role=is_admin
+                    )
+                    selected_perms = request.POST.getlist("permissions")
+                    if selected_perms:
+                        tmpl.permissions.set(selected_perms)
+                    messages.success(request, f"Template '{name}' created.")
+            except Category.DoesNotExist:
+                messages.error(request, "Category not found.")
+            return redirect(redirect_url)
+
+        elif action == "update_template":
+            tmpl_id = request.POST.get("template_id")
+            try:
+                tmpl = CategoryRoleTemplate.objects.get(pk=tmpl_id)
+                name = request.POST.get("name", "").strip()
+                desc = request.POST.get("description", "").strip()
+                is_admin = request.POST.get("is_admin_role") == "on"
+                
+                if name:
+                    tmpl.name = name
+                tmpl.description = desc
+                
+                if is_admin and not tmpl.is_admin_role:
+                    CategoryRoleTemplate.objects.filter(category=tmpl.category, is_admin_role=True).update(is_admin_role=False)
+                tmpl.is_admin_role = is_admin
+                
+                tmpl.save()
+                
+                selected_perms = request.POST.getlist("permissions")
+                tmpl.permissions.set(selected_perms)
+                messages.success(request, f"Template '{tmpl.name}' updated.")
+            except CategoryRoleTemplate.DoesNotExist:
+                messages.error(request, "Template not found.")
+            return redirect(redirect_url)
+            
+        elif action == "delete_template":
+            tmpl_id = request.POST.get("template_id")
+            try:
+                tmpl = CategoryRoleTemplate.objects.get(pk=tmpl_id)
+                name = tmpl.name
+                tmpl.delete()
+                messages.success(request, f"Template '{name}' deleted.")
+            except CategoryRoleTemplate.DoesNotExist:
+                messages.error(request, "Template not found.")
+            return redirect(redirect_url)
+
+        return redirect(redirect_url)

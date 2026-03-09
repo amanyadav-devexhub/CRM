@@ -1,0 +1,823 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Roles & Permissions{% endblock %}
+{% block page_title %}Roles & Permissions{% endblock %}
+{% block nav_admin_roles %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1px;
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.2s;
+    }
+
+    .tab-btn:hover {
+        color: var(--text-color);
+    }
+
+    .tab-btn.active {
+        color: var(--accent-blue);
+    }
+
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--accent-blue);
+        border-radius: 2px 2px 0 0;
+    }
+
+    .tab-pane {
+        display: none;
+        animation: fadeIn 0.3s;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    /* Permission list styles */
+    .perm-group {
+        margin-bottom: 2rem;
+    }
+
+    .perm-group-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-transform: capitalize;
+    }
+
+    .perm-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    .perm-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .perm-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    .perm-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .perm-name {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    .perm-code {
+        font-size: 0.8rem;
+        color: var(--accent-green);
+        background: rgba(16, 185, 129, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    .perm-desc {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        flex-grow: 1;
+    }
+
+    /* Roles grid styles */
+    .tenant-selector-area {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .tenant-selector-area select {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-color);
+        color: var(--text-color);
+        font-size: 0.95rem;
+        flex-grow: 1;
+        max-width: 400px;
+    }
+
+    .role-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .role-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .role-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .role-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .sys-badge {
+        font-size: 0.7rem;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .role-users {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .perm-checkboxes {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 250px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-grow: 1;
+    }
+    
+    .perm-checkboxes::-webkit-scrollbar {
+        width: 6px;
+    }
+    .perm-checkboxes::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 3px;
+    }
+
+    .perm-chk-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+
+    .perm-chk-item:hover {
+        background: rgba(255,255,255,0.03);
+    }
+
+    .perm-chk-item input[type="checkbox"] {
+        margin-top: 0.2rem;
+        accent-color: var(--accent-blue);
+    }
+
+    .perm-chk-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .perm-chk-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-color);
+        cursor: pointer;
+    }
+
+    .perm-chk-code {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-family: monospace;
+    }
+
+    .role-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 500px;
+        padding: 2rem;
+        transform: translateY(20px);
+        transition: transform 0.3s;
+    }
+
+    .modal-overlay.active .modal {
+        transform: translateY(0);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input, .form-group textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-color);
+        color: var(--text-color);
+        font-family: inherit;
+    }
+    
+    .form-group input:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700;">Roles & Permissions</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Manage global system permissions and configure roles for each tenant.</p>
+    </div>
+    <div class="header-actions" style="display: flex; gap: 0.75rem;">
+        {% if active_tab == 'permissions' %}
+            <button class="btn btn-primary" onclick="openModal('permModal')" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-blue); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                <span class="material-icons-round" style="font-size: 18px;">add</span> Add Permission
+            </button>
+        {% elif active_tab == 'roles' and selected_tenant %}
+            <button class="btn btn-primary" onclick="openModal('roleModal')" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-green); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                <span class="material-icons-round" style="font-size: 18px;">add_moderator</span> Create Role
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+    <button class="tab-btn {% if active_tab == 'permissions' %}active{% endif %}" onclick="switchTab('permissions')">
+        Global Permissions <span style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; margin-left: 0.5rem;">{{ total_permissions }}</span>
+    </button>
+    <button class="tab-btn {% if active_tab == 'templates' %}active{% endif %}" onclick="switchTab('templates')">
+        Category Templates
+    </button>
+    <button class="tab-btn {% if active_tab == 'roles' %}active{% endif %}" onclick="switchTab('roles')">
+        Tenant Roles
+    </button>
+</div>
+
+<!-- Permissions Tab -->
+<div id="tab-permissions" class="tab-pane {% if active_tab == 'permissions' %}active{% endif %}">
+    {% for prefix, perms in grouped_perms.items %}
+    <div class="perm-group">
+        <div class="perm-group-title">
+            <span class="material-icons-round" style="color: var(--accent-purple); font-size: 1.2rem;">folder</span>
+            {{ prefix }} module
+        </div>
+        <div class="perm-grid">
+            {% for p in perms %}
+            <div class="perm-card">
+                <div class="perm-header">
+                    <div class="perm-name">{{ p.name }}</div>
+                    <div style="display: flex; gap: 0.25rem;">
+                        <button type="button" onclick="openEditPermModal('{{ p.id }}', '{{ p.code }}', '{{ p.name|escapejs }}', '{{ p.description|escapejs }}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:2px;" title="Edit Permission">
+                            <span class="material-icons-round" style="font-size: 18px;">edit</span>
+                        </button>
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this permission? It will be removed from all roles.');" style="margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_permission">
+                            <input type="hidden" name="active_tab" value="permissions">
+                            <input type="hidden" name="permission_id" value="{{ p.id }}">
+                            <button type="submit" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:2px;" title="Delete Permission">
+                                <span class="material-icons-round" style="font-size: 18px;">delete_outline</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="perm-code">{{ p.code }}</div>
+                <div class="perm-desc">{{ p.description|default:"No description provided." }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Category Templates Tab -->
+<div id="tab-templates" class="tab-pane {% if active_tab == 'templates' %}active{% endif %}">
+    
+    <div class="tenant-selector-area">
+        <span class="material-icons-round" style="color: var(--text-muted);">category</span>
+        <div style="flex-grow: 1;">
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Select Base Category</div>
+            <form id="categorySelectForm" method="get">
+                <input type="hidden" name="tab" value="templates">
+                <select name="category_id" onchange="document.getElementById('categorySelectForm').submit()">
+                    <option value="">-- Choose a category to manage templates --</option>
+                    {% for c in all_categories %}
+                    <option value="{{ c.pk }}" {% if c.pk|stringformat:"s" == selected_category.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_category %}
+        {% if category_templates|length == 0 %}
+        <div style="text-align: center; padding: 4rem 2rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
+            <span class="material-icons-round" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">style</span>
+            <h3 style="margin-bottom: 0.5rem;">No templates configured</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">This category doesn't have any default roles yet.</p>
+            <button class="btn btn-primary" onclick="openCreateTmplModal()" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-blue); color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                <span class="material-icons-round" style="font-size: 18px;">add</span> Create First Template
+            </button>
+        </div>
+        {% else %}
+        <div class="role-grid">
+            {% for item in category_templates %}
+            <form method="post" class="role-card">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_template">
+                <input type="hidden" name="active_tab" value="templates">
+                <input type="hidden" name="selected_category_id" value="{{ selected_category.pk }}">
+                <input type="hidden" name="template_id" value="{{ item.template.pk }}">
+                
+                <div class="role-header" style="flex-wrap: wrap; gap: 0.5rem;">
+                    <div class="role-name" style="width: 100%;">
+                        <input type="text" name="name" value="{{ item.template.name }}" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:inherit; font-weight:inherit; font-size:inherit; flex-grow:1; padding:0.2rem 0.5rem;">
+                        {% if item.template.is_admin_role %}<span class="sys-badge" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">Signup Admin</span>{% endif %}
+                    </div>
+                    <div style="width: 100%;">
+                        <input type="text" name="description" value="{{ item.template.description|default:'' }}" placeholder="Description for this role" style="background:transparent; border:none; outline:none; color:var(--text-muted); font-size:0.85rem; width:100%; padding:0.2rem;">
+                    </div>
+                </div>
+
+                <div class="perm-checkboxes">
+                    {% for p in all_permissions %}
+                    <label class="perm-chk-item">
+                        <input type="checkbox" name="permissions" value="{{ p.id }}" {% if p.id in item.perm_ids %}checked{% endif %}>
+                        <div class="perm-chk-content">
+                            <span class="perm-chk-label">{{ p.name }}</span>
+                            <span class="perm-chk-code">{{ p.code }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="role-actions" style="justify-content: space-between; align-items: center;">
+                    <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; color: var(--text-muted); cursor: pointer;">
+                        <input type="checkbox" name="is_admin_role" {% if item.template.is_admin_role %}checked{% endif %}>
+                        Grant on signup
+                    </label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" onclick="deleteTemplate('{{ item.template.pk }}')" style="padding: 0.4rem 0.8rem; border-radius: 6px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; font-size: 0.85rem; font-weight: 500;">Delete</button>
+                        <button type="submit" style="padding: 0.4rem 1rem; border-radius: 6px; background: var(--accent-blue); color: white; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Save</button>
+                    </div>
+                </div>
+            </form>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 4rem 2rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
+            <span class="material-icons-round" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">category</span>
+            <h3 style="margin-bottom: 0.5rem;">Select a Category</h3>
+            <p style="color: var(--text-muted);">Please select a category from the dropdown to manage its default role templates.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Roles Tab -->
+<div id="tab-roles" class="tab-pane {% if active_tab == 'roles' %}active{% endif %}">
+    
+    <div class="tenant-selector-area">
+        <span class="material-icons-round" style="color: var(--text-muted);">apartment</span>
+        <div style="flex-grow: 1;">
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Select Tenant Context</div>
+            <form id="tenantSelectForm" method="get">
+                <input type="hidden" name="tab" value="roles">
+                <select name="tenant" onchange="document.getElementById('tenantSelectForm').submit()">
+                    <option value="">-- Choose a tenant to view roles --</option>
+                    {% for t in tenant_options %}
+                    <option value="{{ t.pk }}" {% if t.is_selected %}selected{% endif %}>{{ t.name }} ({{ t.category|default:'Uncategorized' }})</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_tenant %}
+        {% if total_roles == 0 %}
+        <div style="text-align: center; padding: 4rem 2rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
+            <span class="material-icons-round" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">admin_panel_settings</span>
+            <h3 style="margin-bottom: 0.5rem;">No roles configured</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">This tenant does not have any roles yet.</p>
+            <button class="btn btn-primary" onclick="openModal('roleModal')" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-green); color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                <span class="material-icons-round" style="font-size: 18px;">add</span> Create First Role
+            </button>
+        </div>
+        {% else %}
+        <div class="role-grid">
+            {% for item in role_data %}
+            <form method="post" class="role-card">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_role">
+                <input type="hidden" name="active_tab" value="roles">
+                <input type="hidden" name="selected_tenant_id" value="{{ selected_tenant.pk }}">
+                <input type="hidden" name="role_id" value="{{ item.role.pk }}">
+                
+                <div class="role-header">
+                    <div class="role-name">
+                        <input type="text" name="role_name" value="{{ item.role.name }}" {% if item.role.is_system_role %}readonly style="background:transparent; border:none; outline:none; color:inherit; font-weight:inherit; font-size:inherit; width:150px;"{% else %}style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:inherit; font-weight:inherit; font-size:inherit; width:150px; padding:0.2rem 0.5rem;"{% endif %}>
+                        {% if item.role.is_system_role %}<span class="sys-badge">System</span>{% endif %}
+                    </div>
+                    <div class="role-users" title="{{ item.user_count }} users assigned">
+                        <span class="material-icons-round" style="font-size: 16px;">people</span> {{ item.user_count }}
+                    </div>
+                </div>
+
+                <div class="perm-checkboxes">
+                    {% for p in all_permissions %}
+                    <label class="perm-chk-item">
+                        <input type="checkbox" name="permissions" value="{{ p.id }}" {% if p.id in item.perm_ids %}checked{% endif %}>
+                        <div class="perm-chk-content">
+                            <span class="perm-chk-label">{{ p.name }}</span>
+                            <span class="perm-chk-code">{{ p.code }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="role-actions">
+                    {% if not item.role.is_system_role and item.user_count == 0 %}
+                    <button type="button" onclick="deleteRole('{{ item.role.pk }}')" style="padding: 0.4rem 0.8rem; border-radius: 6px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; font-size: 0.85rem; font-weight: 500;">Delete</button>
+                    {% endif %}
+                    <button type="submit" style="padding: 0.4rem 1rem; border-radius: 6px; background: var(--accent-blue); color: white; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Save Changes</button>
+                </div>
+            </form>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 4rem 2rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color);">
+            <span class="material-icons-round" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">apartment</span>
+            <h3 style="margin-bottom: 0.5rem;">Select a Tenant</h3>
+            <p style="color: var(--text-muted);">Please select a tenant from the dropdown above to view and manage their roles.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modals -->
+
+<!-- Add/Edit Permission Modal -->
+<div class="modal-overlay" id="permModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="permModalTitle">Add Global Permission</div>
+            <button type="button" onclick="closeModal('permModal')" style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><span class="material-icons-round">close</span></button>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" id="permModalAction" value="create_permission">
+            <input type="hidden" name="active_tab" value="permissions">
+            <input type="hidden" name="permission_id" id="permModalId" value="">
+            
+            <div class="form-group">
+                <label>Permission Code</label>
+                <input type="text" name="code" id="permModalCode" placeholder="e.g. patient.export" required pattern="[a-z0-9._-]+" title="Only lowercase letters, numbers, dots, underscores, and hyphens">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem;">Format: module.action (e.g. billing.approve)</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Friendly Name</label>
+                <input type="text" name="name" id="permModalName" placeholder="e.g. Export Patients" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Description (Optional)</label>
+                <textarea name="description" id="permModalDesc" rows="2" placeholder="Describe what this permission allows..."></textarea>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                <button type="button" onclick="closeModal('permModal')" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: transparent; color: var(--text-color); border: 1px solid var(--border-color); cursor: pointer;">Cancel</button>
+                <button type="submit" id="permModalSubmitBtn" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-blue); color: white; border: none; cursor: pointer; font-weight: 600;">Create Permission</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden form for deleting templates -->
+<form id="deleteTemplateForm" method="post" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete_template">
+    <input type="hidden" name="active_tab" value="templates">
+    {% if selected_category %}<input type="hidden" name="selected_category_id" value="{{ selected_category.pk }}">{% endif %}
+    <input type="hidden" name="template_id" id="deleteTemplateId">
+</form>
+
+<!-- Create Template Modal -->
+{% if selected_category %}
+<div class="modal-overlay" id="tmplModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Create Category Template</div>
+            <button onclick="closeModal('tmplModal')" style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><span class="material-icons-round">close</span></button>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_template">
+            <input type="hidden" name="active_tab" value="templates">
+            <input type="hidden" name="selected_category_id" value="{{ selected_category.pk }}">
+            <input type="hidden" name="category_id" value="{{ selected_category.pk }}">
+            
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+                Creating a template for <strong style="color:var(--text-color);">{{ selected_category.name }}</strong>
+            </div>
+
+            <div class="form-group">
+                <label>Template Name</label>
+                <input type="text" name="name" placeholder="e.g. Senior Doctor" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" name="description" placeholder="Brief description of responsibilities">
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <input type="checkbox" name="is_admin_role" id="tmplAdminChk">
+                <label for="tmplAdminChk" style="margin: 0; color: var(--text-color);">Grant this role to the user who signs up the tenant</label>
+            </div>
+
+            <div class="form-group">
+                <label>Default Permissions</label>
+                <div class="perm-checkboxes" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; background: rgba(0,0,0,0.1);">
+                    {% for p in all_permissions %}
+                    <label class="perm-chk-item">
+                        <input type="checkbox" name="permissions" value="{{ p.id }}">
+                        <div class="perm-chk-content">
+                            <span class="perm-chk-label">{{ p.name }}</span>
+                            <span class="perm-chk-code">{{ p.code }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" onclick="closeModal('tmplModal')" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: transparent; color: var(--text-color); border: 1px solid var(--border-color); cursor: pointer;">Cancel</button>
+                <button type="submit" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-blue); color: white; border: none; cursor: pointer; font-weight: 600;">Create Template</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Create Role Modal -->
+{% if selected_tenant %}
+<div class="modal-overlay" id="roleModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Create Role</div>
+            <button onclick="closeModal('roleModal')" style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><span class="material-icons-round">close</span></button>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_role">
+            <input type="hidden" name="active_tab" value="roles">
+            <input type="hidden" name="selected_tenant_id" value="{{ selected_tenant.pk }}">
+            <input type="hidden" name="tenant_id" value="{{ selected_tenant.pk }}">
+            
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+                Creating a role for <strong style="color:var(--text-color);">{{ selected_tenant.name }}</strong>
+            </div>
+
+            <div class="form-group">
+                <label>Role Name</label>
+                <input type="text" name="role_name" placeholder="e.g. Senior Doctor" required>
+            </div>
+
+            <div class="form-group">
+                <label>Initial Permissions</label>
+                <div class="perm-checkboxes" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; background: rgba(0,0,0,0.1);">
+                    {% for p in all_permissions %}
+                    <label class="perm-chk-item">
+                        <input type="checkbox" name="permissions" value="{{ p.id }}">
+                        <div class="perm-chk-content">
+                            <span class="perm-chk-label">{{ p.name }}</span>
+                            <span class="perm-chk-code">{{ p.code }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" onclick="closeModal('roleModal')" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: transparent; color: var(--text-color); border: 1px solid var(--border-color); cursor: pointer;">Cancel</button>
+                <button type="submit" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-green); color: white; border: none; cursor: pointer; font-weight: 600;">Create Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Hidden form for deleting roles -->
+<form id="deleteRoleForm" method="post" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete_role">
+    <input type="hidden" name="active_tab" value="roles">
+    {% if selected_tenant %}<input type="hidden" name="selected_tenant_id" value="{{ selected_tenant.pk }}">{% endif %}
+    <input type="hidden" name="role_id" id="deleteRoleId">
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabId) {
+        // Update URL instantly without reload using history API
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabId);
+        window.history.pushState({}, '', url);
+
+        // Update UI
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+        
+        event.currentTarget.classList.add('active');
+        document.getElementById('tab-' + tabId).classList.add('active');
+
+        // Update header actions visibility
+        const currentUrl = new URL(window.location.href);
+        const hasTenant = currentUrl.searchParams.has('tenant');
+        const hasCategory = currentUrl.searchParams.has('category_id');
+        
+        const headerActions = document.querySelector('.header-actions');
+        if (tabId === 'permissions') {
+            headerActions.innerHTML = `<button class="btn btn-primary" onclick="openCreatePermModal()" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-blue); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;"><span class="material-icons-round" style="font-size: 18px;">add</span> Add Permission</button>`;
+        } else if (tabId === 'templates' && hasCategory) {
+            headerActions.innerHTML = `<button class="btn btn-primary" onclick="openCreateTmplModal()" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-blue); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;"><span class="material-icons-round" style="font-size: 18px;">style</span> Create Template</button>`;
+        } else if (tabId === 'roles' && hasTenant) {
+            headerActions.innerHTML = `<button class="btn btn-primary" onclick="openModal('roleModal')" style="padding: 0.6rem 1.2rem; border-radius: 8px; background: var(--gradient-green); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;"><span class="material-icons-round" style="font-size: 18px;">add_moderator</span> Create Role</button>`;
+        } else {
+            headerActions.innerHTML = '';
+        }
+    }
+
+    function openModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+
+    function deleteRole(roleId) {
+        if (confirm('Are you sure you want to delete this role? This cannot be undone.')) {
+            document.getElementById('deleteRoleId').value = roleId;
+            document.getElementById('deleteRoleForm').submit();
+        }
+    }
+
+    function openCreatePermModal() {
+        document.getElementById('permModalTitle').innerText = 'Add Global Permission';
+        document.getElementById('permModalAction').value = 'create_permission';
+        document.getElementById('permModalId').value = '';
+        document.getElementById('permModalCode').value = '';
+        document.getElementById('permModalCode').readOnly = false;
+        document.getElementById('permModalName').value = '';
+        document.getElementById('permModalDesc').value = '';
+        document.getElementById('permModalSubmitBtn').innerText = 'Create Permission';
+        openModal('permModal');
+    }
+
+    function openEditPermModal(id, code, name, desc) {
+        document.getElementById('permModalTitle').innerText = 'Edit Global Permission';
+        document.getElementById('permModalAction').value = 'update_permission';
+        document.getElementById('permModalId').value = id;
+        document.getElementById('permModalCode').value = code;
+        document.getElementById('permModalCode').readOnly = true; // Can't edit code once created
+        document.getElementById('permModalName').value = name;
+        document.getElementById('permModalDesc').value = desc;
+        document.getElementById('permModalSubmitBtn').innerText = 'Save Changes';
+        openModal('permModal');
+    }
+
+    function openCreateTmplModal() {
+        openModal('tmplModal');
+    }
+
+    function deleteTemplate(tmplId) {
+        if (confirm('Are you sure you want to delete this category template? This will not affect existing tenants, only new ones.')) {
+            document.getElementById('deleteTemplateId').value = tmplId;
+            document.getElementById('deleteTemplateForm').submit();
+        }
+    }
+
+    // Replace the old button's onclick
+    document.querySelector('button[onclick="openModal(\'permModal\')"]').setAttribute('onclick', 'openCreatePermModal()');
+
+    // Close modal on click outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
+        }
+    }
+</script>
+{% endblock %}

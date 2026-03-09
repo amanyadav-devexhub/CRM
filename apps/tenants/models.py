@@ -117,6 +117,28 @@ class Tenant(models.Model):
         return self.name
 
 
+class CategoryRoleTemplate(models.Model):
+    category = models.ForeignKey(
+        'tenants.Category', 
+        on_delete=models.CASCADE, 
+        related_name="role_templates"
+    )
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    permissions = models.ManyToManyField('accounts.Permission', blank=True)
+    is_admin_role = models.BooleanField(
+        default=False, 
+        help_text="Should the onboarding user receive this role?"
+    )
+
+    class Meta:
+        unique_together = ('category', 'name')
+        ordering = ['category', '-is_admin_role', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.category.name})"
+
+
 # ================================
 # CLINIC SETTINGS (Org Configuration)
 # ================================

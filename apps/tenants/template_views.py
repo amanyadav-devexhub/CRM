@@ -93,7 +93,10 @@ class CategoryIndexView(View):
 
         cat_data = []
         for cat in categories:
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            from django.db.models import Q
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             cat_data.append({
                 "category": cat,
                 "tenant_count": tenant_count,
@@ -192,7 +195,10 @@ class CategoryIndexView(View):
             messages.success(request, f"'{cat.name}' deactivated.")
 
         elif action == "delete":
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            from django.db.models import Q
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             if tenant_count > 0:
                 messages.error(request, f"Cannot delete '{cat.name}' — {tenant_count} tenant(s) are using it. Deactivate it instead.")
             else:
@@ -608,7 +614,10 @@ class CategoryListView(View):
                 "tenants": [],
             })
 
-        tenants_query = Tenant.objects.filter(category=cat.code).order_by("-created_at")
+        from django.db.models import Q
+        tenants_query = Tenant.objects.filter(
+            Q(category=cat.code) | Q(category_obj=cat)
+        ).distinct().order_by("-created_at")
         
         # Pagination setup (10 tenants per page)
         paginator = Paginator(tenants_query, 10)
