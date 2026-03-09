@@ -5,191 +5,1154 @@
 
 {% block extra_css %}
 <style>
+    /* Tabs */
+    .tabs {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .tab {
+        padding: 12px 0;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .tab:hover {
+        color: var(--text-primary);
+    }
+
+    .tab.active {
+        color: var(--accent-purple);
+        border-bottom-color: var(--accent-purple);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Plan Grid */
     .plan-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 24px;
     }
+
     .plan-card {
         background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
         padding: 24px;
-        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .plan-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+    .plan-header {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
     }
-    .plan-name {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 4px;
-    }
-    .plan-price {
-        font-size: 28px;
-        font-weight: 800;
-        background: var(--gradient-blue);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 16px;
-    }
-    .plan-price.free {
-        background: var(--gradient-green);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .plan-limits {
-        list-style: none;
-        padding: 0;
-        margin: 0 0 20px 0;
-    }
-    .plan-limits li {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        font-size: 13px;
-        color: var(--text-muted);
-    }
-    .plan-limits li .limit-val {
-        color: var(--text-primary);
-        font-weight: 600;
-    }
+
     .edit-input {
         background: var(--bg-hover);
-        border: 1px solid var(--border);
-        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
         color: var(--text-primary);
         padding: 6px 10px;
         font-size: 13px;
-        width: 80px;
-        text-align: right;
+        width: 100%;
         outline: none;
     }
+
     .edit-input:focus {
-        border-color: var(--accent-blue);
+        border-color: var(--accent-purple);
     }
-    .plan-subs {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid var(--border);
+
+    .limit-row,
+    .feature-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .limit-val-input {
+        width: 70px;
+        text-align: center;
+    }
+
+    /* Master Lists */
+    .list-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Side Panel */
+    .side-panel {
+        position: fixed;
+        top: 0;
+        right: -500px;
+        width: 450px;
+        height: 100vh;
+        background: var(--bg-card);
+        border-left: 1px solid var(--border-color);
+        box-shadow: var(--shadow-lg);
+        z-index: 2000;
+        transition: right 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        display: flex;
+        flex-direction: column;
+        padding-top: 20px;
+    }
+
+    .side-panel.open {
+        right: 0;
+    }
+
+    .side-panel-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1500;
+        display: none;
+    }
+
+    .side-panel-overlay.active {
+        display: block;
+    }
+
+    .side-panel-header {
+        padding: 0 24px 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .side-panel-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="plan-grid">
-    {% for item in plan_data %}
-    <form method="post" class="plan-card" style="position:relative;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="update">
-        <input type="hidden" name="plan_id" value="{{ item.plan.pk }}">
-
-        <!-- Delete button -->
-        <button type="submit" name="action" value="delete" class="action-btn" style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px;" onclick="return confirm('Are you sure you want to delete this plan?');">
-            <span class="material-icons-round" style="font-size:18px;">delete</span>
-        </button>
-
-        <div class="plan-name">{{ item.plan.display_name|default:item.plan.name }}</div>
-        <div class="plan-price {% if item.plan.price == 0 %}free{% endif %}">
-            ₹<input type="number" name="price" value="{{ item.plan.price|floatformat:0 }}"
-                class="edit-input" style="width:100px; font-size:24px; font-weight:800;
-                background:transparent; border:none; color:inherit; -webkit-text-fill-color:inherit;">
-            <span style="font-size:14px; font-weight:400;">/mo</span>
-        </div>
-
-        <ul class="plan-limits">
-            <li>
-                <span>Max Doctors</span>
-                <input type="number" name="max_doctors" value="{{ item.plan.max_doctors }}"
-                    class="edit-input">
-            </li>
-            <li>
-                <span>Max Staff</span>
-                <input type="number" name="max_staff" value="{{ item.plan.max_staff }}"
-                    class="edit-input">
-            </li>
-            <li>
-                <span>Max Patients</span>
-                <input type="number" name="max_patients" value="{{ item.plan.max_patients }}"
-                    class="edit-input">
-            </li>
-            <li>
-                <span>Appointments / Month</span>
-                <input type="number" name="max_appointments" value="{{ item.plan.max_appointments_per_month }}"
-                    class="edit-input">
-            </li>
-        </ul>
-
-        <button type="submit" class="action-btn primary" style="width:100%; justify-content:center; padding:10px;">
-            <span class="material-icons-round" style="font-size:16px;">save</span>
-            Save Changes
-        </button>
-
-        <div class="plan-subs">
-            <span class="material-icons-round" style="font-size:14px; vertical-align:middle;">people</span>
-            {{ item.subscriber_count }} active subscriber{{ item.subscriber_count|pluralize }}
-        </div>
-    </form>
-    {% empty %}
-    <div class="card" style="grid-column: 1 / -1;">
-        <div class="empty-state">
-            <div class="icon material-icons-round">credit_card_off</div>
-            <p>No subscription plans configured.</p>
-        </div>
+<div
+    style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 2px solid var(--border-color); padding-bottom: 0px; margin-bottom: 24px;">
+    <div class="tabs" style="margin-bottom:0; border-bottom:none;">
+        <div class="tab active" onclick="switchTab('plans')">Subscription Plans</div>
+        <div class="tab" onclick="switchTab('resources')">Resources</div>
+        <div class="tab" onclick="switchTab('features')">Features</div>
     </div>
-    {% endfor %}
+</div>
 
-    <!-- Create New Plan Card -->
-    <form method="post" class="plan-card" style="border: 2px dashed var(--border); display:flex; flex-direction:column; justify-content:space-between; height: 100%;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="create">
+<style>
+    .section-bar {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
 
-        <div style="margin-bottom: 20px;">
-            <div class="form-group" style="margin-bottom: 12px;">
-                <label style="font-size:12px; color:var(--text-muted);">Internal Name (e.g. BASIC)</label>
-                <input type="text" name="name" class="form-control" required style="padding:8px; font-size:14px;">
-            </div>
-            <div class="form-group" style="margin-bottom: 12px;">
-                <label style="font-size:12px; color:var(--text-muted);">Display Name (e.g. Basic Plan)</label>
-                <input type="text" name="display_name" class="form-control" required style="padding:8px; font-size:14px;">
-            </div>
+    .section-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-right: 20px;
+        border-right: 1px solid var(--border-color);
+    }
+
+    .total-badge {
+        background: var(--accent-purple);
+        color: white;
+        padding: 0 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 700;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .search-wrapper {
+        flex: 1;
+        min-width: 250px;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0 40px 0 15px;
+        border-radius: 8px;
+        height: 44px;
+        font-size: 14px;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 20px !important;
+    }
+
+    .section-bar .edit-input {
+        height: 44px;
+        padding: 0 12px;
+        font-size: 14px;
+    }
+
+    .action-btn.primary,
+    .action-btn.success {
+        height: 44px;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 8px;
+        font-weight: 600;
+        background: rgba(139, 92, 246, 0.12) !important;
+        color: var(--accent-purple) !important;
+        border: 1px solid rgba(139, 92, 246, 0.2) !important;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .action-btn.primary:hover,
+    .action-btn.success:hover {
+        background: rgba(139, 92, 246, 0.2) !important;
+        transform: translateY(-1px);
+    }
+
+    .section-bar .action-btn.success {
+        height: 44px;
+    }
+
+    /* Status Badge Buttons */
+    .status-badge-btn {
+        border: none;
+        cursor: pointer;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: inline-block;
+    }
+
+    .status-badge-btn.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-badge-btn.inactive {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+    }
+
+    .status-badge-btn:hover {
+        transform: scale(1.05);
+    }
+
+    /* Icon Buttons */
+    .icon-btn {
+        padding: 6px !important;
+        border: 1px solid var(--border-color) !important;
+        background: var(--bg-hover) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 6px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-btn:hover {
+        background: var(--hover-bg-strong) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .icon-btn.delete:hover {
+        background: rgba(239, 68, 68, 0.1) !important;
+        color: #ef4444 !important;
+        border-color: rgba(239, 68, 68, 0.2) !important;
+    }
+
+    /* Hide scrollbar utility */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    /* Modern Toggle Switch */
+    .status-toggle {
+        position: relative;
+        display: inline-block;
+        width: 32px;
+        height: 18px;
+    }
+
+    .status-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .status-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-hover);
+        transition: .3s;
+        border-radius: 18px;
+        border: 1px solid var(--border-color);
+    }
+
+    .status-slider:before {
+        position: absolute;
+        content: "";
+        height: 12px;
+        width: 12px;
+        left: 2px;
+        bottom: 2px;
+        background-color: var(--text-muted);
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+    input:checked+.status-slider {
+        background-color: rgba(139, 92, 246, 0.15);
+        border-color: var(--accent-purple);
+    }
+
+    input:checked+.status-slider:before {
+        transform: translateX(14px);
+        background-color: var(--accent-purple);
+    }
+</style>
+
+<!-- ======================= -->
+<!-- TAB: PLANS -->
+<!-- ======================= -->
+<div id="tab-plans" class="tab-content active">
+    <!-- Plans Section Bar -->
+    <div class="section-bar">
+        <div class="section-info">
+            <span class="material-icons-round" style="color:var(--accent-purple);">inventory_2</span>
+            <span style="font-weight: 600;">Total Plans:</span>
+            <span class="total-badge">{{ total_plans }}</span>
         </div>
 
-        <ul class="plan-limits">
-            <li>
-                <span>Price (₹/mo)</span>
-                <input type="number" name="price" value="0" class="edit-input" required>
-            </li>
-            <li>
-                <span>Max Doctors</span>
-                <input type="number" name="max_doctors" value="1" class="edit-input" required>
-            </li>
-            <li>
-                <span>Max Staff</span>
-                <input type="number" name="max_staff" value="2" class="edit-input" required>
-            </li>
-            <li>
-                <span>Max Patients</span>
-                <input type="number" name="max_patients" value="300" class="edit-input" required>
-            </li>
-            <li>
-                <span>Appointments / Month</span>
-                <input type="number" name="max_appointments" value="150" class="edit-input" required>
-            </li>
-        </ul>
+        <div class="search-wrapper">
+            <span class="material-icons-round search-icon">search</span>
+            <input type="text" placeholder="Search plans by name..." class="edit-input search-input"
+                onkeyup="searchContent('plans', this.value)">
+        </div>
 
-        <button type="submit" class="action-btn success" style="width:100%; justify-content:center; padding:10px;">
-            <span class="material-icons-round" style="font-size:16px;">add</span>
-            Create Plan
+        <select id="category-filter" class="edit-input" style="width:200px;" onchange="filterByCategory(this.value)">
+            <option value="">All Categories</option>
+            <option value="global" {% if is_global_selected %}selected{% endif %}>Global (No Category)</option>
+            {% for cat in categories %}
+            <option value="{{ cat.pk }}" {% if cat.is_selected %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button class="action-btn success" onclick="toggleSidePanel(true)" style="padding: 10px 20px;">
+            <span class="material-icons-round">add</span> Add New Plan
         </button>
-    </form>
+    </div>
+    <div class="plan-grid">
+        {% for item in plan_data %}
+        <form method="post" class="plan-card" style="position:relative;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_plan">
+            <input type="hidden" name="plan_id" value="{{ item.plan.pk }}">
+            <input type="hidden" name="redirect_category" value="{{ selected_category|default:'' }}">
 
+            <div class="plan-header">
+                <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                    <input type="text" name="display_name" value="{{ item.plan.display_name|default:item.plan.name }}"
+                        class="edit-input" style="font-size: 18px; font-weight:700; width: 60%;">
+
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <label class="status-toggle" title="Active/Inactive Status">
+                            <input type="checkbox" name="is_active" {% if item.plan.is_active %}checked{% endif %}
+                                onchange="this.form.requestSubmit()">
+                            <span class="status-slider"></span>
+                        </label>
+                        <button type="submit" name="action" value="delete_plan" title="Delete Plan"
+                            style="background:none; border:none; color:var(--text-muted); cursor:pointer;"
+                            onclick="return confirm('Archive this plan?');">
+                            <span class="material-icons-round" style="font-size:18px;">delete</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div style="font-size:24px; font-weight:800; color:var(--accent-purple);">₹</div>
+                    <input type="number" name="price" value="{{ item.plan.price|floatformat:0 }}" class="edit-input"
+                        style="width: 100px; font-size:20px; font-weight:700;">
+
+                    <select name="billing_cycle" class="edit-input" style="width: auto;">
+                        {% for bc in item.billing_options %}
+                        <option value="{{ bc.value }}" {{ bc.selected_str }}>{{ bc.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <div style="display:flex; align-items:center; gap:4px; margin-left:auto;">
+                        <span style="font-size:11px; color:var(--text-muted);">Ord:</span>
+                        <input type="number" name="order" value="{{ item.plan.order }}" class="edit-input"
+                            style="width: 45px; padding: 4px;">
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <select name="category_id" class="edit-input">
+                        <option value="">-- Global (All Categories) --</option>
+                        {% for cat in item.category_options %}
+                        <option value="{{ cat.pk }}" {{ cat.selected_str }}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <h4
+                style="font-size:12px; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">
+                Resource Limits <span style="text-transform:none; font-weight:normal;">(-1 = Unlimited)</span></h4>
+            <div style="margin-bottom:24px;">
+                {% for r_item in item.resources %}
+                <div class="limit-row">
+                    <label style="cursor:help;" title="{{ r_item.resource.code }}">{{ r_item.resource.name }}</label>
+                    <input type="number" name="resource_{{ r_item.resource.code }}" value="{{ r_item.value }}"
+                        class="edit-input limit-val-input" placeholder="unlimited">
+                </div>
+                {% endfor %}
+            </div>
+
+            <h4
+                style="font-size:12px; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">
+                Included Features</h4>
+            <div class="no-scrollbar"
+                style="margin-bottom:24px; padding:8px; border:1px solid var(--border-color); border-radius:6px; background:var(--bg-hover); max-height: 200px; overflow-y: auto;">
+                {% for f_item in item.features %}
+                <label class="feature-row" style="cursor:pointer; justify-content:flex-start; gap:12px;">
+                    <input type="checkbox" name="features" value="{{ f_item.feature.code }}" {{ f_item.checked_str }}
+                        style="accent-color:var(--accent-purple);">
+                    <span title="{{ f_item.feature.code }}">{{ f_item.feature.name }}</span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="action-btn primary" style="width:100%; justify-content:center; padding:10px;">
+                <span class="material-icons-round" style="font-size:16px;">save</span>
+                Save Plan Configuration
+            </button>
+
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; text-align:center;">
+                <span class="material-icons-round" style="font-size:14px; vertical-align:middle;">people</span>
+                {{ item.subscriber_count }} active subscriber{{ item.subscriber_count|pluralize }}
+            </div>
+        </form>
+        {% empty %}
+        <div class="card" style="grid-column: 1 / -1;">
+            <div class="empty-state">
+                <div class="icon material-icons-round">payment</div>
+                <p>No subscription plans configured.</p>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
 </div>
+
+<!-- Add Plan Side Panel -->
+<div class="side-panel-overlay" id="panel-overlay" onclick="toggleSidePanel(false)"></div>
+<div class="side-panel" id="add-plan-panel">
+    <div class="side-panel-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-round">add_circle</span> Create New Plan
+        </h3>
+        <button onclick="toggleSidePanel(false)"
+            style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+    </div>
+    <div class="side-panel-content">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_plan">
+            <input type="hidden" name="redirect_category" value="{{ selected_category|default:'' }}">
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Internal Code
+                    (Unique ID)</label>
+                <input type="text" name="name" class="edit-input" required placeholder="e.g. CLINIC_PRO"
+                    style="font-size:15px; padding:10px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Display
+                    Name</label>
+                <input type="text" name="display_name" class="edit-input" required placeholder="e.g. Pro Clinic Plan"
+                    style="font-size:15px; padding:10px;">
+            </div>
+
+            <div style="display:flex; gap:16px; margin-bottom: 20px;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Price
+                        (₹)</label>
+                    <input type="number" name="price" value="0" class="edit-input" required
+                        style="font-size:15px; padding:10px;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Billing
+                        Cycle</label>
+                    <select name="billing_cycle" class="edit-input" style="font-size:15px; padding:10px; height:46px;">
+                        {% for bc in billing_choices %}
+                        <option value="{{ bc.0 }}">{{ bc.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:16px; margin-bottom: 20px;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Category
+                        Allocation</label>
+                    <select name="category_id" class="edit-input" style="font-size:15px; padding:10px; height:46px;">
+                        <option value="">-- Global (All Categories) --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="flex:0.5;">
+                    <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Display
+                        Order</label>
+                    <input type="number" name="order" value="0" class="edit-input"
+                        style="font-size:15px; padding:10px;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:flex; align-items:center; gap:12px; cursor:pointer;">
+                    <label class="status-toggle">
+                        <input type="checkbox" name="is_active" checked>
+                        <span class="status-slider"></span>
+                    </label>
+                    <span style="font-size: 13px; color: var(--text-primary); font-weight: 500;">Plan Status:
+                        Active</span>
+                </label>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Initial
+                    Configuration</label>
+                <div
+                    style="background:var(--bg-hover); border-radius:10px; padding:16px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+                    <span class="material-icons-round"
+                        style="font-size:16px; vertical-align:middle; color:var(--accent-purple);">info</span>
+                    Create this "Bare Plan" first. Once saved, you can find it in the list to configure specific
+                    resource limits and feature toggles.
+                </div>
+            </div>
+
+            <button type="submit" class="action-btn success"
+                style="width:100%; justify-content:center; padding:14px; font-size:16px; font-weight:700;">
+                <span class="material-icons-round">add_task</span> Confirm & Create Plan
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Resource Side Panel -->
+<div class="side-panel" id="add-resource-panel">
+    <div class="side-panel-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-round">speed</span> Define New Resource
+        </h3>
+        <button onclick="toggleSidePanel(false)"
+            style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+    </div>
+    <div class="side-panel-content">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_resource">
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Internal Code
+                    (e.g. MAX_DOCTORS)</label>
+                <input type="text" name="code" class="edit-input" required
+                    style="text-transform:uppercase; font-size:15px; padding:10px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Display
+                    Name</label>
+                <input type="text" name="name" class="edit-input" required placeholder="e.g. Maximum Doctors"
+                    style="font-size:15px; padding:10px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Category
+                    Allocation</label>
+                <select name="category_id" class="edit-input" style="font-size:15px; padding:10px; height:46px;">
+                    <option value="">-- Global (All Categories) --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="action-btn success"
+                style="width:100%; justify-content:center; padding:14px; font-size:16px; font-weight:700;">
+                <span class="material-icons-round">add_task</span> Confirm & Create Resource
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Feature Side Panel -->
+<div class="side-panel" id="add-feature-panel">
+    <div class="side-panel-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-round">toggle_on</span> Create Feature Toggle
+        </h3>
+        <button onclick="toggleSidePanel(false)"
+            style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+    </div>
+    <div class="side-panel-content">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_feature">
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Internal Code
+                    (e.g. ai_chatbot)</label>
+                <input type="text" name="code" class="edit-input" required
+                    style="text-transform:lowercase; font-size:15px; padding:10px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Feature
+                    Name</label>
+                <input type="text" name="name" class="edit-input" required placeholder="e.g. AI Content Generation"
+                    style="font-size:15px; padding:10px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Description</label>
+                <textarea name="description" class="edit-input"
+                    style="font-size:14px; padding:10px; min-height:80px;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Category
+                    Allocation</label>
+                <select name="category_id" class="edit-input" style="font-size:15px; padding:10px; height:46px;">
+                    <option value="">-- Global (All Categories) --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="action-btn success"
+                style="width:100%; justify-content:center; padding:14px; font-size:16px; font-weight:700;">
+                <span class="material-icons-round">add_task</span> Confirm & Create Feature
+            </button>
+        </form>
+    </div>
+</div>
+<!-- Edit Resource Side Panel -->
+<div class="side-panel" id="edit-resource-panel">
+    <div class="side-panel-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-round">edit</span> Edit Resource
+        </h3>
+        <button onclick="toggleSidePanel(false)"
+            style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+    </div>
+    <div class="side-panel-content">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_resource">
+            <input type="hidden" name="resource_id" value="">
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Internal
+                    Code</label>
+                <input type="text" name="code" class="edit-input" readonly
+                    style="background:var(--subtle-bg); opacity:0.7;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Display
+                    Name</label>
+                <input type="text" name="name" class="edit-input" required style="font-size:15px; padding:10px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Category
+                    Allocation</label>
+                <select name="category_id" class="edit-input" style="font-size:15px; padding:10px; height:46px;">
+                    <option value="">-- Global (All Categories) --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="action-btn success"
+                style="width:100%; justify-content:center; padding:14px; font-weight:700;">
+                <span class="material-icons-round">save</span> Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Feature Side Panel -->
+<div class="side-panel" id="edit-feature-panel">
+    <div class="side-panel-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-round">edit</span> Edit Feature
+        </h3>
+        <button onclick="toggleSidePanel(false)"
+            style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+    </div>
+    <div class="side-panel-content">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_feature">
+            <input type="hidden" name="feature_id" value="">
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Internal
+                    Code</label>
+                <input type="text" name="code" class="edit-input" readonly
+                    style="background:var(--subtle-bg); opacity:0.7;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Feature
+                    Name</label>
+                <input type="text" name="name" class="edit-input" required style="font-size:15px; padding:10px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Description</label>
+                <textarea name="description" class="edit-input"
+                    style="font-size:14px; padding:10px; min-height:80px;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Category
+                    Allocation</label>
+                <select name="category_id" class="edit-input" style="font-size:15px; padding:10px; height:46px;">
+                    <option value="">-- Global (All Categories) --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="action-btn success"
+                style="width:100%; justify-content:center; padding:14px; font-weight:700;">
+                <span class="material-icons-round">save</span> Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+<!-- ======================= -->
+<!-- TAB: RESOURCES -->
+<!-- ======================= -->
+<div id="tab-resources" class="tab-content">
+    <!-- Resources Section Bar -->
+    <div class="section-bar">
+        <div class="section-info">
+            <span class="material-icons-round" style="color:var(--accent-purple);">speed</span>
+            <span style="font-weight: 600;">Total Resources:</span>
+            <span class="total-badge">{{ total_resources }}</span>
+        </div>
+
+        <div class="search-wrapper">
+            <span class="material-icons-round search-icon">search</span>
+            <input type="text" placeholder="Search resources by code or name..." class="edit-input search-input"
+                onkeyup="searchContent('resources', this.value)">
+        </div>
+
+        <select class="edit-input" style="width:200px;" onchange="filterByCategory(this.value)">
+            <option value="">All Categories</option>
+            <option value="global" {% if is_global_selected %}selected{% endif %}>Global (No Category)</option>
+            {% for cat in categories %}
+            <option value="{{ cat.pk }}" {% if cat.is_selected %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button class="action-btn success" onclick="toggleSidePanel(true, 'add-resource-panel')"
+            style="padding: 10px 20px;">
+            <span class="material-icons-round">add</span> Define New Resource
+        </button>
+    </div>
+    <!-- Resource form removed from here and moved to side panel -->
+
+    <div class="card" style="padding:0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Scope</th>
+                    <th>Status</th>
+                    <th style="width:180px; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in all_resources %}
+                <tr>
+                    <td><code style="color:var(--accent-purple); font-size:12px;">{{ res.code }}</code></td>
+                    <td>{{ res.name }}</td>
+                    <td>
+                        <span
+                            style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.05); color:var(--text-muted);">
+                            {{ res.category.name|default:"Global" }}
+                        </span>
+                    </td>
+                    <td>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle_resource">
+                            <input type="hidden" name="resource_id" value="{{ res.id }}">
+                            <label class="status-toggle" style="vertical-align: middle;">
+                                <input type="checkbox" {% if res.is_active %}checked{% endif %}
+                                    onchange="this.form.requestSubmit()">
+                                <span class="status-slider"></span>
+                            </label>
+                            <span
+                                style="font-size: 11px; margin-left: 6px; color: {% if res.is_active %}#10b981{% else %}var(--text-muted){% endif %};">
+                                {{ res.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </form>
+                    </td>
+                    <td style="text-align:right;">
+                        <div style="display:flex; gap:8px; justify-content:flex-end;">
+                            <button type="button" class="action-btn icon-btn" title="Edit Resource"
+                                onclick="openEditResourcePanel('{{ res.id }}', '{{ res.code }}', '{{ res.name }}', '{{ res.category.id|default:'' }}')">
+                                <span class="material-icons-round" style="font-size:18px;">edit</span>
+                            </button>
+                            <form method="post" onsubmit="return confirm('Delete this resource limit definition?');"
+                                style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_resource">
+                                <input type="hidden" name="resource_id" value="{{ res.id }}">
+                                <button type="submit" class="action-btn icon-btn delete" title="Delete">
+                                    <span class="material-icons-round" style="font-size:18px;">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No resources
+                        defined.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ======================= -->
+<!-- TAB: FEATURES -->
+<!-- ======================= -->
+<div id="tab-features" class="tab-content">
+    <!-- Features Section Bar -->
+    <div class="section-bar">
+        <div class="section-info">
+            <span class="material-icons-round" style="color:var(--status-active);">toggle_on</span>
+            <span style="font-weight: 600;">Total Features:</span>
+            <span class="total-badge">{{ total_features }}</span>
+        </div>
+
+        <div class="search-wrapper">
+            <span class="material-icons-round search-icon">search</span>
+            <input type="text" placeholder="Search features by name or code..." class="edit-input search-input"
+                onkeyup="searchContent('features', this.value)">
+        </div>
+
+        <select class="edit-input" style="width:200px;" onchange="filterByCategory(this.value)">
+            <option value="">All Categories</option>
+            <option value="global" {% if is_global_selected %}selected{% endif %}>Global (No Category)</option>
+            {% for cat in categories %}
+            <option value="{{ cat.pk }}" {% if cat.is_selected %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button class="action-btn success" onclick="toggleSidePanel(true, 'add-feature-panel')"
+            style="padding: 10px 20px;">
+            <span class="material-icons-round">add</span> Create Feature Toggle
+        </button>
+    </div>
+    <!-- Feature form removed and moved to side panel -->
+
+    <div class="card" style="padding:0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Scope</th>
+                    <th>Status</th>
+                    <th style="width:180px; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feat in all_features %}
+                <tr>
+                    <td><code style="color:var(--accent-purple); font-size:12px;">{{ feat.code }}</code></td>
+                    <td><strong style="color:var(--text-primary);">{{ feat.name }}</strong></td>
+                    <td style="color:var(--text-muted); font-size:13px;">{{ feat.description|default:"—" }}</td>
+                    <td>
+                        <span
+                            style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.05); color:var(--text-muted);">
+                            {{ feat.category.name|default:"Global" }}
+                        </span>
+                    </td>
+                    <td>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle_feature">
+                            <input type="hidden" name="feature_id" value="{{ feat.id }}">
+                            <label class="status-toggle" style="vertical-align: middle;">
+                                <input type="checkbox" {% if feat.is_active %}checked{% endif %}
+                                    onchange="this.form.requestSubmit()">
+                                <span class="status-slider"></span>
+                            </label>
+                            <span
+                                style="font-size: 11px; margin-left: 6px; color: {% if feat.is_active %}#10b981{% else %}var(--text-muted){% endif %};">
+                                {{ feat.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </form>
+                    </td>
+                    <td style="text-align:right;">
+                        <div style="display:flex; gap:8px; justify-content:flex-end;">
+                            <button type="button" class="action-btn icon-btn" title="Edit Feature"
+                                onclick="openEditFeaturePanel('{{ feat.id }}', '{{ feat.code }}', '{{ feat.name|escapejs }}', '{{ feat.description|escapejs }}', '{{ feat.category.id|default:'' }}')">
+                                <span class="material-icons-round" style="font-size:18px;">edit</span>
+                            </button>
+                            <form method="post" onsubmit="return confirm('Delete this feature?');"
+                                style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_feature">
+                                <input type="hidden" name="feature_id" value="{{ feat.id }}">
+                                <button type="submit" class="action-btn icon-btn delete" title="Delete">
+                                    <span class="material-icons-round" style="font-size:18px;">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">No features
+                        defined.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId, pushState = true) {
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.tab-content');
+
+        // Update UI
+        tabs.forEach(t => {
+            if (t.getAttribute('onclick').includes(`'${tabId}'`)) {
+                t.classList.add('active');
+            } else {
+                t.classList.remove('active');
+            }
+        });
+
+        contents.forEach(c => {
+            if (c.id === `tab-${tabId}`) {
+                c.classList.add('active');
+            } else {
+                c.classList.remove('active');
+            }
+        });
+
+        // Update URL to preserve tab on refresh if desired (optional but good)
+        if (pushState) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabId);
+            window.history.pushState({}, '', url);
+        }
+
+        // Hide/Show specific elements based on tab if needed
+        const filterControls = document.getElementById('filter-controls');
+        if (filterControls) {
+            filterControls.style.display = (tabId === 'plans') ? 'block' : 'none';
+        }
+    }
+
+    function openEditResourcePanel(id, code, name, catId) {
+        const panel = document.getElementById('edit-resource-panel');
+        panel.querySelector('input[name="resource_id"]').value = id;
+        panel.querySelector('input[name="code"]').value = code;
+        panel.querySelector('input[name="name"]').value = name;
+        panel.querySelector('select[name="category_id"]').value = catId;
+        toggleSidePanel(true, 'edit-resource-panel');
+    }
+
+    function openEditFeaturePanel(id, code, name, desc, catId) {
+        const panel = document.getElementById('edit-feature-panel');
+        panel.querySelector('input[name="feature_id"]').value = id;
+        panel.querySelector('input[name="code"]').value = code;
+        panel.querySelector('input[name="name"]').value = name;
+        panel.querySelector('textarea[name="description"]').value = desc;
+        panel.querySelector('select[name="category_id"]').value = catId;
+        toggleSidePanel(true, 'edit-feature-panel');
+    }
+
+    // Handle initial tab from URL
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
+        if (tab) {
+            switchTab(tab, false);
+        }
+
+        // Dynamically add active_tab and redirect_category hidden fields to all forms on submit
+        document.addEventListener('submit', (e) => {
+            if (e.target.tagName === 'FORM') {
+                const activeTab = document.querySelector('.tab-content.active').id.replace('tab-', '');
+
+                // Add or update active_tab
+                let tabInput = e.target.querySelector('input[name="active_tab"]');
+                if (!tabInput) {
+                    tabInput = document.createElement('input');
+                    tabInput.type = 'hidden';
+                    tabInput.name = 'active_tab';
+                    e.target.appendChild(tabInput);
+                }
+                tabInput.value = activeTab;
+
+                // Also preserve category filter if present in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentCat = urlParams.get('category');
+                if (currentCat) {
+                    let catInput = e.target.querySelector('input[name="redirect_category"]');
+                    if (!catInput) {
+                        catInput = document.createElement('input');
+                        catInput.type = 'hidden';
+                        catInput.name = 'redirect_category';
+                        e.target.appendChild(catInput);
+                    }
+                    catInput.value = currentCat;
+                }
+            }
+        });
+    });
+
+    function toggleSidePanel(show, panelId = 'add-plan-panel') {
+        const overlay = document.getElementById('panel-overlay');
+        const allPanels = document.querySelectorAll('.side-panel');
+
+        if (show) {
+            const panel = document.getElementById(panelId);
+            panel.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            allPanels.forEach(p => p.classList.remove('open'));
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    function filterByCategory(catId) {
+        const url = new URL(window.location);
+        if (catId) {
+            url.searchParams.set('category', catId);
+        } else {
+            url.searchParams.delete('category');
+        }
+        window.location.href = url.toString();
+    }
+
+    function searchContent(type, query) {
+        query = query.toLowerCase();
+        if (type === 'plans') {
+            const cards = document.querySelectorAll('.plan-card');
+            cards.forEach(card => {
+                const name = card.querySelector('input[name="display_name"]').value.toLowerCase();
+                card.style.display = name.includes(query) ? 'block' : 'none';
+            });
+        } else if (type === 'resources') {
+            const rows = document.querySelectorAll('#tab-resources .data-table tbody tr');
+            rows.forEach(row => {
+                if (row.cells.length < 2) return;
+                const code = row.cells[0].textContent.toLowerCase();
+                const name = row.cells[1].textContent.toLowerCase();
+                row.style.display = (code.includes(query) || name.includes(query)) ? '' : 'none';
+            });
+        } else if (type === 'features') {
+            const rows = document.querySelectorAll('#tab-features .data-table tbody tr');
+            rows.forEach(row => {
+                if (row.cells.length < 3) return;
+                const code = row.cells[0].textContent.toLowerCase();
+                const name = row.cells[1].textContent.toLowerCase();
+                const desc = row.cells[2].textContent.toLowerCase();
+                row.style.display = (code.includes(query) || name.includes(query) || desc.includes(query)) ? '' : 'none';
+            });
+        }
+    }
+</script>
 
 {% endblock %}

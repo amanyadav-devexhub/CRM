@@ -1,0 +1,478 @@
+{% extends "base_admin.html" %}
+
+{% block nav_admin_categories %}active{% endblock %}
+{% block page_title %}Manage Categories <span>/ Healthcare Services</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-card h3 .material-icons-round {
+        font-size: 20px;
+        color: var(--accent-blue);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-group label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: var(--accent-blue);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .btn-submit {
+        background: var(--gradient-blue);
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .btn-submit:hover {
+        opacity: 0.9;
+    }
+
+    .btn-cancel {
+        background: var(--bg-card-hover);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        padding: 10px 24px;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-card);
+    }
+
+    .color-dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+
+    .color-dot.green {
+        background: var(--accent-green);
+    }
+
+    .color-dot.blue {
+        background: var(--accent-blue);
+    }
+
+    .color-dot.purple {
+        background: var(--accent-purple);
+    }
+
+    .color-dot.orange {
+        background: var(--accent-orange);
+    }
+
+    .color-dot.cyan {
+        background: var(--accent-cyan);
+    }
+
+    .color-dot.red {
+        background: var(--accent-red, #ef4444);
+    }
+
+    .color-dot.pink {
+        background: #ec4899;
+    }
+
+    .cat-icon-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cat-icon-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 18px;
+    }
+
+    .cat-icon-badge.green {
+        background: var(--gradient-green);
+    }
+
+    .cat-icon-badge.blue {
+        background: var(--gradient-blue);
+    }
+
+    .cat-icon-badge.purple {
+        background: var(--gradient-purple);
+    }
+
+    .cat-icon-badge.orange {
+        background: var(--gradient-orange);
+    }
+
+    .cat-icon-badge.cyan {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+    }
+
+    .cat-icon-badge.red {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .cat-icon-badge.pink {
+        background: linear-gradient(135deg, #ec4899, #db2777);
+    }
+
+    .cat-name {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .cat-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .messages-area {
+        margin-bottom: 16px;
+    }
+
+    .msg {
+        padding: 12px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .msg.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: var(--accent-green);
+    }
+
+    .msg.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: var(--accent-red, #ef4444);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Search Bar -->
+<div class="card" style="margin-bottom: 20px; padding: 16px 20px;">
+    <form method="get" style="display:flex; gap:12px; align-items:center;">
+        <span class="material-icons-round" style="color:var(--text-muted);">search</span>
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Search categories by name or code…" style="flex:1; background:transparent; border:none; color:var(--text-primary);
+                   font-size:14px; outline:none;">
+        <button type="submit" class="action-btn primary" style="padding:8px 20px; font-size:13px;">Search</button>
+        {% if search_query %}
+        <a href="/admin-categories/" class="action-btn"
+            style="padding:8px 16px; font-size:13px; text-decoration:none;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Add / Edit Form -->
+<div class="form-card">
+    {% if editing %}
+    <h3>
+        <span class="material-icons-round">edit</span>
+        Edit Category: {{ editing.name }}
+    </h3>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="category_id" value="{{ editing.pk }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" value="{{ editing.code }}" disabled style="opacity:0.5; cursor:not-allowed;">
+            </div>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" value="{{ editing.name }}" required>
+            </div>
+            <div class="form-group">
+                <label>Icon</label>
+                <select name="icon">
+                    {% for val, label in icon_choices %}
+                    <option value="{{ val }}" {% if editing.icon==val %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <select name="color">
+                    {% for val, label in color_choices %}
+                    <option value="{{ val }}" {% if editing.color==val %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" value="{{ editing.sort_order }}">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+            <label>Description</label>
+            <textarea name="description">{{ editing.description }}</textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                <span class="material-icons-round"
+                    style="font-size:16px; vertical-align:middle; margin-right:4px;">save</span>
+                Save Changes
+            </button>
+            <a href="/admin-categories/" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+    {% else %}
+    <h3>
+        <span class="material-icons-round">add_circle</span>
+        Add New Category
+    </h3>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" name="code" placeholder="e.g. DENTAL" required style="text-transform: uppercase;">
+            </div>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" placeholder="e.g. Dental Clinics" required>
+            </div>
+            <div class="form-group">
+                <label>Icon</label>
+                <select name="icon">
+                    {% for val, label in icon_choices %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <select name="color">
+                    {% for val, label in color_choices %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" value="0">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+            <label>Description</label>
+            <textarea name="description" placeholder="Short description for this category…"></textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                <span class="material-icons-round"
+                    style="font-size:16px; vertical-align:middle; margin-right:4px;">add</span>
+                Create Category
+            </button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+<!-- Categories Table -->
+<div class="card">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round">category</span>
+            All Categories
+            <span class="badge" style="margin-left:8px;">{{ total }}</span>
+        </h3>
+    </div>
+    <div class="card-body" style="padding:0">
+        {% if cat_data %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Code</th>
+                    <th>Color</th>
+                    <th>Tenants</th>
+                    <th>Sort</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cat_data %}
+                <tr>
+                    <td>
+                        <div class="cat-icon-cell">
+                            <div class="cat-icon-badge {{ item.category.color }}">
+                                <span class="material-icons-round">{{ item.category.icon }}</span>
+                            </div>
+                            <div>
+                                <div class="cat-name">{{ item.category.name }}</div>
+                                {% if item.category.description %}
+                                <div class="cat-desc" title="{{ item.category.description }}">{{
+                                    item.category.description }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <code
+                            style="color:var(--accent-cyan); font-size:12px; font-weight:600;">{{ item.category.code }}</code>
+                    </td>
+                    <td>
+                        <span class="color-dot {{ item.category.color }}"></span>
+                        {{ item.category.color|title }}
+                    </td>
+                    <td>
+                        <span class="badge" style="font-size:12px;">{{ item.tenant_count }}</span>
+                    </td>
+                    <td style="font-size:13px; color:var(--text-muted);">{{ item.category.sort_order }}</td>
+                    <td>
+                        <span class="badge-tag {% if item.category.is_active %}active{% else %}expired{% endif %}">
+                            {% if item.category.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td style="font-size:13px;">{{ item.category.created_at|date:"d M Y" }}</td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <!-- Edit -->
+                            <a href="?edit={{ item.category.pk }}" class="action-btn" title="Edit"
+                                style="padding:6px 10px; font-size:12px; color:var(--accent-blue); text-decoration:none;">
+                                <span class="material-icons-round" style="font-size:16px;">edit</span>
+                            </a>
+
+                            <!-- Toggle Active -->
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="category_id" value="{{ item.category.pk }}">
+                                {% if item.category.is_active %}
+                                <button type="submit" name="action" value="deactivate" class="action-btn"
+                                    title="Deactivate"
+                                    style="padding:6px 10px; font-size:12px; color:var(--accent-orange);">
+                                    <span class="material-icons-round" style="font-size:16px;">pause_circle</span>
+                                </button>
+                                {% else %}
+                                <button type="submit" name="action" value="activate" class="action-btn" title="Activate"
+                                    style="padding:6px 10px; font-size:12px; color:var(--accent-green);">
+                                    <span class="material-icons-round" style="font-size:16px;">play_circle</span>
+                                </button>
+                                {% endif %}
+                            </form>
+
+                            <!-- Delete -->
+                            <form method="post" style="display:inline;"
+                                onsubmit="return confirm('Delete {{ item.category.name }}? This cannot be undone.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="category_id" value="{{ item.category.pk }}">
+                                <button type="submit" name="action" value="delete" class="action-btn" title="Delete"
+                                    style="padding:6px 10px; font-size:12px; color:var(--accent-red, #ef4444);">
+                                    <span class="material-icons-round" style="font-size:16px;">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">category</div>
+            <p>No categories found{% if search_query %} matching "{{ search_query }}"{% endif %}.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

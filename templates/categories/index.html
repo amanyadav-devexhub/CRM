@@ -5,9 +5,10 @@
 
 {% block extra_css %}
 <style>
+    /* ── Category Cards Grid ── */
     .category-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 24px;
         margin-bottom: 28px;
     }
@@ -19,20 +20,16 @@
         padding: 0;
         overflow: hidden;
         transition: var(--transition);
-        cursor: pointer;
-        text-decoration: none;
-        color: inherit;
         position: relative;
     }
 
     .category-card:hover {
         transform: translateY(-4px);
         box-shadow: var(--shadow-lg);
-        border-color: rgba(255, 255, 255, 0.12);
     }
 
-    .category-card:hover .category-card-icon {
-        transform: scale(1.1);
+    .category-card.inactive {
+        opacity: 0.55;
     }
 
     .category-card-banner {
@@ -41,30 +38,44 @@
     }
 
     .category-card-body {
-        padding: 28px 24px;
+        padding: 28px 24px 16px;
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 16px;
+        gap: 12px;
     }
 
     .category-card-icon {
-        width: 72px;
-        height: 72px;
-        border-radius: 16px;
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 32px;
+        font-size: 28px;
         color: #fff;
         transition: transform 0.3s ease;
     }
 
+    .category-card:hover .category-card-icon {
+        transform: scale(1.1);
+    }
+
     .category-card-name {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         letter-spacing: -0.01em;
+    }
+
+    .category-card-code {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--accent-cyan);
+        background: rgba(6, 182, 212, 0.1);
+        padding: 3px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.06em;
     }
 
     .category-card-desc {
@@ -77,7 +88,7 @@
     .category-card-stats {
         display: flex;
         gap: 24px;
-        padding-top: 16px;
+        padding-top: 14px;
         border-top: 1px solid var(--border-color);
         width: 100%;
         justify-content: center;
@@ -100,188 +111,619 @@
         margin-top: 2px;
     }
 
-    .category-card-footer {
-        padding: 14px 24px;
-        background: rgba(255, 255, 255, 0.02);
+    .category-card-actions {
+        padding: 12px 24px;
+        background: var(--subtle-bg, rgba(255, 255, 255, 0.02));
         border-top: 1px solid var(--border-color);
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        font-size: 13px;
-        font-weight: 500;
+        gap: 6px;
+    }
+
+    .cat-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
         color: var(--text-secondary);
+        cursor: pointer;
         transition: var(--transition);
-    }
-
-    .category-card:hover .category-card-footer {
-        color: var(--text-primary);
-    }
-
-    .category-card-footer .material-icons-round {
+        text-decoration: none;
         font-size: 16px;
     }
 
-    /* Color themes */
-    .category-card.clinic .category-card-banner {
-        background: var(--gradient-green);
+    .cat-action-btn:hover {
+        background: var(--hover-bg, rgba(255, 255, 255, 0.05));
     }
 
-    .category-card.clinic .category-card-icon {
-        background: var(--gradient-green);
+    .cat-action-btn.edit:hover {
+        color: var(--accent-blue);
+        border-color: var(--accent-blue);
     }
 
-    .category-card.clinic .category-stat-value {
+    .cat-action-btn.activate:hover {
+        color: var(--accent-green);
+        border-color: var(--accent-green);
+    }
+
+    .cat-action-btn.deactivate:hover {
+        color: var(--accent-orange);
+        border-color: var(--accent-orange);
+    }
+
+    .cat-action-btn.delete:hover {
+        color: #ef4444;
+        border-color: #ef4444;
+    }
+
+    .cat-status-badge {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .cat-status-badge.active {
+        background: rgba(16, 185, 129, 0.15);
         color: var(--accent-green);
     }
 
-    .category-card.pharmacy .category-card-banner {
-        background: var(--gradient-orange);
+    .cat-status-badge.inactive {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
     }
 
-    .category-card.pharmacy .category-card-icon {
-        background: var(--gradient-orange);
+    /* ── Color themes ── */
+    .category-card.green .category-card-banner,
+    .category-card.green .category-card-icon {
+        background: var(--gradient-green);
     }
 
-    .category-card.pharmacy .category-stat-value {
-        color: var(--accent-orange);
+    .category-card.green .category-stat-value {
+        color: var(--accent-green);
     }
 
-    .category-card.hospital .category-card-banner {
+    .category-card.blue .category-card-banner,
+    .category-card.blue .category-card-icon {
         background: var(--gradient-blue);
     }
 
-    .category-card.hospital .category-card-icon {
-        background: var(--gradient-blue);
-    }
-
-    .category-card.hospital .category-stat-value {
+    .category-card.blue .category-stat-value {
         color: var(--accent-blue);
     }
 
-    .category-card.lab .category-card-banner {
+    .category-card.purple .category-card-banner,
+    .category-card.purple .category-card-icon {
         background: var(--gradient-purple);
     }
 
-    .category-card.lab .category-card-icon {
-        background: var(--gradient-purple);
-    }
-
-    .category-card.lab .category-stat-value {
+    .category-card.purple .category-stat-value {
         color: var(--accent-purple);
+    }
+
+    .category-card.orange .category-card-banner,
+    .category-card.orange .category-card-icon {
+        background: var(--gradient-orange);
+    }
+
+    .category-card.orange .category-stat-value {
+        color: var(--accent-orange);
+    }
+
+    .category-card.cyan .category-card-banner,
+    .category-card.cyan .category-card-icon {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+    }
+
+    .category-card.cyan .category-stat-value {
+        color: var(--accent-cyan);
+    }
+
+    .category-card.red .category-card-banner,
+    .category-card.red .category-card-icon {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .category-card.red .category-stat-value {
+        color: #ef4444;
+    }
+
+    .category-card.pink .category-card-banner,
+    .category-card.pink .category-card-icon {
+        background: linear-gradient(135deg, #ec4899, #db2777);
+    }
+
+    .category-card.pink .category-stat-value {
+        color: #ec4899;
+    }
+
+    /* ── Form Card ── */
+    .form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-card h3 .material-icons-round {
+        font-size: 20px;
+        color: var(--accent-blue);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-group label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: var(--accent-blue);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .btn-submit {
+        background: var(--gradient-blue);
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-submit:hover {
+        opacity: 0.9;
+    }
+
+    .btn-cancel {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-cancel:hover {
+        background: var(--hover-bg, rgba(255, 255, 255, 0.05));
+    }
+
+    /* ── Messages ── */
+    .msg {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .msg.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: var(--accent-green);
+    }
+
+    .msg.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .section-header .subtitle {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+
+    .view-list-link {
+        font-size: 13px;
+        color: var(--accent-blue);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+    }
+
+    .view-list-link:hover {
+        text-decoration: underline;
+    }
+
+    /* ── Slide Panel Animation ── */
+    .slide-panel {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slide-panel.open {
+        max-height: 800px;
+        opacity: 1;
+        margin-bottom: 24px;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        border-width: 1px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;">
+<!-- Category Cards Header -->
+<div class="section-header">
     <div>
-        <h2 style="font-size:22px; font-weight:700; margin-bottom:4px;">Healthcare Registration Lists</h2>
-        <p style="font-size:13px; color:var(--text-secondary);">Select a category to view registered business units</p>
+        <h2>Healthcare Categories <span class="badge" style="margin-left:8px; font-size:14px;">{{ total }}</span></h2>
+        <div class="subtitle">Manage service categories for tenant classification</div>
+    </div>
+
+    <div style="display: flex; gap: 16px; align-items: center;">
+        <!-- Inline Search Bar -->
+        <div
+            style="display:flex; gap:8px; align-items:center; background:var(--bg-card); border:1px solid var(--border-color); padding: 6px 12px; border-radius: 8px;">
+            <span class="material-icons-round" style="color:var(--text-muted); font-size: 18px;">search</span>
+            <input type="text" id="searchInput" oninput="filterCategories()" value="{{ search_query }}"
+                placeholder="Search…"
+                style="background:transparent; border:none; color:var(--text-primary); font-size:13px; outline:none; width: 150px;">
+            <a href="javascript:void(0)" onclick="clearSearch()" id="clearSearchBtn"
+                style="color:var(--text-muted); text-decoration:none; display:flex; align-items:center; opacity:0; pointer-events:none; transition: opacity 0.2s;"
+                title="Clear Search">
+                <span class="material-icons-round" style="font-size: 16px;">close</span>
+            </a>
+        </div>
+
+        {% if not editing %}
+        <button class="btn-submit" id="addCategoryBtn" onclick="toggleAddPanel()">
+            <span class="material-icons-round" style="font-size:16px;">add</span>
+            Add Category
+        </button>
+        {% endif %}
     </div>
 </div>
 
-<div class="category-grid">
-
-    <!-- Clinic -->
-    <a href="{% url 'category-list' 'clinic' %}" class="category-card clinic animate-in" style="text-decoration:none;">
-        <div class="category-card-banner"></div>
-        <div class="category-card-body">
-            <div class="category-card-icon">
-                <span class="material-icons-round">local_hospital</span>
+<!-- Slide-down Add / Edit Panel -->
+<div class="form-card slide-panel {% if editing %}open{% endif %}" id="categoryPanel">
+    {% if editing %}
+    <h3>
+        <span class="material-icons-round">edit</span>
+        Edit Category: {{ editing.name }}
+    </h3>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="category_id" value="{{ editing.pk }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" value="{{ editing.code }}" disabled style="opacity:0.5; cursor:not-allowed;">
             </div>
-            <div class="category-card-name">Clinics</div>
-            <div class="category-card-desc">
-                View registered outpatient clinics and clinical records across the platform.
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" value="{{ editing.name }}" required>
             </div>
-            <div class="category-card-stats">
-                <div class="category-stat">
-                    <div class="category-stat-value">{{ clinic_count }}</div>
-                    <div class="category-stat-label">Units</div>
-                </div>
+            <div class="form-group">
+                <label>Icon</label>
+                <select name="icon">
+                    {% for opt in icon_choices %}
+                    <option value="{{ opt.value }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+                    {% endfor %}
+                </select>
             </div>
-        </div>
-        <div class="category-card-footer">
-            <span class="material-icons-round">list</span>
-            View Clinic List
-        </div>
-    </a>
-
-    <!-- Pharmacy -->
-    <a href="{% url 'category-list' 'pharmacy' %}" class="category-card pharmacy animate-in"
-        style="text-decoration:none;">
-        <div class="category-card-banner"></div>
-        <div class="category-card-body">
-            <div class="category-card-icon">
-                <span class="material-icons-round">medication</span>
+            <div class="form-group">
+                <label>Color</label>
+                <select name="color">
+                    {% for opt in color_choices %}
+                    <option value="{{ opt.value }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="category-card-name">Pharmacies</div>
-            <div class="category-card-desc">
-                Oversee registered pharmacy units and their operational details.
-            </div>
-            <div class="category-card-stats">
-                <div class="category-stat">
-                    <div class="category-stat-value">{{ pharmacy_count }}</div>
-                    <div class="category-stat-label">Units</div>
-                </div>
+            <div class="form-group">
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" value="{{ editing.sort_order }}">
             </div>
         </div>
-        <div class="category-card-footer">
-            <span class="material-icons-round">list</span>
-            View Pharmacy List
+        <div class="form-group" style="margin-bottom:16px;">
+            <label>Description</label>
+            <textarea name="description">{{ editing.description }}</textarea>
         </div>
-    </a>
-
-    <!-- Hospitals -->
-    <a href="{% url 'category-list' 'hospitals' %}" class="category-card hospital animate-in"
-        style="text-decoration:none;">
-        <div class="category-card-banner"></div>
-        <div class="category-card-body">
-            <div class="category-card-icon">
-                <span class="material-icons-round">apartment</span>
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                <span class="material-icons-round" style="font-size:16px;">save</span>
+                Save Changes
+            </button>
+            <a href="/categories/" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+    {% else %}
+    <h3>
+        <span class="material-icons-round">add_circle</span>
+        Add New Category
+        <span style="margin-left:auto; cursor:pointer;" onclick="toggleAddPanel()" title="Close">
+            <span class="material-icons-round" style="font-size:20px; color:var(--text-muted);">close</span>
+        </span>
+    </h3>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" name="code" placeholder="e.g. DENTAL" required style="text-transform: uppercase;">
             </div>
-            <div class="category-card-name">Hospitals</div>
-            <div class="category-card-desc">
-                Manage high-level records for registered hospitals and departments.
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" placeholder="e.g. Dental Clinics" required>
             </div>
-            <div class="category-card-stats">
-                <div class="category-stat">
-                    <div class="category-stat-value">{{ hospital_count }}</div>
-                    <div class="category-stat-label">Units</div>
-                </div>
+            <div class="form-group">
+                <label>Icon</label>
+                <select name="icon">
+                    {% for opt in icon_choices %}
+                    <option value="{{ opt.value }}">{{ opt.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <select name="color">
+                    {% for opt in color_choices %}
+                    <option value="{{ opt.value }}">{{ opt.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" value="0">
             </div>
         </div>
-        <div class="category-card-footer">
-            <span class="material-icons-round">list</span>
-            View Hospital List
+        <div class="form-group" style="margin-bottom:16px;">
+            <label>Description</label>
+            <textarea name="description" placeholder="Short description for this category…"></textarea>
         </div>
-    </a>
-
-    <!-- Labs -->
-    <a href="{% url 'category-list' 'labs' %}" class="category-card lab animate-in" style="text-decoration:none;">
-        <div class="category-card-banner"></div>
-        <div class="category-card-body">
-            <div class="category-card-icon">
-                <span class="material-icons-round">biotech</span>
-            </div>
-            <div class="category-card-name">Labs</div>
-            <div class="category-card-desc">
-                Access records for diagnostic labs and testing facilities.
-            </div>
-            <div class="category-card-stats">
-                <div class="category-stat">
-                    <div class="category-stat-value">{{ lab_count }}</div>
-                    <div class="category-stat-label">Units</div>
-                </div>
-            </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                <span class="material-icons-round" style="font-size:16px;">add</span>
+                Create Category
+            </button>
+            <button type="button" class="btn-cancel" onclick="toggleAddPanel()">Cancel</button>
         </div>
-        <div class="category-card-footer">
-            <span class="material-icons-round">list</span>
-            View Lab List
-        </div>
-    </a>
-
+    </form>
+    {% endif %}
 </div>
 
+{% if cat_data %}
+<div class="category-grid">
+    {% for item in cat_data %}
+    <div
+        class="category-card {{ item.category.color }} {% if not item.category.is_active %}inactive{% endif %} animate-in">
+        <div class="category-card-banner"></div>
+
+        <!-- Status Badge -->
+        <span class="cat-status-badge {% if item.category.is_active %}active{% else %}inactive{% endif %}">
+            {% if item.category.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+
+        <div class="category-card-body">
+            <div class="category-card-icon">
+                <span class="material-icons-round">{{ item.category.icon }}</span>
+            </div>
+            <div class="category-card-name">{{ item.category.name }}</div>
+            <span class="category-card-code">{{ item.category.code }}</span>
+            {% if item.category.description %}
+            <div class="category-card-desc">{{ item.category.description }}</div>
+            {% endif %}
+            <div class="category-card-stats">
+                <div class="category-stat">
+                    <div class="category-stat-value">{{ item.tenant_count }}</div>
+                    <div class="category-stat-label">Tenants</div>
+                </div>
+                <div class="category-stat">
+                    <div class="category-stat-value">{{ item.category.sort_order }}</div>
+                    <div class="category-stat-label">Sort Order</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="category-card-actions">
+            <!-- View Tenant List -->
+            <a href="{% url 'category-list' item.category.code|lower %}" class="cat-action-btn" title="View Tenants"
+                style="text-decoration:none;">
+                <span class="material-icons-round">list</span>
+            </a>
+
+            <!-- Edit -->
+            <a href="?edit={{ item.category.pk }}" class="cat-action-btn edit" title="Edit">
+                <span class="material-icons-round">edit</span>
+            </a>
+
+            <!-- Toggle Active/Inactive -->
+            <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="category_id" value="{{ item.category.pk }}">
+                {% if item.category.is_active %}
+                <button type="submit" name="action" value="deactivate" class="cat-action-btn deactivate"
+                    title="Deactivate">
+                    <span class="material-icons-round">pause_circle</span>
+                </button>
+                {% else %}
+                <button type="submit" name="action" value="activate" class="cat-action-btn activate" title="Activate">
+                    <span class="material-icons-round">play_circle</span>
+                </button>
+                {% endif %}
+            </form>
+
+            <!-- Delete -->
+            <form method="post" style="display:inline;"
+                onsubmit="return confirm('Delete {{ item.category.name }}? This cannot be undone.');">
+                {% csrf_token %}
+                <input type="hidden" name="category_id" value="{{ item.category.pk }}">
+                <button type="submit" name="action" value="delete" class="cat-action-btn delete" title="Delete">
+                    <span class="material-icons-round">delete</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="icon material-icons-round">category</div>
+            <p>No categories found{% if search_query %} matching "{{ search_query }}"{% endif %}.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    // Slide panel functionality
+    function toggleAddPanel() {
+        const panel = document.getElementById('categoryPanel');
+        panel.classList.toggle('open');
+
+        // Optional: Scroll to it if opening
+        if (panel.classList.contains('open')) {
+            setTimeout(() => {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }
+
+    // Client-side instant filtering
+    function filterCategories() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toLowerCase();
+        const cards = document.querySelectorAll('.category-card');
+        const clearBtn = document.getElementById('clearSearchBtn');
+
+        // Toggle clear button visibility
+        if (filter.length > 0) {
+            clearBtn.style.opacity = '1';
+            clearBtn.style.pointerEvents = 'auto';
+        } else {
+            clearBtn.style.opacity = '0';
+            clearBtn.style.pointerEvents = 'none';
+        }
+
+        // Filter cards
+        cards.forEach(card => {
+            const nameEl = card.querySelector('.category-card-name');
+            const codeEl = card.querySelector('.category-card-code');
+            const name = nameEl ? nameEl.textContent.toLowerCase() : "";
+            const code = codeEl ? codeEl.textContent.toLowerCase() : "";
+
+            if (name.includes(filter) || code.includes(filter)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function clearSearch() {
+        const input = document.getElementById('searchInput');
+        input.value = '';
+        filterCategories(); // Trigger UI update
+        input.focus();
+    }
+
+    // Run filter on load in case there's an existing query in the URL
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('searchInput').value) {
+            filterCategories();
+        }
+    });
+</script>
 {% endblock %}

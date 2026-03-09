@@ -19,6 +19,68 @@ class Client(TenantMixin):
 class Domain(DomainMixin):
     pass
 
+
+# ================================
+# DYNAMIC CATEGORIES
+# ================================
+
+class Category(models.Model):
+    """Dynamic healthcare service categories that can be managed from the admin panel."""
+    ICON_CHOICES = [
+        ('local_hospital', 'Hospital/Clinic'),
+        ('medication', 'Medication/Pharmacy'),
+        ('apartment', 'Building/Hospital'),
+        ('biotech', 'Lab/Biotech'),
+        ('healing', 'Healing'),
+        ('psychology', 'Psychology'),
+        ('elderly', 'Elderly Care'),
+        ('child_care', 'Child Care'),
+        ('medical_services', 'Medical Services'),
+        ('health_and_safety', 'Health & Safety'),
+        ('vaccines', 'Vaccines'),
+        ('monitor_heart', 'Cardiology'),
+        ('visibility', 'Eye Care'),
+        ('dentistry', 'Dentistry'),
+        ('spa', 'Wellness/Spa'),
+        ('fitness_center', 'Fitness'),
+        ('bloodtype', 'Blood Bank'),
+        ('emergency', 'Emergency'),
+        ('science', 'Research'),
+        ('category', 'General'),
+    ]
+
+    COLOR_CHOICES = [
+        ('green', 'Green'),
+        ('blue', 'Blue'),
+        ('purple', 'Purple'),
+        ('orange', 'Orange'),
+        ('cyan', 'Cyan'),
+        ('red', 'Red'),
+        ('pink', 'Pink'),
+    ]
+
+    code = models.CharField(max_length=30, unique=True, help_text="Uppercase code like CLINIC, PHARMACY")
+    name = models.CharField(max_length=100, help_text="Display name, e.g. 'Clinics'")
+    description = models.TextField(blank=True, help_text="Short description for the category card")
+    icon = models.CharField(max_length=50, choices=ICON_CHOICES, default='category')
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='blue')
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0, help_text="Lower number = shown first")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+        verbose_name_plural = 'Categories'
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def tenant_count(self):
+        return self.tenants.count()
+
+
 class Tenant(models.Model):
     CATEGORY_CHOICES = [
         ('CLINIC', 'Clinic'),
@@ -29,7 +91,13 @@ class Tenant(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='CLINIC')
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='CLINIC')
+    category_obj = models.ForeignKey(
+        'tenants.Category',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='tenants',
+    )
     subdomain = models.CharField(max_length=100, unique=True)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
@@ -99,31 +167,80 @@ class ClinicSettings(models.Model):
 # ================================
 
 class SubscriptionPlan(models.Model):
+    category = models.ForeignKey(
+        "tenants.Category",
+        on_delete=models.CASCADE,
+        related_name="plans",
+        null=True, blank=True # Allow null temporarily for existing plans during migration
+    )
     name = models.CharField(max_length=50, unique=True)
     display_name = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    BILLING_CHOICES = [
+        ('MONTHLY', 'Monthly'),
+        ('YEARLY', 'Yearly'),
+    ]
+    billing_cycle = models.CharField(max_length=20, choices=BILLING_CHOICES, default='MONTHLY')
+    
     description = models.TextField(blank=True)
-
-    # ── Resource limits ──
-    max_doctors = models.IntegerField(default=1)
-    max_staff = models.IntegerField(default=2)
-    max_patients = models.IntegerField(default=300)
-    max_appointments_per_month = models.IntegerField(default=150)
-
-    # ── Feature flags ──
-    sms_enabled = models.BooleanField(default=False)
-    whatsapp_enabled = models.BooleanField(default=False)
-    ai_enabled = models.BooleanField(default=False)
-    export_enabled = models.BooleanField(default=False)
-    custom_branding = models.BooleanField(default=False)
-    api_access = models.BooleanField(default=False)
-    advanced_reports = models.BooleanField(default=False)
-    pharmacy_addon = models.BooleanField(default=False)
-    lab_addon = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0, help_text="Order in which plan appears (lowest first)")
 
     def __str__(self):
-        return self.display_name or self.name
+        cat_name = self.category.name if self.category else "Global"
+        return f"{self.display_name or self.name} ({cat_name})"
+
+    class Meta:
+        ordering = ['order', 'price']
+
+
+class Resource(models.Model):
+    """
+    Defines what can be limited across the platform.
+    e.g., code=MAX_DOCTORS, name="Maximum Doctors"
+    """
+    code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+    # Optional constraint: resource only applies to specific Category
+    category = models.ForeignKey(
+        "tenants.Category", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class PlanResourceLimit(models.Model):
+    """
+    Maps a resource limit to a specific SubscriptionPlan.
+    """
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE, related_name="resource_limits")
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    # -1 = unlimited, 0 = none, >0 = specific limit
+    limit_value = models.IntegerField(default=-1)
+
+    class Meta:
+        unique_together = ('plan', 'resource')
+
+    def __str__(self):
+        limit_str = "Unlimited" if self.limit_value == -1 else str(self.limit_value)
+        return f"{self.plan.name} - {self.resource.name}: {limit_str}"
+
+
+class PlanFeature(models.Model):
+    """
+    Maps a boolean feature to a specific SubscriptionPlan.
+    """
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE, related_name="features")
+    feature = models.ForeignKey("tenants.Feature", on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('plan', 'feature')
+
+    def __str__(self):
+        return f"{self.plan.name} includes {self.feature.name}"
 
 
 class TenantSubscription(models.Model):
@@ -171,6 +288,9 @@ class Feature(models.Model):
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    category = models.ForeignKey(
+        "tenants.Category", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     # Global kill switch
     is_active = models.BooleanField(default=True)
@@ -179,13 +299,6 @@ class Feature(models.Model):
 
     def __str__(self):
         return self.name
-
-
-# Attach features directly to SubscriptionPlan
-SubscriptionPlan.add_to_class(
-    "features",
-    models.ManyToManyField("Feature", blank=True)
-)
 
 
 class TenantFeature(models.Model):
@@ -248,8 +361,9 @@ def has_feature(self, feature_code):
         result = override.is_enabled
     else:
         # 3️⃣ Plan default
+        # Since 'features' is now the related_name for PlanFeature objects
         result = subscription.plan.features.filter(
-            id=feature.id
+            feature_id=feature.id
         ).exists()
 
     cache.set(cache_key, result, 300)  # cache 5 min

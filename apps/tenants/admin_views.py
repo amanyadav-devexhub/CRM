@@ -1,7 +1,7 @@
 # apps/tenants/admin_views.py
 """
 Admin panel views — SuperAdmin-only pages for managing
-tenants, subscriptions, plans, features, and platform settings.
+tenants, subscriptions, plans, features, categories, and platform settings.
 """
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
@@ -9,9 +9,118 @@ from django.views import View
 from django.contrib import messages
 from .models import (
     Tenant, TenantSubscription, SubscriptionPlan,
-    Feature, TenantFeature,
+    Feature, TenantFeature, Category,
 )
 
+
+class AdminCategoryListView(View):
+    """Full CRUD for healthcare categories."""
+    template_name = "dashboard/admin_categories.html"
+
+    def get(self, request):
+        q = request.GET.get("q", "").strip()
+        categories = Category.objects.all()
+
+        if q:
+            categories = categories.filter(name__icontains=q) | categories.filter(code__icontains=q)
+
+        cat_data = []
+        for cat in categories:
+            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            cat_data.append({
+                "category": cat,
+                "tenant_count": tenant_count,
+            })
+
+        # Editing support
+        edit_id = request.GET.get("edit")
+        editing = None
+        if edit_id:
+            try:
+                editing = Category.objects.get(pk=edit_id)
+            except Category.DoesNotExist:
+                pass
+
+        return render(request, self.template_name, {
+            "cat_data": cat_data,
+            "total": len(cat_data),
+            "search_query": q,
+            "editing": editing,
+            "icon_choices": Category.ICON_CHOICES,
+            "color_choices": Category.COLOR_CHOICES,
+        })
+
+    def post(self, request):
+        action = request.POST.get("action")
+
+        if action == "create":
+            code = request.POST.get("code", "").strip().upper()
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            icon = request.POST.get("icon", "category")
+            color = request.POST.get("color", "blue")
+            sort_order = request.POST.get("sort_order", "0")
+
+            if not code or not name:
+                messages.error(request, "Code and Name are required.")
+                return redirect("/admin-categories/")
+
+            if Category.objects.filter(code=code).exists():
+                messages.error(request, f"Category with code '{code}' already exists.")
+                return redirect("/admin-categories/")
+
+            try:
+                Category.objects.create(
+                    code=code,
+                    name=name,
+                    description=description,
+                    icon=icon,
+                    color=color,
+                    sort_order=int(sort_order) if sort_order else 0,
+                )
+                messages.success(request, f"Category '{name}' created successfully.")
+            except Exception as e:
+                messages.error(request, f"Error creating category: {e}")
+
+            return redirect("/admin-categories/")
+
+        cat_id = request.POST.get("category_id")
+        try:
+            cat = Category.objects.get(pk=cat_id)
+        except Category.DoesNotExist:
+            messages.error(request, "Category not found.")
+            return redirect("/admin-categories/")
+
+        if action == "update":
+            cat.name = request.POST.get("name", cat.name).strip()
+            cat.description = request.POST.get("description", cat.description).strip()
+            cat.icon = request.POST.get("icon", cat.icon)
+            cat.color = request.POST.get("color", cat.color)
+            sort_order = request.POST.get("sort_order", str(cat.sort_order))
+            cat.sort_order = int(sort_order) if sort_order else cat.sort_order
+            cat.save()
+            messages.success(request, f"Category '{cat.name}' updated.")
+
+        elif action == "activate":
+            cat.is_active = True
+            cat.save(update_fields=["is_active"])
+            messages.success(request, f"'{cat.name}' activated.")
+
+        elif action == "deactivate":
+            cat.is_active = False
+            cat.save(update_fields=["is_active"])
+            messages.success(request, f"'{cat.name}' deactivated.")
+
+        elif action == "delete":
+            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            if tenant_count > 0:
+                messages.error(request, f"Cannot delete '{cat.name}' — {tenant_count} tenant(s) are using it. Deactivate it instead.")
+            else:
+                name = cat.name
+                cat.delete()
+                messages.success(request, f"Category '{name}' deleted permanently.")
+
+        return redirect("/admin-categories/")
 
 class AdminTenantListView(View):
     """List all tenants with search, activate/deactivate, delete."""
@@ -123,77 +232,307 @@ class AdminSubscriptionListView(View):
 
 
 class AdminPlanListView(View):
-    """List and edit subscription plans."""
+    """List and edit subscription plans, resources, and features."""
     template_name = "dashboard/admin_plans.html"
 
     def get(self, request):
-        plans = SubscriptionPlan.objects.filter(is_active=True)
+        from django.db import models
+        from .models import SubscriptionPlan, TenantSubscription, Category, Feature, Resource, PlanFeature, PlanResourceLimit
+        
+        selected_category_id = request.GET.get('category')
+        plans = SubscriptionPlan.objects.all().select_related('category').order_by('order', 'price')
+        
+        if selected_category_id:
+            if selected_category_id == "global":
+                plans = plans.filter(category__isnull=True)
+            else:
+                plans = plans.filter(category_id=selected_category_id)
+        
+        master_features = Feature.objects.all().order_by('name')
+        master_resources = Resource.objects.all().order_by('name')
+        
+        all_features = master_features
+        all_resources = master_resources
+        
+        if selected_category_id:
+            if selected_category_id == "global":
+                all_features = all_features.filter(category__isnull=True)
+                all_resources = all_resources.filter(category__isnull=True)
+            else:
+                all_features = all_features.filter(category_id=selected_category_id)
+                all_resources = all_resources.filter(category_id=selected_category_id)
+        
+        # Pre-calculate category selection to avoid formatter issues with == in templates
+        categories_list = []
+        for cat in Category.objects.all():
+            categories_list.append({
+                "pk": cat.pk,
+                "name": cat.name,
+                "is_selected": str(cat.pk) == str(selected_category_id)
+            })
+        
         plan_data = []
         for p in plans:
             sub_count = TenantSubscription.objects.filter(plan=p).count()
-            plan_data.append({"plan": p, "subscriber_count": sub_count})
+            
+            # Get assigned feature codes
+            assigned_feats = set(PlanFeature.objects.filter(plan=p).values_list('feature__code', flat=True))
+            
+            # Get resource limits map: {resource_code: limit_value}
+            res_limits = PlanResourceLimit.objects.filter(plan=p)
+            limit_map = {rl.resource.code: rl.limit_value for rl in res_limits}
+            
+            # Filter resources: Global (no category) OR match plan category
+            relevant_resources = master_resources.filter(
+                models.Q(category__isnull=True) | models.Q(category=p.category)
+            )
+            
+            p_resources = []
+            for r in relevant_resources:
+                val = limit_map.get(r.code, "")
+                p_resources.append({"resource": r, "value": val})
+                
+            # Filter features: Global (no category) OR match plan category
+            relevant_features = master_features.filter(
+                models.Q(category__isnull=True) | models.Q(category=p.category)
+            )
+            
+            p_features = []
+            for f in relevant_features:
+                is_assigned = f.code in assigned_feats
+                p_features.append({
+                    "feature": f, 
+                    "is_assigned": is_assigned,
+                    "checked_str": "checked" if is_assigned else ""
+                })
+
+            # Precalculate selected choices to subvert linter bugs with == in templates
+            p_billing_options = []
+            for bc in SubscriptionPlan.BILLING_CHOICES:
+                p_billing_options.append({
+                    "value": bc[0], 
+                    "label": bc[1], 
+                    "selected_str": "selected" if p.billing_cycle == bc[0] else ""
+                })
+
+            p_category_options = []
+            for cat in categories_list:
+                p_category_options.append({
+                    "pk": cat['pk'], 
+                    "name": cat['name'], 
+                    "selected_str": "selected" if p.category_id == cat['pk'] else ""
+                })
+            
+            plan_data.append({
+                "plan": p, 
+                "subscriber_count": sub_count,
+                "resources": p_resources,
+                "features": p_features,
+                "billing_options": p_billing_options,
+                "category_options": p_category_options,
+            })
 
         return render(request, self.template_name, {
             "plan_data": plan_data,
-            "total": len(plan_data),
+            "total_plans": len(plan_data),
+            "total_features": all_features.count(),
+            "total_resources": all_resources.count(),
+            "categories": categories_list,
+            "billing_choices": SubscriptionPlan.BILLING_CHOICES,
+            "all_features": all_features,
+            "all_resources": all_resources,
+            "selected_category": selected_category_id,
+            "is_global_selected": selected_category_id == "global",
         })
 
     def post(self, request):
+        from .models import SubscriptionPlan, Category, Feature, Resource, PlanFeature, PlanResourceLimit
+        
         action = request.POST.get("action")
+        active_tab = request.POST.get("active_tab", "plans")
+        redirect_url = f"/admin-plans/?tab={active_tab}"
+        
+        # Add category if present to maintain filter
+        selected_category = request.POST.get("redirect_category") or request.GET.get("category")
+        if selected_category:
+            redirect_url += f"&category={selected_category}"
+
+        # ── Feature Management ──
+        if action == "create_feature":
+            code = request.POST.get("code", "").strip().lower()
+            name = request.POST.get("name", "").strip()
+            desc = request.POST.get("description", "").strip()
+            cat_id = request.POST.get("category_id")
+            if code and name:
+                try:
+                    cat = Category.objects.get(pk=cat_id) if cat_id else None
+                    Feature.objects.create(code=code, name=name, description=desc, category=cat)
+                    messages.success(request, f"Feature '{name}' created.")
+                except Exception as e:
+                    messages.error(request, f"Error creating feature: {str(e)}")
+            else:
+                messages.error(request, "Feature code and name are required.")
+            return redirect(redirect_url)
+            
+        elif action == "delete_feature":
+            feature_id = request.POST.get("feature_id")
+            Feature.objects.filter(id=feature_id).delete()
+            messages.success(request, "Feature deleted.")
+            return redirect(redirect_url)
+
+        elif action == "toggle_feature":
+            feature_id = request.POST.get("feature_id")
+            feat = Feature.objects.get(id=feature_id)
+            feat.is_active = not feat.is_active
+            feat.save()
+            status = "activated" if feat.is_active else "deactivated"
+            messages.success(request, f"Feature '{feat.name}' {status}.")
+            return redirect(redirect_url)
+            
+        elif action == "update_feature":
+            feature_id = request.POST.get("feature_id")
+            name = request.POST.get("name", "").strip()
+            desc = request.POST.get("description", "").strip()
+            cat_id = request.POST.get("category_id")
+            if name:
+                feat = Feature.objects.get(id=feature_id)
+                feat.name = name
+                feat.description = desc
+                feat.category = Category.objects.get(pk=cat_id) if cat_id else None
+                feat.save()
+                messages.success(request, f"Feature '{name}' updated.")
+            return redirect(redirect_url)
+            
+        # ── Resource Management ──
+        elif action == "create_resource":
+            code = request.POST.get("code", "").strip().upper()
+            name = request.POST.get("name", "").strip()
+            cat_id = request.POST.get("category_id")
+            if code and name:
+                try:
+                    cat = Category.objects.get(pk=cat_id) if cat_id else None
+                    Resource.objects.create(code=code, name=name, category=cat)
+                    messages.success(request, f"Resource '{name}' created.")
+                except Exception as e:
+                    messages.error(request, f"Error creating resource: {str(e)}")
+            else:
+                messages.error(request, "Resource code and name are required.")
+            return redirect(redirect_url)
+            
+        elif action == "delete_resource":
+            resource_id = request.POST.get("resource_id")
+            Resource.objects.filter(id=resource_id).delete()
+            messages.success(request, "Resource deleted.")
+            return redirect(redirect_url)
+
+        elif action == "toggle_resource":
+            resource_id = request.POST.get("resource_id")
+            res = Resource.objects.get(id=resource_id)
+            res.is_active = not res.is_active
+            res.save()
+            status = "activated" if res.is_active else "deactivated"
+            messages.success(request, f"Resource '{res.name}' {status}.")
+            return redirect(redirect_url)
+
+        elif action == "update_resource":
+            resource_id = request.POST.get("resource_id")
+            name = request.POST.get("name", "").strip()
+            cat_id = request.POST.get("category_id")
+            if name:
+                res = Resource.objects.get(id=resource_id)
+                res.name = name
+                res.category = Category.objects.get(pk=cat_id) if cat_id else None
+                res.save()
+                messages.success(request, f"Resource '{name}' updated.")
+            return redirect(redirect_url)
+            
+        # ── Plan Management ──
         plan_id = request.POST.get("plan_id")
 
-        if action == "create":
+        if action == "create_plan":
             name = request.POST.get("name", "").strip().upper()
             display_name = request.POST.get("display_name", "").strip()
             price = request.POST.get("price", "0")
-            max_doctors = request.POST.get("max_doctors", "1")
-            max_staff = request.POST.get("max_staff", "2")
-            max_patients = request.POST.get("max_patients", "300")
-            max_appointments = request.POST.get("max_appointments", "150")
+            try:
+                order = int(request.POST.get("order") or 0)
+            except ValueError:
+                order = 0
+            category_id = request.POST.get("category_id")
+            billing_cycle = request.POST.get("billing_cycle", "MONTHLY")
 
             if name and display_name:
                 try:
-                    SubscriptionPlan.objects.create(
+                    category = Category.objects.get(pk=category_id) if category_id else None
+                    plan = SubscriptionPlan.objects.create(
                         name=name,
                         display_name=display_name,
                         price=price,
-                        max_doctors=max_doctors,
-                        max_staff=max_staff,
-                        max_patients=max_patients,
-                        max_appointments_per_month=max_appointments
+                        order=order,
+                        category=category,
+                        billing_cycle=billing_cycle,
+                        is_active='is_active' in request.POST
                     )
-                    messages.success(request, f"Plan '{display_name}' created successfully.")
+                    
+                    # Process selected features
+                    for feat_str in request.POST.getlist("features"):
+                        try:
+                            feat = Feature.objects.get(code=feat_str)
+                            PlanFeature.objects.create(plan=plan, feature=feat)
+                        except Feature.DoesNotExist:
+                            pass
+                    
+                    messages.success(request, f"Plan '{display_name}' created.")
                 except Exception as e:
-                    messages.error(request, f"Error creating plan: {e}")
-            else:
-                messages.error(request, "Name and Display Name are required.")
+                    messages.error(request, f"Error creating plan: {str(e)}")
             
-            return redirect("/admin-plans/")
+            return redirect(redirect_url)
+            
+        elif action == "update_plan" and plan_id:
+            try:
+                plan = SubscriptionPlan.objects.get(pk=plan_id)
+                plan.display_name = request.POST.get("display_name")
+                plan.price = request.POST.get("price")
+                plan.order = int(request.POST.get("order") or 0)
+                plan.billing_cycle = request.POST.get("billing_cycle")
+                # Handle is_active status from checkbox
+                plan.is_active = 'is_active' in request.POST
+                plan.save()
 
-        try:
-            plan = SubscriptionPlan.objects.get(pk=plan_id)
-        except SubscriptionPlan.DoesNotExist:
-            messages.error(request, "Plan not found.")
-            return redirect("/admin-plans/")
+                # Update features
+                PlanFeature.objects.filter(plan=plan).delete()
+                for feat_str in request.POST.getlist("features"):
+                    try:
+                        feat = Feature.objects.get(code=feat_str)
+                        PlanFeature.objects.create(plan=plan, feature=feat)
+                    except Feature.DoesNotExist:
+                        pass
+                
+                # Update resources
+                for key, value in request.POST.items():
+                    if key.startswith("res_") and value.strip():
+                        res_code = key.replace("res_", "")
+                        try:
+                            resource = Resource.objects.get(code=res_code)
+                            PlanResourceLimit.objects.update_or_create(
+                                plan=plan, resource=resource,
+                                defaults={'limit_value': value}
+                            )
+                        except Resource.DoesNotExist:
+                            pass
 
-        if action == "update":
-            plan.price = request.POST.get("price", plan.price)
-            plan.max_doctors = request.POST.get("max_doctors", plan.max_doctors)
-            plan.max_staff = request.POST.get("max_staff", plan.max_staff)
-            plan.max_patients = request.POST.get("max_patients", plan.max_patients)
-            plan.max_appointments_per_month = request.POST.get(
-                "max_appointments", plan.max_appointments_per_month
-            )
-            plan.save()
-            messages.success(request, f"{plan.display_name} plan updated.")
-        elif action == "delete":
-            plan.is_active = False
-            plan.save(update_fields=["is_active"])
-            messages.success(request, f"{plan.display_name} plan soft-deleted.")
+                messages.success(request, f"Plan '{plan.display_name}' updated.")
+            except Exception as e:
+                messages.error(request, f"Error updating plan: {str(e)}")
+            
+            return redirect(redirect_url)
 
-        return redirect("/admin-plans/")
+        elif action == "delete_plan" and plan_id:
+            SubscriptionPlan.objects.filter(id=plan_id).delete()
+            messages.success(request, "Plan archived and removed.")
+            return redirect(redirect_url)
 
-
+        return redirect(redirect_url)
+    
 class AdminFeatureListView(View):
     """List features with toggle and create/delete."""
     template_name = "dashboard/admin_features.html"

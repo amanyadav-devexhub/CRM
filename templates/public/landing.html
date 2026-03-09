@@ -594,17 +594,21 @@
            PRICING
            ══════════════════════════════════════ */
         .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 1.5rem;
-            max-width: 1000px;
+            max-width: 1280px;
             margin: 0 auto;
         }
 
         .price-card {
+            flex: 1 1 250px;
+            min-width: 250px;
+            max-width: 290px;
             background: var(--bg-card);
             border-radius: var(--radius);
-            padding: 2.25rem 1.75rem;
+            padding: 2.25rem 1.5rem;
             border: 1px solid var(--border-subtle);
             position: relative;
             transition: transform .2s;
@@ -722,6 +726,54 @@
 
         .btn-plan.secondary:hover {
             background: var(--btn-secondary-bg-hover);
+        }
+
+        /* ── Category Pills ── */
+        .category-pills {
+            display: flex;
+            justify-content: center;
+            gap: .75rem;
+            margin-bottom: 3.5rem;
+            flex-wrap: wrap;
+        }
+
+        .category-pill {
+            background: var(--btn-secondary-bg);
+            border: 1px solid var(--btn-secondary-border);
+            color: var(--text-secondary);
+            padding: .6rem 1.25rem;
+            border-radius: 99px;
+            font-size: .875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .24s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-pill:hover {
+            border-color: var(--btn-secondary-border-hover);
+            background: var(--btn-secondary-bg-hover);
+            color: var(--text-primary);
+        }
+
+        .category-pill.active {
+            background: var(--gradient-hero);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .grouped-plans-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all .4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .grouped-plans-section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* ══════════════════════════════════════
@@ -1092,89 +1144,74 @@
                 <p>Choose the plan that fits your organization. Start with a free trial.</p>
             </div>
 
-            <div class="pricing-grid">
-                {% for plan in plans %}
-                <div class="price-card {% if plan.name == 'PRO' %}featured{% endif %} animate-in">
-                    <div class="price-plan-name">{{ plan.display_name|default:plan.name }}</div>
-                    <div class="price-amount">
-                        {% if plan.price == 0 %}Free{% else %}₹{{ plan.price|floatformat:0 }}{% endif %}
-                        {% if plan.price != 0 %}<span>/month</span>{% endif %}
-                    </div>
-                    <div class="price-desc">{{ plan.description|default:"Perfect for your healthcare practice" }}</div>
-
-                    <ul class="price-features">
-                        <!-- Resource Limits -->
-                        <li>
-                            <span class="material-icons-round">check_circle</span>
-                            Up to {{ plan.max_doctors }} Doctor{{ plan.max_doctors|pluralize }}
-                        </li>
-                        <li>
-                            <span class="material-icons-round">check_circle</span>
-                            Up to {{ plan.max_staff }} Staff User{{ plan.max_staff|pluralize }}
-                        </li>
-                        <li>
-                            <span class="material-icons-round">check_circle</span>
-                            {{ plan.max_patients }} Patient{{ plan.max_patients|pluralize }}
-                        </li>
-                        <li>
-                            <span class="material-icons-round">check_circle</span>
-                            {{ plan.max_appointments_per_month }} Appointments/mo
-                        </li>
-
-                        <!-- Feature Flags -->
-                        <li class="{% if not plan.sms_enabled %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.sms_enabled %}check_circle{% else %}cancel{% endif %}</span>
-                            SMS Notifications
-                        </li>
-                        <li class="{% if not plan.whatsapp_enabled %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.whatsapp_enabled %}check_circle{% else %}cancel{% endif %}</span>
-                            WhatsApp Integration
-                        </li>
-                        <li class="{% if not plan.pharmacy_addon %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.pharmacy_addon %}check_circle{% else %}cancel{% endif %}</span>
-                            Pharmacy Module
-                        </li>
-                        <li class="{% if not plan.lab_addon %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.lab_addon %}check_circle{% else %}cancel{% endif %}</span>
-                            Lab Management
-                        </li>
-                        <li class="{% if not plan.advanced_reports %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.advanced_reports %}check_circle{% else %}cancel{% endif %}</span>
-                            Advanced Reports
-                        </li>
-                        <li class="{% if not plan.ai_enabled %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.ai_enabled %}check_circle{% else %}cancel{% endif %}</span>
-                            AI-Powered Insights
-                        </li>
-                        <li class="{% if not plan.export_enabled %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.export_enabled %}check_circle{% else %}cancel{% endif %}</span>
-                            Data Export
-                        </li>
-                        <li class="{% if not plan.custom_branding %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.custom_branding %}check_circle{% else %}cancel{% endif %}</span>
-                            Custom Branding
-                        </li>
-                        <li class="{% if not plan.api_access %}disabled{% endif %}">
-                            <span class="material-icons-round">{% if plan.api_access %}check_circle{% else %}cancel{% endif %}</span>
-                            API Access
-                        </li>
-                    </ul>
-                    <a href="/register/?plan_id={{ plan.id }}"
-                        class="btn-plan {% if plan.name == 'PRO' %}primary{% else %}secondary{% endif %}">
-                        Avail Now →
-                    </a>
-                </div>
-                {% empty %}
-                <!-- Fallback if no plans in DB -->
-                <div class="price-card animate-in">
-                    <div class="price-plan-name">Coming Soon</div>
-                    <div class="price-amount">—</div>
-                    <div class="price-desc">Plans are being configured. Check back soon!</div>
-                    <ul class="price-features"></ul>
-                    <a href="/register/" class="btn-plan secondary">Register →</a>
+            <div class="category-pills animate-in" id="categoryPills">
+                {% for group in grouped_plans %}
+                <div class="category-pill {% if forloop.first %}active{% endif %}"
+                    data-target="cat-{{ group.category.id }}" onclick="switchPricingCategory(this)">
+                    {{ group.category.name }}
                 </div>
                 {% endfor %}
             </div>
+
+            {% for group in grouped_plans %}
+            <div id="cat-{{ group.category.id }}" class="grouped-plans-section {% if forloop.first %}active{% endif %}">
+
+                <div class="pricing-grid">
+                    {% for item in group.plans %}
+                    <div
+                        class="price-card {% if item.plan.name == 'PRO' or item.plan.name == 'CLINIC_PRO' %}featured{% endif %} animate-in">
+                        <div class="price-plan-name">{{ item.plan.display_name|default:item.plan.name }}</div>
+                        <div class="price-amount">
+                            {% if item.plan.price == 0 %}Free{% else %}₹{{ item.plan.price|floatformat:0 }}{% endif %}
+                            {% if item.plan.price != 0 %}<span>/{{ item.display_billing }}</span>{% endif %}
+                        </div>
+                        <div class="price-desc">{{ item.display_desc }}</div>
+
+                        <ul class="price-features">
+                            <!-- Resource Limits -->
+                            {% for r_limit in item.resources %}
+                            <li>
+                                <span class="material-icons-round" style="color:var(--accent-blue);">verified</span>
+                                {% if r_limit.limit_value == -1 %}
+                                Unlimited {{ r_limit.resource.name }}
+                                {% else %}
+                                Up to {{ r_limit.limit_value }} {{ r_limit.resource.name }}
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+
+                            <!-- All Features -->
+                            {% for feat in item.features %}
+                            <li class="{{ feat.li_class }}">
+                                <span class="material-icons-round">{{ feat.icon }}</span>
+                                {{ feat.name }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+
+                        <a href="/register/?plan_id={{ item.plan.id }}"
+                            class="btn-plan {% if item.plan.name == 'PRO' or item.plan.name == 'CLINIC_PRO' %}primary{% else %}secondary{% endif %}"
+                            style="margin-top:auto;">
+                            Start with {{ item.plan.display_name|default:item.plan.name }} →
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="price-card animate-in">
+                        <div class="price-plan-name">Coming Soon</div>
+                        <div class="price-amount">—</div>
+                        <div class="price-desc">Plans for {{ group.category.name }} are being configured.</div>
+                        <ul class="price-features"></ul>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div
+                style="text-align:center; padding: 4rem; color: var(--text-muted); border:1px dashed rgba(255,255,255,0.1); border-radius:12px;">
+                <span class="material-icons-round" style="font-size:3rem; margin-bottom:1rem;">inventory_2</span><br>
+                Pricing plans are currently being updated. Please check back later.
+            </div>
+            {% endfor %}
         </div>
     </section>
 
@@ -1215,6 +1252,25 @@
             el.style.animationPlayState = 'paused';
             observer.observe(el);
         });
+
+        // Pricing Category Switcher
+        function switchPricingCategory(pill) {
+            const targetId = pill.getAttribute('data-target');
+
+            // Update pills
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+
+            // Update sections
+            document.querySelectorAll('.grouped-plans-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        }
     </script>
 
 

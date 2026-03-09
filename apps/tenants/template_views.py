@@ -12,7 +12,7 @@ from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Count
 
-from .models import Client, Domain, Tenant
+from .models import Client, Domain, Tenant, Category
 
 User = get_user_model()
 
@@ -77,18 +77,130 @@ class TenantCreatePageView(View):
 
 
 # ──────────────────────────────────────────────
-# Category Index — real counts
+# Category Index — dynamic CRUD
 # ──────────────────────────────────────────────
 class CategoryIndexView(View):
-    """Category selection page showing all healthcare categories with tenant counts."""
+    """Category management page with full CRUD operations."""
+
     def get(self, request):
+        from django.contrib import messages as msg_framework
+
+        q = request.GET.get("q", "").strip()
+        categories = Category.objects.all()
+
+        if q:
+            categories = categories.filter(name__icontains=q) | categories.filter(code__icontains=q)
+
+        cat_data = []
+        for cat in categories:
+            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            cat_data.append({
+                "category": cat,
+                "tenant_count": tenant_count,
+            })
+
+        # Editing support
+        edit_id = request.GET.get("edit")
+        editing = None
+        if edit_id:
+            try:
+                editing = Category.objects.get(pk=edit_id)
+            except Category.DoesNotExist:
+                pass
+
+        # Build choices with selected flags for the template
+        icon_choices = [
+            {"value": val, "label": label, "selected": editing and editing.icon == val}
+            for val, label in Category.ICON_CHOICES
+        ]
+        color_choices = [
+            {"value": val, "label": label, "selected": editing and editing.color == val}
+            for val, label in Category.COLOR_CHOICES
+        ]
+
         context = {
-            "clinic_count": Tenant.objects.filter(category='CLINIC').count(),
-            "pharmacy_count": Tenant.objects.filter(category='PHARMACY').count(),
-            "hospital_count": Tenant.objects.filter(category='HOSPITAL').count(),
-            "lab_count": Tenant.objects.filter(category='LAB').count(),
+            "cat_data": cat_data,
+            "total": len(cat_data),
+            "search_query": q,
+            "editing": editing,
+            "icon_choices": icon_choices,
+            "color_choices": color_choices,
         }
         return render(request, "categories/index.html", context)
+
+    def post(self, request):
+        from django.contrib import messages
+
+        action = request.POST.get("action")
+
+        if action == "create":
+            code = request.POST.get("code", "").strip().upper()
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            icon = request.POST.get("icon", "category")
+            color = request.POST.get("color", "blue")
+            sort_order = request.POST.get("sort_order", "0")
+
+            if not code or not name:
+                messages.error(request, "Code and Name are required.")
+                return redirect("/categories/")
+
+            if Category.objects.filter(code=code).exists():
+                messages.error(request, f"Category with code '{code}' already exists.")
+                return redirect("/categories/")
+
+            try:
+                Category.objects.create(
+                    code=code,
+                    name=name,
+                    description=description,
+                    icon=icon,
+                    color=color,
+                    sort_order=int(sort_order) if sort_order else 0,
+                )
+                messages.success(request, f"Category '{name}' created successfully.")
+            except Exception as e:
+                messages.error(request, f"Error creating category: {e}")
+
+            return redirect("/categories/")
+
+        cat_id = request.POST.get("category_id")
+        try:
+            cat = Category.objects.get(pk=cat_id)
+        except Category.DoesNotExist:
+            messages.error(request, "Category not found.")
+            return redirect("/categories/")
+
+        if action == "update":
+            cat.name = request.POST.get("name", cat.name).strip()
+            cat.description = request.POST.get("description", cat.description).strip()
+            cat.icon = request.POST.get("icon", cat.icon)
+            cat.color = request.POST.get("color", cat.color)
+            sort_order = request.POST.get("sort_order", str(cat.sort_order))
+            cat.sort_order = int(sort_order) if sort_order else cat.sort_order
+            cat.save()
+            messages.success(request, f"Category '{cat.name}' updated.")
+
+        elif action == "activate":
+            cat.is_active = True
+            cat.save(update_fields=["is_active"])
+            messages.success(request, f"'{cat.name}' activated.")
+
+        elif action == "deactivate":
+            cat.is_active = False
+            cat.save(update_fields=["is_active"])
+            messages.success(request, f"'{cat.name}' deactivated.")
+
+        elif action == "delete":
+            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            if tenant_count > 0:
+                messages.error(request, f"Cannot delete '{cat.name}' — {tenant_count} tenant(s) are using it. Deactivate it instead.")
+            else:
+                name = cat.name
+                cat.delete()
+                messages.success(request, f"Category '{name}' deleted permanently.")
+
+        return redirect("/categories/")
 
 
 # ──────────────────────────────────────────────
@@ -487,21 +599,16 @@ class CategoryListView(View):
     template_name = "dashboard/category_list.html"
 
     def get(self, request, category_slug):
-        category_map = {
-            'clinic': ('CLINIC', 'Clinics'),
-            'pharmacy': ('PHARMACY', 'Pharmacies'),
-            'hospitals': ('HOSPITAL', 'Hospitals'),
-            'labs': ('LAB', 'Labs'),
-        }
+        # Dynamic lookup from Category model
+        cat = Category.objects.filter(code__iexact=category_slug).first()
 
-        if category_slug not in category_map:
+        if not cat:
             return render(request, "dashboard/category_list.html", {
                 "category_name": "Unknown",
                 "tenants": [],
             })
 
-        category_code, category_display = category_map[category_slug]
-        tenants_query = Tenant.objects.filter(category=category_code).order_by("-created_at")
+        tenants_query = Tenant.objects.filter(category=cat.code).order_by("-created_at")
         
         # Pagination setup (10 tenants per page)
         paginator = Paginator(tenants_query, 10)
@@ -509,7 +616,7 @@ class CategoryListView(View):
         tenants = paginator.get_page(page_number)
 
         context = {
-            "category_name": category_display,
+            "category_name": cat.name,
             "category_slug": category_slug,
             "tenants": tenants,
             "tenant_count": tenants_query.count(),

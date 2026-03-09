@@ -5,6 +5,14 @@
 {% block page_title %}{{ category_name }}{% endblock %}
 
 {% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'category-index' %}" class="btn-text"
+        style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight: 500;">
+        <span class="material-icons-round" style="font-size: 18px;">arrow_back</span>
+        Back to Categories
+    </a>
+</div>
+
 <div class="card">
     <div class="card-header">
         <h3>
@@ -42,7 +50,8 @@
                             </div>
                             <div>
                                 <a href="{% url 'admin-tenant-detail' tenant.pk %}" style="text-decoration:none;">
-                                    <div class="patient-name" style="color:var(--accent-blue); font-weight:600;">{{ tenant.name }}</div>
+                                    <div class="patient-name" style="color:var(--accent-blue); font-weight:600;">{{
+                                        tenant.name }}</div>
                                 </a>
                                 <div class="patient-id">{{ tenant.email }}</div>
                             </div>
@@ -81,17 +90,12 @@
 
             {% if tenants.has_next %}
             <a href="?page={{ tenants.next_page_number }}" class="action-btn" style="text-decoration:none;">Next</a>
-            <a href="?page={{ tenants.paginator.num_pages }}" class="action-btn" style="text-decoration:none;">Last &raquo;</a>
+            <a href="?page={{ tenants.paginator.num_pages }}" class="action-btn" style="text-decoration:none;">Last
+                &raquo;</a>
             {% endif %}
         </div>
         {% endif %}
     </div>
 </div>
 
-<div style="margin-top: 20px;">
-    <a href="{% url 'admin-dashboard' %}" class="btn-text">
-        <span class="material-icons-round">arrow_back</span>
-        Back to Dashboard
-    </a>
-</div>
 {% endblock %}

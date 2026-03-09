@@ -25,6 +25,7 @@
         .sidebar-brand h2 {
             background: linear-gradient(135deg, #a78bfa, #c084fc);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -92,6 +93,117 @@
         .tenant-type-icon.pharmacy {
             background: var(--gradient-orange);
         }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            width: 280px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        /* Message Type Styling - Clean White with Color Accents */
+        .toast.success {
+            border-left: 4px solid #10b981;
+            border-color: rgba(16, 185, 129, 0.2);
+            border-left-color: #10b981;
+            color: #065f46;
+            /* Darker text for readability on white */
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+            border-left-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #f59e0b;
+            border-color: rgba(245, 158, 11, 0.2);
+            border-left-color: #f59e0b;
+            color: #92400e;
+        }
+
+        .toast.info {
+            border-left: 4px solid #3b82f6;
+            border-color: rgba(59, 130, 246, 0.2);
+            border-left-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .toast-content {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .toast-icon {
+            font-size: 20px !important;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .toast.success .toast-icon {
+            color: #10b981;
+        }
+
+        .toast.error .toast-icon {
+            color: #ef4444;
+        }
+
+        .toast.warning .toast-icon {
+            color: #f59e0b;
+        }
+
+        .toast.info .toast-icon {
+            color: var(--accent-blue);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: currentColor;
+            opacity: 0.6;
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.05);
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -153,6 +265,10 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Platform Config</div>
+                    <a href="/admin-categories/" class="nav-item {% block nav_admin_categories %}{% endblock %}">
+                        <span class="icon material-icons-round">category</span>
+                        Manage Categories
+                    </a>
                     <a href="/admin-features/" class="nav-item {% block nav_features %}{% endblock %}">
                         <span class="icon material-icons-round">toggle_on</span>
                         Feature Flags
@@ -188,19 +304,22 @@
                     <button class="topbar-btn theme-toggle" id="themeToggle" title="Toggle Theme" style="border: none;">
                         <span class="material-icons-round" id="themeIcon">light_mode</span>
                     </button>
-                    <a href="/notifications/" class="topbar-btn" title="Notifications" style="text-decoration:none;">
-                        <span class="material-icons-round">notifications</span>
+                    <a href="/notifications/" class="topbar-btn" title="Notifications"
+                        style="text-decoration:none; display: flex; align-items:center;">
+                        <span class="material-icons-round" style="line-height: 1;">notifications</span>
                     </a>
                     <div class="user-pill">
-                        <div class="user-avatar" style="background: var(--gradient-purple);">{% firstof
-                            request.user.email.0 'P' %}</div>
+                        <div class="user-avatar"
+                            style="background: var(--gradient-purple); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                            {% firstof request.user.email.0 'P' %}</div>
                         <div class="user-info">
                             <div class="name">{{ request.user.email|default:'Platform Owner' }}</div>
                             <div class="role">Super Admin</div>
                         </div>
                     </div>
-                    <a href="/logout/" class="topbar-btn" title="Logout" style="text-decoration:none;">
-                        <span class="material-icons-round">logout</span>
+                    <a href="/logout/" class="topbar-btn" title="Logout"
+                        style="text-decoration:none; display: flex; align-items:center;">
+                        <span class="material-icons-round" style="line-height: 1;">logout</span>
                     </a>
                 </div>
             </header>
@@ -212,9 +331,54 @@
         </div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="toast {{ message.tags }}" role="alert">
+            <span class="material-icons-round toast-icon">
+                {% if message.tags == 'success' %}check_circle
+                {% elif message.tags == 'error' %}error
+                {% elif message.tags == 'warning' %}warning
+                {% else %}info{% endif %}
+            </span>
+            <div class="toast-content">{{ message }}</div>
+            <button class="toast-close" title="Close" onclick="hideToast(this.parentElement)">
+                <span class="material-icons-round" style="font-size: 18px;">close</span>
+            </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script>
+        // Toast logic
+        function showToast(element) {
+            setTimeout(() => {
+                element.classList.add('show');
+            }, 100);
+
+            // Auto-hide after 3 seconds
+            const timeout = setTimeout(() => {
+                hideToast(element);
+            }, 3000);
+        }
+
+        function hideToast(element) {
+            element.classList.remove('show');
+            setTimeout(() => {
+                element.remove();
+            }, 400);
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
+            // Initialize Django messages as toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach((t, index) => {
+                setTimeout(() => showToast(t), index * 200);
+            });
+
             const themeToggle = document.getElementById("themeToggle");
             const themeIcon = document.getElementById("themeIcon");
             if (themeToggle && themeIcon) {
