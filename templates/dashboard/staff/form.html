@@ -123,23 +123,25 @@
             <div class="form-group">
                 <label for="specialization">Specialization</label>
                 <select id="specialization" name="specialization">
-                    <option value="General">General Practice</option>
-                    <option value="Cardiology">Cardiology</option>
-                    <option value="Dermatology">Dermatology</option>
-                    <option value="Orthopedics">Orthopedics</option>
-                    <option value="Pediatrics">Pediatrics</option>
-                    <option value="ENT">ENT</option>
-                    <option value="Neurology">Neurology</option>
-                    <option value="Ophthalmology">Ophthalmology</option>
-                    <option value="Gynecology">Gynecology</option>
-                    <option value="Psychiatry">Psychiatry</option>
-                    <option value="Dentistry">Dentistry</option>
-                    <option value="Physiotherapy">Physiotherapy</option>
+                    {% firstof employee.user.doctor_profile.specialization form_data.specialization "General" as spec %}
+                    <option value="General" {% if spec == 'General' %}selected{% endif %}>General Practice</option>
+                    <option value="Cardiology" {% if spec == 'Cardiology' %}selected{% endif %}>Cardiology</option>
+                    <option value="Dermatology" {% if spec == 'Dermatology' %}selected{% endif %}>Dermatology</option>
+                    <option value="Orthopedics" {% if spec == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
+                    <option value="Pediatrics" {% if spec == 'Pediatrics' %}selected{% endif %}>Pediatrics</option>
+                    <option value="ENT" {% if spec == 'ENT' %}selected{% endif %}>ENT</option>
+                    <option value="Neurology" {% if spec == 'Neurology' %}selected{% endif %}>Neurology</option>
+                    <option value="Ophthalmology" {% if spec == 'Ophthalmology' %}selected{% endif %}>Ophthalmology</option>
+                    <option value="Gynecology" {% if spec == 'Gynecology' %}selected{% endif %}>Gynecology</option>
+                    <option value="Psychiatry" {% if spec == 'Psychiatry' %}selected{% endif %}>Psychiatry</option>
+                    <option value="Dentistry" {% if spec == 'Dentistry' %}selected{% endif %}>Dentistry</option>
+                    <option value="Physiotherapy" {% if spec == 'Physiotherapy' %}selected{% endif %}>Physiotherapy</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="consultation_fee">Consultation Fee (₹)</label>
-                <input type="number" id="consultation_fee" name="consultation_fee" step="0.01" min="0" value="0">
+                <input type="number" id="consultation_fee" name="consultation_fee" step="0.01" min="0" 
+                       value="{% firstof employee.user.doctor_profile.consultation_fee form_data.consultation_fee 0 %}">
             </div>
         </div>
     </div>

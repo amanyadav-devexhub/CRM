@@ -6,6 +6,7 @@ These render full HTML pages (not API JSON responses).
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.db.models import Q
+from apps.utils.mixins import HasTenantPermissionMixin
 
 from .models import (
     Patient, MedicalHistory, Allergy,
@@ -15,11 +16,20 @@ from .models import (
 BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
 
 
-class PatientListView(View):
+class PatientListView(HasTenantPermissionMixin, View):
     """List all patients with search and filters."""
+    required_permission = ["patients.view_records", "patients.register"]
 
     def get(self, request):
-        patients = Patient.objects.all()
+        try:
+            if request.user.doctor_profile:
+                patients = Patient.objects.filter(assigned_doctor=request.user.doctor_profile)
+            else:
+                patients = Patient.objects.all()
+        except getattr(request.user, 'DoesNotExist', Exception):
+            patients = Patient.objects.all()
+        except Exception:
+            patients = Patient.objects.all()
 
         search = request.GET.get("search", "").strip()
         gender = request.GET.get("gender", "").strip()
@@ -66,9 +76,12 @@ class PatientCreateView(View):
     """Create a new patient."""
 
     def get(self, request):
+        from apps.clinical.models import Doctor
+        doctors = Doctor.objects.filter(is_active=True)
         return render(request, "patients/patient_form.html", {
             "patient": None,
             "blood_groups": BLOOD_GROUPS,
+            "doctors": doctors,
         })
 
     def post(self, request):
@@ -85,12 +98,16 @@ class PatientCreateView(View):
                 email=data.get("email") or "",
                 preferred_language=data.get("preferred_language") or "English",
                 notes=data.get("notes") or "",
+                assigned_doctor_id=data.get("assigned_doctor") or None,
             )
             return redirect(f"/patients/{patient.id}/")
         except Exception as e:
+            from apps.clinical.models import Doctor
+            doctors = Doctor.objects.filter(is_active=True)
             return render(request, "patients/patient_form.html", {
                 "patient": None,
                 "blood_groups": BLOOD_GROUPS,
+                "doctors": doctors,
                 "form_errors": str(e),
             })
 
@@ -100,9 +117,12 @@ class PatientEditView(View):
 
     def get(self, request, pk):
         patient = get_object_or_404(Patient, pk=pk)
+        from apps.clinical.models import Doctor
+        doctors = Doctor.objects.filter(is_active=True)
         return render(request, "patients/patient_form.html", {
             "patient": patient,
             "blood_groups": BLOOD_GROUPS,
+            "doctors": doctors,
         })
 
     def post(self, request, pk):
@@ -119,12 +139,16 @@ class PatientEditView(View):
             patient.email = data.get("email") or ""
             patient.preferred_language = data.get("preferred_language") or "English"
             patient.notes = data.get("notes") or ""
+            patient.assigned_doctor_id = data.get("assigned_doctor") or None
             patient.save()
             return redirect(f"/patients/{patient.id}/")
         except Exception as e:
+            from apps.clinical.models import Doctor
+            doctors = Doctor.objects.filter(is_active=True)
             return render(request, "patients/patient_form.html", {
                 "patient": patient,
                 "blood_groups": BLOOD_GROUPS,
+                "doctors": doctors,
                 "form_errors": str(e),
             })
 

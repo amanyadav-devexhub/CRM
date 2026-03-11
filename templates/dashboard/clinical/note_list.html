@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load permission_tags %}
 {% block nav_clinical_notes %}active{% endblock %}
 {% block page_title %}Clinical Notes <span>/ {{ total }} total</span>{% endblock %}
 
@@ -31,7 +31,9 @@
                     <p style="font-size:.75rem; color:rgba(241,245,249,.45);">Dr. {{ note.doctor.name }} &bull; {{ note.created_at|date:"d M Y" }}</p>
                 </div>
             </div>
+            {% if request.user.is_superuser or request.user|has_permission:'patients.edit_records' %}
             <a href="/dashboard/clinical/notes/{{ note.pk }}/edit/" class="btn-icon" title="Edit"><span class="material-icons-round">edit</span></a>
+            {% endif %}
         </div>
         <div class="card-body">
             <div class="soap-section">

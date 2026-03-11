@@ -95,7 +95,6 @@ def provision_category_roles(tenant):
             name=template.name,
             defaults={
                 "is_system_role": True,
-                "description": template.description
             }
         )
         

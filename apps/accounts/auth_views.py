@@ -466,6 +466,12 @@ class AuthBridgeView(View):
             elif etype == "RECEPTIONIST":
                 dashboard_url = "/dashboard/reception/"
             # (HR, Accountant, etc., can be added here)
+        elif user.role:
+            role_name = user.role.name.lower()
+            if "doctor" in role_name:
+                dashboard_url = "/dashboard/doctor/"
+            elif "reception" in role_name or "front desk" in role_name:
+                dashboard_url = "/dashboard/reception/"
 
         # Set JWT cookies for this subdomain
         response = redirect(dashboard_url)

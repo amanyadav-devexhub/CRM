@@ -147,6 +147,15 @@
                     </option>
                 </select>
             </div>
+            <div class="form-group">
+                <label for="assigned_doctor">Assigned Doctor</label>
+                <select id="assigned_doctor" name="assigned_doctor">
+                    <option value="">— Unassigned —</option>
+                    {% for doc in doctors %}
+                    <option value="{{ doc.id }}" {% if patient.assigned_doctor_id == doc.id %}selected{% endif %}>Dr. {{ doc.name }} ({{ doc.specialization }})</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
     </div>
 

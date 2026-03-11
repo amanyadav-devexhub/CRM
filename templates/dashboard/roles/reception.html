@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load permission_tags %}
 
 {% block nav_dashboard %}active{% endblock %}
 {% block page_title %}Dashboard <span>/ Front Desk</span>{% endblock %}
@@ -51,9 +52,11 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Patient</th>
-                        <th>Phone</th>
-                        <th>Registered</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">PATIENT</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">GENDER</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">PHONE</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">BLOOD</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">REGISTERED</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -62,18 +65,26 @@
                         <td>
                             <div class="patient-cell">
                                 <div class="patient-avatar"
-                                    style="background: {% cycle 'var(--gradient-blue)' 'var(--gradient-purple)' 'var(--gradient-green)' 'var(--gradient-orange)' %}">
+                                    style="background: {% cycle '#3b82f6' '#8b5cf6' '#10b981' '#f59e0b' %}">
                                     {{ p.first_name.0 }}{{ p.last_name.0 }}
                                 </div>
                                 <div>
                                     <a href="{% url 'patient-detail' p.id %}" class="patient-name"
                                         style="text-decoration:none;">{{ p.first_name }} {{ p.last_name }}</a>
-                                    <div class="patient-id">{{ p.patient_id }}</div>
+                                    <div class="patient-id" style="color:var(--text-muted); font-size:0.75rem;">{{ p.patient_id }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td>{{ p.phone|default:"—" }}</td>
-                        <td>{{ p.created_at|date:"d M Y" }}</td>
+                        <td>
+                            {% if p.gender %}
+                            <span style="background:rgba(59,130,246,0.1); color:#3b82f6; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; display:inline-block;">{{ p.get_gender_display|default:p.gender|title }}</span>
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 500;">{{ p.phone|default:"—" }}</td>
+                        <td style="font-weight: 500;">{{ p.blood_group|default:"—" }}</td>
+                        <td style="font-weight: 500;">{{ p.created_at|date:"d M Y" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -113,28 +124,26 @@
                             Collect Payment
                         </a>
                     {% elif request.user.role %}
-                        {% for perm in request.user.role.permissions.all %}
-                            {% if perm.code == 'patient.create' %}
-                            <a href="{% url 'patient-create' %}" class="action-btn primary" style="text-decoration:none;">
-                                <span class="icon material-icons-round">person_add</span>
-                                New Registration
-                            </a>
-                            {% endif %}
-                            
-                            {% if perm.code == 'appointment.create' %}
-                            <a href="{% url 'appointment-create' %}" class="action-btn" style="text-decoration:none;">
-                                <span class="icon material-icons-round">event</span>
-                                Book Appointment
-                            </a>
-                            {% endif %}
-                            
-                            {% if perm.code == 'billing.create' %}
-                            <a href="{% url 'billing-create' %}" class="action-btn" style="text-decoration:none;">
-                                <span class="icon material-icons-round">receipt_long</span>
-                                Collect Payment
-                            </a>
-                            {% endif %}
-                        {% endfor %}
+                        {% if request.user|has_permission:'patients.register' %}
+                        <a href="{% url 'patient-create' %}" class="action-btn primary" style="text-decoration:none;">
+                            <span class="icon material-icons-round">person_add</span>
+                            New Registration
+                        </a>
+                        {% endif %}
+                        
+                        {% if request.user|has_permission:'appointments.schedule' %}
+                        <a href="{% url 'appointment-create' %}" class="action-btn" style="text-decoration:none;">
+                            <span class="icon material-icons-round">event</span>
+                            Book Appointment
+                        </a>
+                        {% endif %}
+                        
+                        {% if request.user|has_permission:'billing.access' %}
+                        <a href="{% url 'billing-create' %}" class="action-btn" style="text-decoration:none;">
+                            <span class="icon material-icons-round">receipt_long</span>
+                            Collect Payment
+                        </a>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -160,15 +169,13 @@
                         Book Appointment
                     </a>
                     {% elif request.user.role %}
-                        {% for perm in request.user.role.permissions.all %}
-                            {% if perm.code == 'appointment.create' %}
-                            <a href="{% url 'appointment-create' %}" class="action-btn primary"
-                                style="margin-top:16px; display:inline-flex; text-decoration:none;">
-                                <span class="icon material-icons-round">event</span>
-                                Book Appointment
-                            </a>
-                            {% endif %}
-                        {% endfor %}
+                        {% if request.user|has_permission:'appointments.schedule' %}
+                        <a href="{% url 'appointment-create' %}" class="action-btn primary"
+                            style="margin-top:16px; display:inline-flex; text-decoration:none;">
+                            <span class="icon material-icons-round">event</span>
+                            Book Appointment
+                        </a>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

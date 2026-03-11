@@ -193,6 +193,20 @@ class SubAdminDashboardView(View):
         elif tenant_category == "LAB":
             context = self._lab_context(tenant)
         else:
+            # Fallback check: if clinic user manually hits /dashboard/ but has a specific role
+            if hasattr(request.user, "employee_profile"):
+                etype = request.user.employee_profile.employee_type
+                if etype == "DOCTOR":
+                    return redirect("/dashboard/doctor/")
+                if etype == "RECEPTIONIST":
+                    return redirect("/dashboard/reception/")
+            elif request.user.role:
+                role_name = request.user.role.name.lower()
+                if "doctor" in role_name:
+                    return redirect("/dashboard/doctor/")
+                elif "reception" in role_name or "front desk" in role_name:
+                    return redirect("/dashboard/reception/")
+            
             context = self._clinic_context(tenant)
 
         return render(request, template, context)
@@ -406,12 +420,48 @@ class DoctorDashboardView(LoginRequiredMixin, View):
     """Tailored dashboard for doctors."""
 
     def get(self, request):
+        from datetime import date
+        from apps.appointments.models import Appointment
+        from apps.clinical.models import Doctor
+
         tenant = getattr(request.user, "tenant", None)
-        
+
+        # Find the doctor profile for the logged-in user
+        doctor = getattr(request.user, 'doctor_profile', None)
+
+        today_qs = Appointment.objects.none()
+        recent_qs = Appointment.objects.none()
+        today_count = 0
+
+        if doctor:
+            today_qs = Appointment.objects.filter(
+                doctor=doctor,
+                appointment_date=date.today(),
+            ).exclude(status='CANCELLED').select_related('patient').order_by('appointment_time')[:5]
+
+            today_count = Appointment.objects.filter(
+                doctor=doctor,
+                appointment_date=date.today(),
+            ).exclude(status='CANCELLED').count()
+
+            recent_qs = Appointment.objects.filter(
+                doctor=doctor,
+            ).exclude(status='CANCELLED').select_related('patient').order_by('-appointment_date', '-appointment_time')[:5]
+
+        # Fetch recent patients generally to populate the list
+        try:
+            from apps.patients.models import Patient
+            recent_patients = Patient.objects.order_by("-created_at")[:5]
+        except Exception:
+            recent_patients = []
+
         context = {
             "tenant_category": tenant.category if tenant else "CLINIC",
-            "today_appointments": 0,
+            "today_appointments": today_count,
             "pending_labs": 0,
+            "appointments": today_qs,
+            "recent_appointments": recent_qs,
+            "recent_patients": recent_patients,
         }
         return render(request, "dashboard/roles/doctor.html", context)
 

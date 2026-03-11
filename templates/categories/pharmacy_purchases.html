@@ -1,0 +1,178 @@
+{% extends "categories/base_pharmacy.html" %}
+
+{% block nav_purchases %}active{% endblock %}
+
+{% block page_title %}Purchases & Suppliers{% endblock %}
+{% block page_subtitle %}Manage suppliers, create purchase orders, and track incoming stock.{% endblock %}
+
+{% block page_actions %}
+<button class="btn-primary" onclick="openDrawer('supplierDrawer')">
+    <span class="material-icons-round">add</span>
+    Add Supplier
+</button>
+<button class="btn-primary" style="background: var(--gradient-blue);" onclick="openDrawer('poDrawer')">
+    <span class="material-icons-round">receipt</span>
+    New Order
+</button>
+{% endblock %}
+
+{% block content %}
+
+{% if success_message %}
+<script>document.addEventListener('DOMContentLoaded', () => showToast("{{ success_message }}", 'success'));</script>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Purchase Orders List -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Purchase Orders</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Supplier</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in purchase_orders %}
+                    <tr>
+                        <td style="color: white; font-weight: 500;">{{ po.order_number }}</td>
+                        <td>{{ po.supplier.name }}</td>
+                        <td>{{ po.order_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge" style="
+                                {% if po.status == 'RECEIVED' %}background: rgba(46, 213, 115, 0.15); color: #2ed573;
+                                {% elif po.status == 'PENDING' %}background: rgba(245, 158, 11, 0.15); color: #f59e0b;
+                                {% else %}background: rgba(164, 176, 190, 0.15); color: #a4b0be;{% endif %}
+                            ">{{ po.get_status_display }}</span>
+                        </td>
+                        <td style="color: white; font-weight: 600;">₹{{ po.total_amount }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                            No purchase orders found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Suppliers List -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Active Suppliers</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                {% for supplier in suppliers %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px;">
+                    <div>
+                        <div style="color: white; font-weight: 500;">{{ supplier.name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">{{ supplier.phone }} | {{ supplier.email }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="text-align: center; color: var(--text-muted); font-size: 14px;">No suppliers added yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Supplier Drawer -->
+<div id="supplierDrawer" class="drawer-overlay">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h2>Add New Supplier</h2>
+            <button class="drawer-close" onclick="closeDrawer('supplierDrawer')">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <form method="post" action="{% url 'pharmacy-purchases' %}" id="supplierForm" class="drawer-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_supplier">
+                
+                <div class="form-group">
+                    <label class="form-label">Supplier Name*</label>
+                    <input type="text" name="name" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone" class="form-input">
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button type="button" class="btn-primary" style="background: transparent; border: 1px solid var(--border-color); color: white;" onclick="closeDrawer('supplierDrawer')">Cancel</button>
+            <button type="submit" form="supplierForm" class="btn-primary">Save Supplier</button>
+        </div>
+    </div>
+</div>
+
+<!-- New PO Drawer -->
+<div id="poDrawer" class="drawer-overlay">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h2>Receive Stock Purchase</h2>
+            <button class="drawer-close" onclick="closeDrawer('poDrawer')">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <form method="post" action="{% url 'pharmacy-purchases' %}" id="poForm" class="drawer-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_po">
+                
+                <div class="form-group">
+                    <label class="form-label">Select Supplier*</label>
+                    <select name="supplier_id" required class="form-select">
+                        <option value="">-- Choose Supplier --</option>
+                        {% for s in suppliers %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Medicine*</label>
+                    <select name="medicine_id" required class="form-select">
+                        <option value="">-- Choose Medicine --</option>
+                        {% for m in medicines %}
+                        <option value="{{ m.id }}">{{ m.name }} (Stock: {{ m.stock }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Quantity*</label>
+                        <input type="number" name="quantity" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit Price (₹)*</label>
+                        <input type="number" step="0.01" name="unit_price" required class="form-input">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button type="button" class="btn-primary" style="background: transparent; border: 1px solid var(--border-color); color: white;" onclick="closeDrawer('poDrawer')">Cancel</button>
+            <button type="submit" form="poForm" class="btn-primary" style="background: var(--gradient-blue); margin: 0;">Receive Stock</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

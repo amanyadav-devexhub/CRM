@@ -45,7 +45,6 @@ class RoleCreateView(View):
             return redirect("/dashboard/")
 
         name = request.POST.get("name", "").strip()
-        description = request.POST.get("description", "").strip()
         selected_perms = request.POST.getlist("permissions")
 
         if not name:
@@ -67,7 +66,6 @@ class RoleCreateView(View):
             role = Role.objects.create(
                 tenant=tenant,
                 name=name,
-                description=description,
                 is_system_role=False
             )
             
@@ -108,7 +106,6 @@ class RoleEditView(View):
             "role_perm_ids": list(role_perm_ids),
             "form_data": {
                 "name": "",
-                "description": "",
             }
         })
 
@@ -122,7 +119,6 @@ class RoleEditView(View):
         # Allow name edits if not system default
         if not role.is_system_role:
             role.name = request.POST.get("name", role.name).strip()
-            role.description = request.POST.get("description", role.description).strip()
             role.save()
 
         # Update permissions

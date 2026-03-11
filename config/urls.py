@@ -22,7 +22,7 @@ from apps.tenants.template_views import (
     TenantCreatePageView,
     CategoryIndexView, CategoryClinicView, CategoryPharmacyView,
     CategoryListView,
-    PharmacyInventoryView, PharmacySalesView, PharmacyPrescriptionsView,
+    PharmacyInventoryView, PharmacyPurchasesView, PharmacySalesView, PharmacyPrescriptionsView,
     ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
     ClinicDashboardAPIView,CategoryLabsView,
     CategoryLabsTestCatalogView, CategoryLabsOrderListView
@@ -52,13 +52,17 @@ from apps.accounts.role_views import (
 )
 from apps.appointments.views import (
     AppointmentListView, AppointmentCreateView, AppointmentDetailView,
+    AvailableSlotsAPIView,
 )
 from apps.billing.views import (
     BillingListView, BillingCreateView, BillingDetailView,
 )
 from apps.clinical.views import (
-    ClinicalNoteListView, ClinicalNoteCreateView, 
-    PrescriptionListView, PrescriptionCreateView,
+    ClinicalNoteListView, ClinicalNoteCreateView, ClinicalNoteEditView,
+    PrescriptionListView, PrescriptionCreateView, PrescriptionDetailView,
+)
+from apps.clinical.schedule_views import (
+    ScheduleListView, ScheduleCreateView, ScheduleEditView, ScheduleDeleteView,
 )
 from apps.analytics.views import (
     AnalyticsDashboardView, RevenueAnalyticsView,
@@ -143,9 +147,16 @@ urlpatterns = [
     # ── Doctors ──
     path("dashboard/doctors/", DoctorListView.as_view(), name="doctor-list"),
 
+    # ── Schedules ──
+    path("dashboard/schedules/", ScheduleListView.as_view(), name="schedule-list"),
+    path("dashboard/schedules/create/", ScheduleCreateView.as_view(), name="schedule-create"),
+    path("dashboard/schedules/<uuid:pk>/edit/", ScheduleEditView.as_view(), name="schedule-edit"),
+    path("dashboard/schedules/<uuid:pk>/delete/", ScheduleDeleteView.as_view(), name="schedule-delete"),
+
     # ── Appointments ──
     path("dashboard/appointments/", AppointmentListView.as_view(), name="appointment-list"),
     path("dashboard/appointments/book/", AppointmentCreateView.as_view(), name="appointment-create"),
+    path("dashboard/appointments/slots/", AvailableSlotsAPIView.as_view(), name="available-slots"),
     path("dashboard/appointments/<uuid:pk>/", AppointmentDetailView.as_view(), name="appointment-detail"),
 
     # ── Billing ──
@@ -156,8 +167,10 @@ urlpatterns = [
     # ── Clinical Notes & Prescriptions ──
     path("dashboard/clinical/notes/", ClinicalNoteListView.as_view(), name="note-list"),
     path("dashboard/clinical/notes/create/", ClinicalNoteCreateView.as_view(), name="note-create"),
+    path("dashboard/clinical/notes/<uuid:pk>/edit/", ClinicalNoteEditView.as_view(), name="note-edit"),
     path("dashboard/clinical/prescriptions/", PrescriptionListView.as_view(), name="prescription-list"),
     path("dashboard/clinical/prescriptions/create/", PrescriptionCreateView.as_view(), name="prescription-create"),
+    path("dashboard/clinical/prescriptions/<uuid:pk>/", PrescriptionDetailView.as_view(), name="prescription-detail"),
     path("dashboard/clinical/prescriptions/<uuid:pk>/pdf/", PrescriptionCreateView.as_view(), name="prescription-pdf"), # Placeholder for now
 
     # ── Analytics & Reports ──
@@ -193,6 +206,7 @@ urlpatterns = [
     path("categories/hospital/", include("apps.hospitals.urls")),
     path("categories/pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
     path("categories/pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
+    path("categories/pharmacy/purchases/", PharmacyPurchasesView.as_view(), name="pharmacy-purchases"),
     path("categories/pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
     path("categories/pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
     path("categories/labs/", CategoryLabsView.as_view(), name="category-labs"),

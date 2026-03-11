@@ -10,15 +10,8 @@ class Command(BaseCommand):
         
         categories = Category.objects.all()
         if not categories.exists():
-            self.stdout.write(self.style.WARNING("No categories found! Creating a default GENERAL category..."))
-            default_cat, _ = Category.objects.get_or_create(
-                code="GENERAL",
-                defaults={
-                    "name": "General",
-                    "description": "General Category"
-                }
-            )
-            categories = [default_cat]
+            self.stdout.write(self.style.WARNING("No categories found. Please create categories in the admin dashboard before seeding." ))
+            return
 
         role_definitions = {
             "Admin / Super Admin": {
@@ -42,7 +35,7 @@ class Command(BaseCommand):
                     "dashboard.doctor", "patients.view_records", "patients.edit_records",
                     "patients.edit_medical_history", "prescriptions.edit",
                     "patients.edit_vitals", "prescriptions.issue", "lab.view_results",
-                    "appointments.schedule"
+                    "appointments.schedule", "appointments.moderate"
                 ]
             },
             "Nurse / Assistant": {

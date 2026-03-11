@@ -1,41 +1,6 @@
-{% extends "categories/base_mgmt.html" %}
+{% extends "categories/base_pharmacy.html" %}
 
-{% block hub_icon %}medication{% endblock %}
-{% block hub_name %}PharmTrack{% endblock %}
-
-{% block hub_nav %}
-<div class="nav-section">
-    <div class="nav-section-title">Operations</div>
-    <a href="{% url 'category-pharmacy' %}" class="nav-item">
-        <span class="icon material-icons-round">dashboard</span>
-        Dashboard
-    </a>
-    <a href="{% url 'pharmacy-inventory' %}" class="nav-item active">
-        <span class="icon material-icons-round">inventory_2</span>
-        Inventory
-    </a>
-    <a href="{% url 'pharmacy-sales' %}" class="nav-item">
-        <span class="icon material-icons-round">shopping_cart</span>
-        Sales & POS
-    </a>
-    <a href="{% url 'pharmacy-prescriptions' %}" class="nav-item">
-        <span class="icon material-icons-round">receipt_long</span>
-        Prescriptions
-    </a>
-</div>
-
-<div class="nav-section">
-    <div class="nav-section-title">Reports</div>
-    <a href="#" class="nav-item">
-        <span class="icon material-icons-round">analytics</span>
-        Sales Report
-    </a>
-    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item" style="color: var(--accent-orange);">
-        <span class="icon material-icons-round">warning</span>
-        Expiry Alerts
-    </a>
-</div>
-{% endblock %}
+{% block nav_inventory %}active{% endblock %}
 
 {% block page_title %}Inventory Management{% endblock %}
 {% block page_subtitle %}Manage your medicine stock, batches, and pricing.{% endblock %}
@@ -47,7 +12,7 @@
     <input type="text" id="inventorySearch" placeholder="Search medicines..."
         style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px;">
 </div>
-<button class="btn-primary" onclick="openModal()">
+<button class="btn-primary" onclick="openDrawer('addStockDrawer')">
     <span class="material-icons-round">add</span>
     Add Stock
 </button>
@@ -62,7 +27,7 @@
 <script>document.addEventListener('DOMContentLoaded', () => showToast("{{ error_message }}", 'error'));</script>
 {% endif %}
 
-<div class="card">
+<div class="card" style="border-top: 3px solid #f59e0b;">
     <div class="card-body" style="padding: 0;">
         <table class="data-table" id="inventoryTable">
             <thead>
@@ -102,78 +67,90 @@
     </div>
 </div>
 
-<!-- Add Stock Modal -->
-<div id="addStockModal"
-    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-    <div class="card" style="width: 100%; max-width: 480px; padding: 24px; position: relative;">
-        <button onclick="closeModal()"
-            style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer;">
-            <span class="material-icons-round">close</span>
-        </button>
-        <h3 style="margin: 0 0 20px 0;">Add New Medicine Stock</h3>
-        <form method="post" action="{% url 'pharmacy-inventory' %}"
-            style="display: flex; flex-direction: column; gap: 16px;">
-            {% csrf_token %}
-            <div class="form-group">
-                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Medicine
-                    Name</label>
-                <input type="text" name="name" id="m_name" required placeholder="e.g. Omeprazole"
-                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Batch
-                        #</label>
-                    <input type="text" name="batch_number" id="m_batch" required placeholder="B-2024"
-                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
-                </div>
-                <div class="form-group">
-                    <label
-                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Qty</label>
-                    <input type="number" name="quantity" id="m_qty" required placeholder="100"
-                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Price
-                        (₹)</label>
-                    <input type="number" name="price" step="0.01" placeholder="25.00"
-                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
-                </div>
-                <div class="form-group">
-                    <label
-                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Category</label>
-                    <select name="category"
-                        style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
-                        <option value="General">General</option>
-                        <option value="Analgesic">Analgesic</option>
-                        <option value="Antibiotic">Antibiotic</option>
-                        <option value="Antihistamine">Antihistamine</option>
-                        <option value="Supplement">Supplement</option>
-                        <option value="Antacid">Antacid</option>
-                        <option value="Antiviral">Antiviral</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Expiry
-                    Date</label>
-                <input type="date" name="expiry_date"
-                    style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white;">
-            </div>
-            <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 8px;">
-                <span class="material-icons-round">save</span>
-                Save Entry
+<!-- Add Stock Drawer -->
+<div id="addStockDrawer" class="drawer-overlay">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h2>Add New Medicine</h2>
+            <button class="drawer-close" onclick="closeDrawer('addStockDrawer')">
+                <span class="material-icons-round">close</span>
             </button>
-        </form>
+        </div>
+        <div class="drawer-body">
+            <form method="post" id="addStockForm" class="drawer-form">
+                {% csrf_token %}
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Medicine Name</label>
+                        <input type="text" name="name" required placeholder="e.g. Omeprazole" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Barcode</label>
+                        <input type="text" name="barcode" placeholder="Scan or Type" class="form-input">
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Batch #</label>
+                        <input type="text" name="batch_number" required placeholder="B-2024" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="General">General</option>
+                            <option value="Analgesic">Analgesic</option>
+                            <option value="Antibiotic">Antibiotic</option>
+                            <option value="Antihistamine">Antihistamine</option>
+                            <option value="Supplement">Supplement</option>
+                            <option value="Antacid">Antacid</option>
+                            <option value="Antiviral">Antiviral</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Stock Qty</label>
+                        <input type="number" name="quantity" required placeholder="100" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Min Stock Alert</label>
+                        <input type="number" name="min_stock_level" placeholder="10" value="10" class="form-input">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Cost Price (₹)</label>
+                        <input type="number" name="price" step="0.01" placeholder="25.00" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">MRP (₹)</label>
+                        <input type="number" name="mrp" step="0.01" placeholder="30.00" required class="form-input">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">GST %</label>
+                        <input type="number" name="tax_rate" step="0.01" placeholder="12" value="0" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" name="expiry_date" required class="form-input">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button type="button" class="btn-primary" style="background: transparent; border: 1px solid var(--border-color); color: white;" onclick="closeDrawer('addStockDrawer')">Cancel</button>
+            <button type="submit" form="addStockForm" class="btn-primary" style="margin: 0;">Record Inventory</button>
+        </div>
     </div>
 </div>
 
 <script>
-    function openModal() { document.getElementById('addStockModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('addStockModal').style.display = 'none'; }
-
     document.getElementById('inventorySearch')?.addEventListener('input', function (e) {
         const query = e.target.value.toLowerCase();
         const rows = document.querySelectorAll('#inventoryTable tbody tr');

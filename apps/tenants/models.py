@@ -124,12 +124,15 @@ class CategoryRoleTemplate(models.Model):
         related_name="role_templates"
     )
     name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50, blank=True, default='',
+        help_text="Unique identifier for this role within the category (e.g. doctor, receptionist)")
     description = models.TextField(blank=True, null=True)
     permissions = models.ManyToManyField('accounts.Permission', blank=True)
     is_admin_role = models.BooleanField(
         default=False, 
         help_text="Should the onboarding user receive this role?"
     )
+    is_active = models.BooleanField(default=True, help_text="Is this role currently active?")
 
     class Meta:
         unique_together = ('category', 'name')

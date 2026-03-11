@@ -85,6 +85,15 @@ class Patient(AuditMixin, SoftDeleteMixin):
     # Segmentation
     tags = models.ManyToManyField(PatientTag, blank=True, related_name="patients")
 
+    # Assigned Doctor
+    assigned_doctor = models.ForeignKey(
+        'clinical.Doctor',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="assigned_patients",
+        help_text="Doctor primarily responsible for this patient"
+    )
+
     # Linked user account (for patient portal login)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

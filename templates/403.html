@@ -1,103 +1,93 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        // Apply theme early to prevent flash
-        const savedTheme = localStorage.getItem("theme") || "dark";
-        document.documentElement.setAttribute("data-theme", savedTheme);
-    </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feature Locked — HealthCRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Access Denied</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+        }
         body {
+            margin: 0;
+            padding: 0;
             font-family: 'Inter', sans-serif;
-            background: #0a0e17; color: #f1f5f9;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            padding: 2rem;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
-        .lock-card {
-            text-align: center; max-width: 440px;
-            background: #111827; border-radius: 20px; padding: 3rem 2.5rem;
-            border: 1px solid rgba(255,255,255,.06);
-            box-shadow: 0 20px 60px rgba(0,0,0,.35);
+        .error-container {
+            background: var(--card);
+            padding: 3rem;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            max-width: 480px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
-        .lock-icon {
-            width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 1.5rem;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(239,68,68,.1); border: 2px solid rgba(239,68,68,.2);
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--danger-bg);
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
         }
-        .lock-icon .material-icons-round { font-size: 2rem; color: #f87171; }
-        h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: .5rem; }
-        p { color: rgba(241,245,249,.55); font-size: .95rem; line-height: 1.6; margin-bottom: 2rem; }
-        .btn-row { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+        .icon-circle .material-icons-round {
+            font-size: 36px;
+        }
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0 0 1rem 0;
+        }
+        p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0 0 2rem 0;
+        }
         .btn {
-            padding: .75rem 1.5rem; border-radius: 12px; font-size: .9rem; font-weight: 600;
-            text-decoration: none; cursor: pointer; transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; border: none;
+        .btn:hover {
+            background: rgba(255,255,255,0.1);
         }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59,130,246,.3); }
-        .btn-secondary {
-            background: rgba(255,255,255,.05); color: #f1f5f9;
-            border: 1px solid rgba(255,255,255,.1);
-        }
-        .btn-secondary:hover { background: rgba(255,255,255,.08); }
-        .code { color: rgba(241,245,249,.3); font-size: .75rem; margin-top: 1.5rem; }
     </style>
 </head>
 <body>
-    <div class="lock-card">
-        <div class="lock-icon">
-            <span class="material-icons-round">lock</span>
+    <div class="error-container">
+        <div class="icon-circle">
+            <span class="material-icons-round">gpp_bad</span>
         </div>
-        <h1>Feature Not Available</h1>
-        <p>
-            This module is not included in your current subscription plan.
-            Upgrade to unlock this feature and many more.
-        </p>
-        <div class="btn-row">
-            <a href="/dashboard/" class="btn btn-secondary">← Back to Dashboard</a>
-            <a href="/dashboard/" class="btn btn-primary">Upgrade Plan</a>
-        </div>
-        <div class="code">Error 403 — Access Denied</div>
+        <h1>Access Denied</h1>
+        <p>You don't have the necessary permissions to access this page or perform this action. Please contact your clinic administrator if you believe this is a mistake.</p>
+        
+        <a href="javascript:history.back()" class="btn">
+            &larr; Go Back
+        </a>
     </div>
-
-    
-
-
-    <!-- Theme Toggle -->
-    <button id="themeToggle" title="Toggle Theme"
-        style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #111827); color: var(--text, #f1f5f9); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-        <span class="material-icons-round" id="themeIcon" style="font-size: 1.2rem;">light_mode</span>
-    </button>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const toggleBtn = document.getElementById("themeToggle");
-            const toggleIcon = document.getElementById("themeIcon");
-            if (toggleBtn && toggleIcon) {
-                if (document.documentElement.getAttribute("data-theme") === "light") {
-                    toggleIcon.textContent = "dark_mode";
-                } else {
-                    toggleIcon.textContent = "light_mode";
-                }
-                toggleBtn.addEventListener("click", () => {
-                    let current = document.documentElement.getAttribute("data-theme");
-                    let newTheme = current === "light" ? "dark" : "light";
-                    document.documentElement.setAttribute("data-theme", newTheme);
-                    localStorage.setItem("theme", newTheme);
-                    toggleIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
-                    window.dispatchEvent(new Event("themeChanged"));
-                });
-            }
-        });
-    </script>
-
 </body>
 </html>

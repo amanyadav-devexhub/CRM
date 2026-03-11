@@ -236,7 +236,7 @@
             {% if patient.clinical_notes.exists %}
             <div style="display:flex; flex-direction:column;">
                 {% for note in patient.clinical_notes.all|slice:":3" %}
-                <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,.05);">
+                <a href="/dashboard/clinical/notes/{{ note.pk }}/edit/" style="padding:16px; border-bottom:1px solid rgba(255,255,255,.05); display:block; text-decoration:none; color:inherit; transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                         <strong>Dr. {{ note.doctor.name }}</strong>
                         <span style="color:var(--text-muted); font-size:.8rem;">{{ note.created_at|date:"d M Y" }}</span>
@@ -246,7 +246,7 @@
                         <span style="font-weight:600; color:rgba(241,245,249,.8);">A:</span> {{ note.assessment }}
                     </p>
                     {% endif %}
-                </div>
+                </a>
                 {% endfor %}
             </div>
             {% else %}
@@ -273,14 +273,20 @@
                         <th>Date</th>
                         <th>Doctor</th>
                         <th>Medicines</th>
+                        <th>View</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for rx in patient.prescriptions.all|slice:":3" %}
-                    <tr>
+                    {% for rx in patient.prescriptions.all|slice:":5" %}
+                    <tr style="cursor:pointer;" onclick="window.location='/dashboard/clinical/prescriptions/{{ rx.pk }}/'">
                         <td style="white-space:nowrap;">{{ rx.created_at|date:"d M Y" }}</td>
                         <td>Dr. {{ rx.doctor.name }}</td>
                         <td><span class="badge-tag active">{{ rx.items.count }} items</span></td>
+                        <td>
+                            <a href="/dashboard/clinical/prescriptions/{{ rx.pk }}/" class="tbl-action" title="View Prescription" style="text-decoration:none;">
+                                <span class="material-icons-round">visibility</span>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

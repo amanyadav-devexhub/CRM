@@ -309,15 +309,21 @@ class OnboardingStep3View(View):
                 
             # 4c. Auto-provision category-based roles
             from apps.accounts.utils import provision_category_roles
-            from apps.accounts.models import Role
+            from apps.accounts.models import Role, Permission
             provision_category_roles(tenant)
 
-            # 5. Assign user to tenant and 'Admin' role
+            # 5. Assign user to tenant and 'Admin' role (with ALL permissions)
             user = request.user
             user.tenant = tenant
-            admin_role = Role.objects.filter(tenant=tenant, name="Admin").first()
-            if admin_role:
-                user.role = admin_role
+            admin_role, _ = Role.objects.get_or_create(
+                tenant=tenant,
+                name="Admin",
+                defaults={"is_system_role": True},
+            )
+            # Admin gets every permission
+            admin_role.permissions.set(Permission.objects.all())
+
+            user.role = admin_role
             user.save(update_fields=["tenant", "role"])
 
             # 6. Seed default data in the new tenant schema

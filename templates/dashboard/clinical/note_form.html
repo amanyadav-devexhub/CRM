@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block page_title %}New Clinical Note{% endblock %}
+{% block page_title %}{% if editing %}Edit Clinical Note{% else %}New Clinical Note{% endif %}{% endblock %}
 
 {% block content %}
 
-<form method="post" class="crud-form">
+<form method="post" class="crud-form" action="{% if editing %}{% url 'note-edit' note.pk %}{% endif %}">
     {% csrf_token %}
 
     <div class="form-section">
@@ -18,7 +18,7 @@
                 <select id="patient" name="patient" required>
                     <option value="">— Select Patient —</option>
                     {% for p in patients %}
-                    <option value="{{ p.pk }}" {% if p.pk|stringformat:"s" == selected_patient %}selected{% endif %}>{{ p.full_name }} ({{ p.patient_id }})</option>
+                    <option value="{{ p.pk }}" {% if editing and note.patient_id == p.pk %}selected{% elif p.pk|stringformat:"s" == selected_patient %}selected{% endif %}>{{ p.full_name }} ({{ p.patient_id }})</option>
                     {% endfor %}
                 </select>
             </div>
@@ -27,7 +27,7 @@
                 <select id="doctor" name="doctor" required>
                     <option value="">— Select Doctor —</option>
                     {% for doc in doctors %}
-                    <option value="{{ doc.pk }}">Dr. {{ doc.name }} ({{ doc.specialization }})</option>
+                    <option value="{{ doc.pk }}" {% if editing and note.doctor_id == doc.pk %}selected{% endif %}>Dr. {{ doc.name }} ({{ doc.specialization }})</option>
                     {% endfor %}
                 </select>
             </div>
@@ -43,36 +43,38 @@
         <div class="form-group full-width" style="margin-bottom:1.5rem;">
             <label for="subjective">Subjective (S)</label>
             <p style="font-size: .75rem; color: rgba(241,245,249,.4); margin-top:-.2rem; margin-bottom:.5rem;">Chief complaints, history of present illness, patient's own words.</p>
-            <textarea id="subjective" name="subjective" rows="3" placeholder="Patient complains of..."></textarea>
+            <textarea id="subjective" name="subjective" rows="3" placeholder="Patient complains of...">{% if editing %}{{ note.subjective }}{% endif %}</textarea>
         </div>
 
         <div class="form-group full-width" style="margin-bottom:1.5rem;">
             <label for="objective">Objective (O)</label>
             <p style="font-size: .75rem; color: rgba(241,245,249,.4); margin-top:-.2rem; margin-bottom:.5rem;">Vitals, physical examination findings, lab results.</p>
-            <textarea id="objective" name="objective" rows="3" placeholder="BP: 120/80, HR: 72..."></textarea>
+            <textarea id="objective" name="objective" rows="3" placeholder="BP: 120/80, HR: 72...">{% if editing %}{{ note.objective }}{% endif %}</textarea>
         </div>
 
         <div class="form-group full-width" style="margin-bottom:1.5rem;">
             <label for="assessment">Assessment (A)</label>
             <p style="font-size: .75rem; color: rgba(241,245,249,.4); margin-top:-.2rem; margin-bottom:.5rem;">Medical diagnosis and impression.</p>
-            <textarea id="assessment" name="assessment" rows="2" placeholder="Acute viral pharyngitis..."></textarea>
+            <textarea id="assessment" name="assessment" rows="2" placeholder="Acute viral pharyngitis...">{% if editing %}{{ note.assessment }}{% endif %}</textarea>
         </div>
 
         <div class="form-group full-width">
             <label for="plan">Plan (P)</label>
             <p style="font-size: .75rem; color: rgba(241,245,249,.4); margin-top:-.2rem; margin-bottom:.5rem;">Treatment prescribed, next steps, follow-up advice.</p>
-            <textarea id="plan" name="plan" rows="3" placeholder="Prescribed paracetamol, advised rest..."></textarea>
+            <textarea id="plan" name="plan" rows="3" placeholder="Prescribed paracetamol, advised rest...">{% if editing %}{{ note.plan }}{% endif %}</textarea>
         </div>
     </div>
 
     <div class="form-actions">
-        {% if selected_patient %}
+        {% if editing %}
+            <a href="javascript:history.back()" class="btn-secondary">Cancel</a>
+        {% elif selected_patient %}
             <a href="/patients/{{ selected_patient }}/" class="btn-secondary">Cancel</a>
         {% else %}
             <a href="javascript:history.back()" class="btn-secondary">Cancel</a>
         {% endif %}
         <button type="submit" class="btn-primary">
-            <span class="material-icons-round">save</span> Save Clinical Note
+            <span class="material-icons-round">save</span> {% if editing %}Update{% else %}Save{% endif %} Clinical Note
         </button>
     </div>
 </form>

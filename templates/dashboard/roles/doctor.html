@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load permission_tags %}
 
 {% block nav_dashboard %}active{% endblock %}
 {% block page_title %}Dashboard <span>/ Doctor's Portal</span>{% endblock %}
@@ -36,149 +37,104 @@
 <!-- ─── Row: Schedule + Quick Actions ─── -->
 <div class="content-grid">
 
-    <!-- Today's Schedule -->
+    <!-- Recent Patients -->
+    {% if request.user|has_permission:'patients.view_records' %}
     <div class="card">
         <div class="card-header">
             <h3>
-                <span class="icon material-icons-round">schedule</span>
-                Today's Appointments
+                <span class="icon material-icons-round">person</span>
+                Recent Patients
             </h3>
-            <a href="{% url 'appointment-list' %}" class="card-action">View All →</a>
+            <a href="{% url 'patient-list' %}" class="card-action">View All →</a>
         </div>
         <div class="card-body" style="padding:0">
-            {% if appointments %}
+            {% if recent_patients %}
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Patient</th>
-                        <th>Time</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">PATIENT</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">GENDER</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">PHONE</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">BLOOD</th>
+                        <th style="color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:0.5px;">REGISTERED</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for apt in appointments %}
+                    {% for p in recent_patients %}
                     <tr>
                         <td>
                             <div class="patient-cell">
-                                <div class="patient-avatar" style="background: var(--gradient-blue)">
-                                    {{ apt.patient.first_name.0 }}{{ apt.patient.last_name.0 }}
+                                <div class="patient-avatar"
+                                    style="background: {% cycle '#3b82f6' '#8b5cf6' '#10b981' '#f59e0b' %}">
+                                    {{ p.first_name.0 }}{{ p.last_name.0 }}
                                 </div>
                                 <div>
-                                    <span class="patient-name">{{ apt.patient.first_name }} {{ apt.patient.last_name }}</span>
-                                    <div class="patient-id">{{ apt.patient.patient_id }}</div>
+                                    <a href="{% url 'patient-detail' p.id %}" class="patient-name"
+                                        style="text-decoration:none;">{{ p.first_name }} {{ p.last_name }}</a>
+                                    <div class="patient-id" style="color:var(--text-muted); font-size:0.75rem;">{{ p.patient_id }}</div>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <div style="font-weight: 500;">{{ apt.start_time|time:"g:i A" }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted, #94a3b8);">{{ apt.date|date:"d M Y" }}</div>
+                            {% if p.gender %}
+                            <span style="background:rgba(59,130,246,0.1); color:#3b82f6; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; display:inline-block;">{{ p.get_gender_display|default:p.gender|title }}</span>
+                            {% else %}
+                            —
+                            {% endif %}
                         </td>
-                        <td><span class="type-badge custom">{{ apt.get_appointment_type_display }}</span></td>
-                        <td>
-                            <span class="status-badge {{ apt.status|lower }}">{{ apt.get_status_display }}</span>
-                        </td>
-                        <td>
-                            <div class="action-btns">
-                                <a href="{% url 'appointment-detail' apt.pk %}" class="btn-icon" title="Update Status">
-                                    <span class="material-icons-round">edit</span>
-                                </a>
-                            </div>
-                        </td>
+                        <td style="font-weight: 500;">{{ p.phone|default:"—" }}</td>
+                        <td style="font-weight: 500;">{{ p.blood_group|default:"—" }}</td>
+                        <td style="font-weight: 500;">{{ p.created_at|date:"d M Y" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% else %}
             <div class="empty-state">
-                <div class="icon material-icons-round">event_busy</div>
-                <p>No appointments scheduled for you today.</p>
+                <div class="icon material-icons-round">person_off</div>
+                <p>No patients linked yet.</p>
             </div>
             {% endif %}
         </div>
     </div>
+    {% endif %}
 
-    <!-- Sidebar column: Quick Actions & Recent Patients -->
-    <div>
-        <!-- Quick Actions -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div class="card-header">
-                <h3>
-                    <span class="icon material-icons-round">bolt</span>
-                    Clinical Actions
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="quick-actions">
-                    <a href="{% url 'note-create' %}" class="action-btn primary" style="text-decoration:none;">
-                        <span class="icon material-icons-round">edit_note</span>
-                        Write Clinical Note
-                    </a>
-                    
-                    <a href="{% url 'prescription-create' %}" class="action-btn" style="text-decoration:none;">
-                        <span class="icon material-icons-round">medication</span>
-                        Write Prescription
-                    </a>
-
-
-                    <a href="{% url 'patient-list' %}" class="action-btn" style="text-decoration:none;">
-                        <span class="icon material-icons-round">people</span>
-                        My Patients
-                    </a>
-                    
-                    <a href="{% url 'lab-order-list' %}" class="action-btn" style="text-decoration:none;">
-                        <span class="icon material-icons-round">science</span>
-                        Lab Reports
-                    </a>
-                </div>
-            </div>
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <span class="icon material-icons-round">bolt</span>
+                Clinical Actions
+            </h3>
         </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                {% if request.user|has_permission:'patients.edit_records' %}
+                <a href="{% url 'note-create' %}" class="action-btn primary" style="text-decoration:none;">
+                    <span class="icon material-icons-round">edit_note</span>
+                    Write Clinical Note
+                </a>
+                {% endif %}
+                
+                {% if request.user|has_permission:'prescriptions.issue' %}
+                <a href="{% url 'prescription-create' %}" class="action-btn" style="text-decoration:none;">
+                    <span class="icon material-icons-round">medication</span>
+                    Write Prescription
+                </a>
+                {% endif %}
 
-        <!-- Recent Patients -->
-        <div class="card">
-            <div class="card-header">
-                <h3>
-                    <span class="icon material-icons-round">person</span>
-                    Recent Patients
-                </h3>
-                <a href="{% url 'patient-list' %}" class="card-action">View All →</a>
-            </div>
-            <div class="card-body" style="padding:0">
-                {% if recent_patients %}
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Patient</th>
-                            <th>Phone</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in recent_patients %}
-                        <tr>
-                            <td>
-                                <div class="patient-cell">
-                                    <div class="patient-avatar"
-                                        style="background: {% cycle 'var(--gradient-blue)' 'var(--gradient-purple)' 'var(--gradient-green)' 'var(--gradient-orange)' %}">
-                                        {{ p.first_name.0 }}{{ p.last_name.0 }}
-                                    </div>
-                                    <div>
-                                        <a href="{% url 'patient-detail' p.id %}" class="patient-name"
-                                            style="text-decoration:none;">{{ p.first_name }} {{ p.last_name }}</a>
-                                        <div class="patient-id">{{ p.patient_id }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>{{ p.phone|default:"—" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="empty-state">
-                    <div class="icon material-icons-round">person_off</div>
-                    <p>No patients linked yet.</p>
-                </div>
+                {% if request.user|has_permission:'patients.view_records' %}
+                <a href="{% url 'patient-list' %}" class="action-btn" style="text-decoration:none;">
+                    <span class="icon material-icons-round">people</span>
+                    My Patients
+                </a>
+                {% endif %}
+                
+                {% if request.user|has_permission:'lab.view_results' %}
+                <a href="{% url 'lab-order-list' %}" class="action-btn" style="text-decoration:none;">
+                    <span class="icon material-icons-round">science</span>
+                    Lab Reports
+                </a>
                 {% endif %}
             </div>
         </div>
