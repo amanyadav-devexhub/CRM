@@ -189,6 +189,9 @@ urlpatterns = [
     path("dashboard/analytics/appointments/", AppointmentAnalyticsView.as_view(), name="analytics-appointments"),
     path("dashboard/analytics/doctors/", DoctorAnalyticsView.as_view(), name="analytics-doctors"),
 
+    # ── Global Inventory ──
+    path("dashboard/inventory/", include("apps.inventory.urls")),
+
     # ── Patient HTML pages ──
     path("patients/", PatientListView.as_view(), name="patient-list"),
     path("patients/create/", PatientCreateView.as_view(), name="patient-create"),

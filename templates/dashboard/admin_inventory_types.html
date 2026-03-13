@@ -1,0 +1,135 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Inventory Configuration{% endblock %}
+{% block page_subtitle %}Manage global Item Types and Categories across all tenants.{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 2fr; gap:24px;">
+
+    <!-- ─── Create Forms ─── -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- Add Item Type -->
+        <div class="card">
+            <div class="card-header">
+                <h3><span class="icon material-icons-round">add_circle</span> Add Item Type</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" style="display:flex; flex-direction:column; gap:12px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_type">
+                    <div class="form-group">
+                        <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Type Name</label>
+                        <input type="text" name="type_name" required placeholder="e.g. Medical Consumable" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px;">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Code</label>
+                            <input type="text" name="type_code" required placeholder="e.g. CONSUMABLE" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px; text-transform:uppercase;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Icon</label>
+                            <input type="text" name="type_icon" placeholder="inventory_2" value="inventory_2" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px;">
+                        </div>
+                    </div>
+                    <button type="submit" style="padding:10px; border-radius:8px; border:none; background:var(--accent-purple); color:#fff; font-weight:600; cursor:pointer;">Create Type</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Category -->
+        <div class="card">
+            <div class="card-header">
+                <h3><span class="icon material-icons-round">category</span> Add Category</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" style="display:flex; flex-direction:column; gap:12px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_category">
+                    <div class="form-group">
+                        <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Parent Type</label>
+                        <select name="category_type" required style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px;">
+                            <option value="">— Select Type —</option>
+                            {% for t in item_types %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Category Name</label>
+                        <input type="text" name="category_name" required placeholder="e.g. Tablets" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Code</label>
+                        <input type="text" name="category_code" required placeholder="e.g. TABLETS" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px; text-transform:uppercase;">
+                    </div>
+                    <button type="submit" style="padding:10px; border-radius:8px; border:none; background:rgba(59,130,246,0.8); color:#fff; font-weight:600; cursor:pointer;">Add Category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Types & Categories Table ─── -->
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">inventory_2</span> All Item Types & Categories</h3>
+            <span style="font-size:12px; color:var(--text-secondary);">{{ item_types.count }} types</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% for t in item_types %}
+            <div style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                <!-- Type Row -->
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; {% if not t.is_active %}opacity:0.5;{% endif %}">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span class="material-icons-round" style="font-size:24px; color:var(--accent-purple);">{{ t.icon }}</span>
+                        <div>
+                            <div style="font-weight:600; font-size:15px;">{{ t.name }}</div>
+                            <div style="font-size:12px; color:var(--text-secondary);">
+                                <code style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">{{ t.code }}</code>
+                                · {{ t.categories.count }} categories
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        {% if t.is_active %}
+                        <span class="badge-tag active" style="font-size:11px;">Active</span>
+                        {% else %}
+                        <span class="badge-tag expired" style="font-size:11px;">Inactive</span>
+                        {% endif %}
+                        <form method="post" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle_type">
+                            <input type="hidden" name="type_id" value="{{ t.id }}">
+                            <button type="submit" style="background:none; border:none; cursor:pointer; color:var(--text-secondary);" title="Toggle">
+                                <span class="material-icons-round" style="font-size:18px;">power_settings_new</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Categories Under Type -->
+                {% if t.categories.count > 0 %}
+                <div style="padding:0 20px 16px 56px; display:flex; flex-wrap:wrap; gap:8px;">
+                    {% for cat in t.categories.all %}
+                    <div style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:12px; {% if cat.is_active %}background:rgba(59,130,246,0.1); color:#60a5fa;{% else %}background:rgba(255,255,255,0.03); color:var(--text-muted); text-decoration:line-through;{% endif %}">
+                        {{ cat.name }}
+                        <form method="post" style="margin:0; display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle_category">
+                            <input type="hidden" name="category_id" value="{{ cat.id }}">
+                            <button type="submit" style="background:none; border:none; cursor:pointer; color:inherit; padding:0; line-height:1;" title="Toggle">
+                                <span class="material-icons-round" style="font-size:14px;">{% if cat.is_active %}close{% else %}refresh{% endif %}</span>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div style="text-align:center; padding:40px; color:var(--text-muted);">
+                No item types found. Run <code>python manage.py seed_inventory_types</code> to seed defaults.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

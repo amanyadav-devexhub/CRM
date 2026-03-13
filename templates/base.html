@@ -243,6 +243,14 @@
                         </div>
                         {% endif %}
                     {% endif %}
+
+                    <div class="nav-section">
+                        <div class="nav-section-title">Operations</div>
+                        <a href="{% url 'inventory-dashboard' %}" class="nav-item {% block nav_inventory %}{% endblock %}">
+                            <span class="icon material-icons-round">inventory_2</span>
+                            Global Inventory
+                        </a>
+                    </div>
                 </div>
 
                 <div class="nav-section">

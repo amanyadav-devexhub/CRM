@@ -50,6 +50,7 @@ SHARED_APPS = [
     "apps.tenants",
     "apps.accounts",
     "apps.core",
+    "apps.inventory",
 ]
 
 TENANT_APPS = [
@@ -69,7 +70,8 @@ TENANT_APPS = [
     "apps.ai",
     "apps.notifications",
     "apps.utils",
-    "apps.hospitals"
+    "apps.hospitals",
+    "apps.inventory",
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [

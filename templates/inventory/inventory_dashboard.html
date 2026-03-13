@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block page_title %}Global Inventory Dashboard{% endblock %}
+{% block page_subtitle %}Centralized management for medical supplies, reagents, and equipment.{% endblock %}
+
+{% block page_actions %}
+<div class="search-box" style="margin-right: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 4px 12px;">
+    <span class="material-icons-round" style="font-size: 20px; color: var(--text-muted);">search</span>
+    <input type="text" id="inventorySearch" placeholder="Search items..." style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px;">
+</div>
+<button class="btn-primary" onclick="openDrawer('addItemDrawer')">
+    <span class="material-icons-round">add</span>
+    Add Item
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid animate-in" style="margin-bottom: 2rem;">
+    <div class="stat-card purple">
+        <div class="stat-info">
+            <div class="stat-label">Total Unique Items</div>
+            <div class="stat-value">{{ total_items }}</div>
+        </div>
+        <div class="stat-icon purple"><span class="material-icons-round">inventory</span></div>
+    </div>
+    <div class="stat-card orange">
+        <div class="stat-info">
+            <div class="stat-label">Low Stock Alerts</div>
+            <div class="stat-value">{{ low_stock_count }}</div>
+        </div>
+        <div class="stat-icon orange"><span class="material-icons-round">warning</span></div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-info">
+            <div class="stat-label">Out of Stock</div>
+            <div class="stat-value">{{ out_of_stock_count }}</div>
+        </div>
+        <div class="stat-icon red"><span class="material-icons-round">error_outline</span></div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-info">
+            <div class="stat-label">Expiring Soon (30d)</div>
+            <div class="stat-value">{{ expiring_soon_count }}</div>
+        </div>
+        <div class="stat-icon blue"><span class="material-icons-round">event_busy</span></div>
+    </div>
+</div>
+
+<div class="card animate-in">
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table" id="inventoryTable">
+            <thead>
+                <tr>
+                    <th>Item Info</th>
+                    <th>Type / Category</th>
+                    <th>Stock Level</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: white;">{{ item.name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">SKU: {{ item.sku }}</div>
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <span class="badge-tag" style="background: rgba(168, 85, 247, 0.1); color: #a855f7; width: fit-content;">{{ item.item_type.name }}</span>
+                            {% if item.item_category %}
+                            <span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">{{ item.item_category.name }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">{{ item.total_stock }} {{ item.unit }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Min: {{ item.min_stock_level }}</div>
+                    </td>
+                    <td>
+                        {% if item.status == 'IN_STOCK' %}
+                        <span class="badge-tag active">In Stock</span>
+                        {% elif item.status == 'LOW_STOCK' %}
+                        <span class="badge-tag trial">Low Stock</span>
+                        {% elif item.status == 'OUT_OF_STOCK' %}
+                        <span class="badge-tag expired">Out of Stock</span>
+                        {% else %}
+                        <span class="badge-tag expired">Expired</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:8px;">
+                            <button class="icon-btn" title="Edit Item"><span class="material-icons-round">edit</span></button>
+                            <button class="icon-btn" onclick="openStockTransaction('{{ item.id }}', '{{ item.name|escapejs }}')" title="Update Stock"><span class="material-icons-round">swap_vert</span></button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No items found in your inventory.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Item Drawer -->
+<div id="addItemDrawer" class="drawer-overlay">
+    <div class="drawer-panel" style="width: 500px;">
+        <div class="drawer-header">
+            <h2>Add New Inventory Item</h2>
+            <button class="drawer-close" onclick="closeDrawer('addItemDrawer')">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <form method="post" action="{% url 'inventory-item-create' %}" class="drawer-form" id="addItemForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Paracetamol 500mg" class="form-input">
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">SKU</label>
+                        <input type="text" name="sku" required placeholder="SKU-123" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit</label>
+                        <input type="text" name="unit" value="pcs" required class="form-input">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Item Type</label>
+                        <select name="item_type" id="typeSelect" required class="form-select" onchange="fetchCategories(this.value)">
+                            <option value="">Select Type</option>
+                            {% for t in item_types %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select name="item_category" id="catSelect" class="form-select">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <h4 style="margin-bottom: 1rem; color: var(--accent-purple);">Initial Stock (Batch)</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Batch Number</label>
+                            <input type="text" name="batch_number" placeholder="B2024-001" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Initial Qty</label>
+                            <input type="number" name="quantity" value="0" class="form-input">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Purchase Price</label>
+                            <input type="number" step="0.01" name="purchase_price" value="0" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">MRP / Selling Price</label>
+                            <input type="number" step="0.01" name="selling_price" value="0" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" name="expiry_date" class="form-input">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn-secondary" onclick="closeDrawer('addItemDrawer')">Cancel</button>
+            <button type="submit" form="addItemForm" class="btn-primary">Save Item</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Transaction Drawer (Generic for now) -->
+<div id="stockTransDrawer" class="drawer-overlay">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h3>Update Stock: <span id="transItemName"></span></h3>
+            <button class="drawer-close" onclick="closeDrawer('stockTransDrawer')">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <form id="stockTransForm" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Transaction Type</label>
+                    <select name="transaction_type" class="form-select">
+                        <option value="IN">Stock IN (Receive)</option>
+                        <option value="OUT">Stock OUT (Consume)</option>
+                        <option value="ADJUST">Adjustment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" name="quantity" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-input" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn-secondary" onclick="closeDrawer('stockTransDrawer')">Cancel</button>
+            <button type="submit" form="stockTransForm" class="btn-primary">Update Stock</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fetchCategories(typeId) {
+        const catSelect = document.getElementById('catSelect');
+        catSelect.innerHTML = '<option value="">Loading...</option>';
+        
+        if (!typeId) {
+            catSelect.innerHTML = '<option value="">Select Category</option>';
+            return;
+        }
+
+        fetch(`/dashboard/inventory/ajax/categories/?type_id=${typeId}`)
+            .then(response => response.json())
+            .then(data => {
+                catSelect.innerHTML = '<option value="">Select Category</option>';
+                data.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.textContent = cat.name;
+                    catSelect.appendChild(opt);
+                });
+            });
+    }
+
+    function openStockTransaction(itemId, itemName) {
+        document.getElementById('transItemName').textContent = itemName;
+        document.getElementById('stockTransForm').action = `/dashboard/inventory/${itemId}/transaction/`;
+        openDrawer('stockTransDrawer');
+    }
+
+    // Search functionality
+    document.getElementById('inventorySearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#inventoryTable tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+    });
+</script>
+
+<style>
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+</style>
+{% endblock %}

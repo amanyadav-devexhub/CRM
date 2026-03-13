@@ -1073,3 +1073,64 @@ class AdminBroadcastToggleView(View):
         messages.success(request, f"Broadcast '{broadcast.subject}' has been {state}.")
         
         return redirect("admin-broadcast")
+
+
+class AdminInventoryTypesView(View):
+    """
+    SuperAdmin view for managing global ItemTypes and ItemCategories.
+    """
+    template_name = "dashboard/admin_inventory_types.html"
+
+    def get(self, request):
+        from apps.inventory.models import ItemType, ItemCategory
+        item_types = ItemType.objects.prefetch_related('categories').all()
+        return render(request, self.template_name, {
+            "item_types": item_types,
+        })
+
+    def post(self, request):
+        from apps.inventory.models import ItemType, ItemCategory
+        action = request.POST.get("action")
+
+        if action == "add_type":
+            name = request.POST.get("type_name", "").strip()
+            code = request.POST.get("type_code", "").strip().upper()
+            icon = request.POST.get("type_icon", "inventory_2").strip()
+            if name and code:
+                ItemType.objects.get_or_create(code=code, defaults={"name": name, "icon": icon})
+                messages.success(request, f"Item Type '{name}' created.")
+            else:
+                messages.error(request, "Name and Code are required.")
+
+        elif action == "add_category":
+            type_id = request.POST.get("category_type")
+            name = request.POST.get("category_name", "").strip()
+            code = request.POST.get("category_code", "").strip().upper()
+            if type_id and name and code:
+                item_type = get_object_or_404(ItemType, id=type_id)
+                ItemCategory.objects.get_or_create(
+                    code=code,
+                    defaults={"item_type": item_type, "name": name}
+                )
+                messages.success(request, f"Category '{name}' added under '{item_type.name}'.")
+            else:
+                messages.error(request, "All fields are required.")
+
+        elif action == "toggle_type":
+            type_id = request.POST.get("type_id")
+            item_type = get_object_or_404(ItemType, id=type_id)
+            item_type.is_active = not item_type.is_active
+            item_type.save()
+            state = "activated" if item_type.is_active else "deactivated"
+            messages.success(request, f"Item Type '{item_type.name}' {state}.")
+
+        elif action == "toggle_category":
+            cat_id = request.POST.get("category_id")
+            category = get_object_or_404(ItemCategory, id=cat_id)
+            category.is_active = not category.is_active
+            category.save()
+            state = "activated" if category.is_active else "deactivated"
+            messages.success(request, f"Category '{category.name}' {state}.")
+
+        return redirect("admin-inventory-types")
+
