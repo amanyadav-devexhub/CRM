@@ -19,6 +19,7 @@ from apps.tenants.admin_views import (
     AdminTenantListView, AdminSubscriptionListView, AdminPlanListView,
     AdminFeatureListView, AdminSettingsView, AdminAnalyticsView,
     AdminRevenueView, AdminTenantDetailView,
+    AdminBroadcastView, AdminBroadcastToggleView,
 )
 from apps.tenants.template_views import (
     TenantCreatePageView,
@@ -130,6 +131,8 @@ urlpatterns = [
     path("admin-plans/", AdminPlanListView.as_view(), name="admin-plans"),
     path("admin-features/", AdminFeatureListView.as_view(), name="admin-features"),
     path("admin-settings/", AdminSettingsView.as_view(), name="admin-settings"),
+    path("admin-broadcast/", AdminBroadcastView.as_view(), name="admin-broadcast"),
+    path("admin-broadcast/<uuid:pk>/toggle/", AdminBroadcastToggleView.as_view(), name="admin-broadcast-toggle"),
     path("admin-analytics/", AdminAnalyticsView.as_view(), name="admin-analytics"),
     path("admin-revenue/", AdminRevenueView.as_view(), name="admin-revenue"),
 

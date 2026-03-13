@@ -338,6 +338,39 @@
                 </div>
             </header>
 
+            <!-- Active Broadcast Banner -->
+            {% if active_broadcast %}
+            <style>
+            @keyframes marqueeLeftToRight {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100vw); }
+            }
+            .broadcast-wrapper {
+                flex-grow: 1;
+                overflow: hidden;
+                margin: 0 16px;
+                display: flex;
+            }
+            .broadcast-ticker {
+                white-space: nowrap;
+                animation: marqueeLeftToRight 20s linear infinite;
+                font-size: 14px;
+                font-weight: 500;
+            }
+            </style>
+            <div style="background: var(--gradient-blue); color: #ffffff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <span class="material-icons-round" style="font-size: 20px; flex-shrink: 0;">campaign</span>
+                <div class="broadcast-wrapper">
+                    <div class="broadcast-ticker">
+                        <span><strong>{{ active_broadcast.subject }}:</strong> {{ active_broadcast.message }}</span>
+                    </div>
+                </div>
+                <button type="button" onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: #ffffff; opacity: 0.8; cursor: pointer; display: flex; align-items: center; padding: 4px; flex-shrink: 0;">
+                    <span class="material-icons-round" style="font-size: 18px;">close</span>
+                </button>
+            </div>
+            {% endif %}
+
             <!-- Page Content -->
             <main class="page">
                 {% block content %}{% endblock %}

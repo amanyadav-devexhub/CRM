@@ -5,7 +5,7 @@ Templates can use:
     {% if "patients" in enabled_features %} ... {% endif %}
     {% if "lab" not in enabled_features %} 🔒 ... {% endif %}
 """
-from apps.tenants.models import Feature
+from apps.tenants.models import Feature, BroadcastMessage
 
 
 # All feature codes that can appear in the sidebar
@@ -22,20 +22,39 @@ def tenant_features(request):
     Adds `enabled_features` (set) and `all_features` (list) to template context.
     SuperAdmins get ALL features enabled.
     Unauthenticated users get an empty set.
+    Also injects `active_broadcast` if there is a matching broadcast for this tenant.
     """
+    context = {
+        "enabled_features": set(), 
+        "all_features": ALL_FEATURE_CODES,
+        "user_permissions": set(),
+        "active_broadcast": None
+    }
+    
+    # --- BROADCAST BANNER LOGIC ---
+    active_broadcast = BroadcastMessage.objects.filter(is_active=True).first()
+    
     if not hasattr(request, "user") or not request.user.is_authenticated:
-        return {"enabled_features": set(), "all_features": ALL_FEATURE_CODES}
+        return context
 
-    # SuperAdmin sees everything
+    # SuperAdmin logic
     if request.user.is_superuser:
-        return {
-            "enabled_features": set(ALL_FEATURE_CODES),
-            "all_features": ALL_FEATURE_CODES,
-        }
+        context["enabled_features"] = set(ALL_FEATURE_CODES)
+        context["active_broadcast"] = active_broadcast # Superadmins see the active broadcast regardless of target
+        return context
 
     tenant = getattr(request.user, "tenant", None)
     if not tenant:
-        return {"enabled_features": set(), "all_features": ALL_FEATURE_CODES}
+        return context
+
+    # Target matching for broadcasts
+    if active_broadcast:
+        if active_broadcast.target_type == 'ALL':
+            context["active_broadcast"] = active_broadcast
+        elif active_broadcast.target_type == 'CATEGORY' and tenant.category in active_broadcast.target_categories:
+            context["active_broadcast"] = active_broadcast
+        elif active_broadcast.target_type == 'SPECIFIC' and tenant in active_broadcast.target_tenants.all():
+            context["active_broadcast"] = active_broadcast
 
     # Check each feature via the cached has_feature() method on Tenant
     enabled = set()
@@ -48,8 +67,7 @@ def tenant_features(request):
     if not request.user.is_superuser and getattr(request.user, "role", None):
         user_permissions = set(request.user.role.permissions.values_list("code", flat=True))
 
-    return {
-        "enabled_features": enabled,
-        "all_features": ALL_FEATURE_CODES,
-        "user_permissions": user_permissions,
-    }
+    context["enabled_features"] = enabled
+    context["user_permissions"] = user_permissions
+    
+    return context

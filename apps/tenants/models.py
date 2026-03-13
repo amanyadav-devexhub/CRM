@@ -404,3 +404,51 @@ def has_feature(self, feature_code):
 
 # Attach to Tenant model
 Tenant.has_feature = has_feature
+
+
+# ================================
+# SUPERADMIN BROADCASTS
+# ================================
+
+class BroadcastMessage(models.Model):
+    """
+    Global system broadcast message (e.g., Maintenance alerts).
+    Only one message can be active at a time to show as a banner.
+    """
+    TARGET_CHOICES = [
+        ('ALL', 'All Tenants'),
+        ('CATEGORY', 'Specific Categories'),
+        ('SPECIFIC', 'Specific Tenants'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    subject = models.CharField(max_length=255, help_text="Short title for the banner (e.g. SYSTEM MAINTENANCE)")
+    message = models.TextField(help_text="Detailed message text")
+    target_type = models.CharField(max_length=20, choices=TARGET_CHOICES, default='ALL')
+    
+    # Targeting arrays
+    target_categories = models.JSONField(default=list, blank=True, help_text="List of category codes if TARGET=CATEGORY")
+    target_tenants = models.ManyToManyField(Tenant, blank=True, related_name="broadcasts", help_text="Specific tenants if TARGET=SPECIFIC")
+    
+    is_active = models.BooleanField(default=False, help_text="If True, this banner currently displays. Only one can be active.")
+    
+    created_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="created_broadcasts"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "broadcast_messages"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        status = "🟢 ACTIVE" if self.is_active else "⚫ INACTIVE"
+        return f"[{status}] {self.subject}"
+
+    def save(self, *args, **kwargs):
+        # Enforce single active broadcast rule
+        if self.is_active:
+            BroadcastMessage.objects.exclude(id=self.id).update(is_active=False)
+        super().save(*args, **kwargs)

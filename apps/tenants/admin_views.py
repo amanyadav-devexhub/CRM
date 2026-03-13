@@ -969,3 +969,107 @@ class AdminRolesPermissionsView(View):
             return redirect(redirect_url)
 
         return redirect(redirect_url)
+
+
+# =====================================================================
+# BROADCAST SYSTEM
+# =====================================================================
+
+class AdminBroadcastView(View):
+    """
+    Manage global broadcast messages. 
+    Allows superadmin to create banners targeting specific tenants or categories.
+    """
+    template_name = "dashboard/admin_broadcast.html"
+    
+    def get(self, request):
+        from apps.tenants.models import BroadcastMessage # local import to avoid circular dependency
+        broadcasts = BroadcastMessage.objects.all().order_by("-created_at")
+        categories = Category.objects.filter(is_active=True)
+        tenants = Tenant.objects.filter(is_active=True)
+        
+        edit_id = request.GET.get("edit")
+        editing = None
+        if edit_id:
+            try:
+                editing = BroadcastMessage.objects.get(id=edit_id)
+            except BroadcastMessage.DoesNotExist:
+                pass
+        
+        return render(request, self.template_name, {
+            "broadcasts": broadcasts,
+            "categories": categories,
+            "tenants": tenants,
+            "editing": editing,
+        })
+        
+    def post(self, request):
+        from apps.tenants.models import BroadcastMessage
+        subject = request.POST.get("subject", "").strip()
+        message = request.POST.get("message", "").strip()
+        target_type = request.POST.get("target_type", "ALL")
+        is_active = request.POST.get("is_active") == "on"
+        broadcast_id = request.POST.get("broadcast_id")
+        
+        target_categories = request.POST.getlist("target_categories")
+        target_tenants = request.POST.getlist("target_tenants")
+        
+        if not subject or not message:
+            messages.error(request, "Subject and message are required.")
+            return redirect("admin-broadcast")
+            
+        if broadcast_id:
+            try:
+                broadcast = BroadcastMessage.objects.get(id=broadcast_id)
+                broadcast.subject = subject
+                broadcast.message = message
+                broadcast.target_type = target_type
+                broadcast.target_categories = target_categories if target_type == "CATEGORY" else []
+                broadcast.is_active = is_active
+                broadcast.save()
+                
+                if target_type == "SPECIFIC":
+                    broadcast.target_tenants.set(Tenant.objects.filter(id__in=target_tenants))
+                else:
+                    broadcast.target_tenants.clear()
+                    
+                messages.success(request, f"Broadcast '{subject}' updated successfully.")
+            except BroadcastMessage.DoesNotExist:
+                messages.error(request, "Broadcast not found.")
+        else:
+            broadcast = BroadcastMessage.objects.create(
+                subject=subject,
+                message=message,
+                target_type=target_type,
+                target_categories=target_categories if target_type == "CATEGORY" else [],
+                is_active=is_active,
+                created_by=request.user
+            )
+            
+            if target_type == "SPECIFIC":
+                broadcast.target_tenants.set(Tenant.objects.filter(id__in=target_tenants))
+                
+            if is_active:
+                messages.success(request, f"Broadcast '{subject}' is now live!")
+            else:
+                messages.success(request, f"Broadcast '{subject}' saved as inactive.")
+            
+        return redirect("admin-broadcast")
+        
+
+class AdminBroadcastToggleView(View):
+    """Toggle the active status of a broadcast message."""
+    
+    def post(self, request, pk):
+        from apps.tenants.models import BroadcastMessage
+        broadcast = get_object_or_404(BroadcastMessage, pk=pk)
+        
+        # We toggle the current state. The model's save() method ensures 
+        # only this one becomes active if we are setting it to True.
+        broadcast.is_active = not broadcast.is_active
+        broadcast.save()
+        
+        state = "activated" if broadcast.is_active else "deactivated"
+        messages.success(request, f"Broadcast '{broadcast.subject}' has been {state}.")
+        
+        return redirect("admin-broadcast")
