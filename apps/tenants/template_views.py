@@ -607,13 +607,72 @@ class CategoryHospitalsView(View):
 class CategoryLabsView(View):
     """Labs management panel with real stats."""
     def get(self, request):
+        from apps.labs.models import LabOrder, LabSample, LabResult, LabTest
+        from apps.billing.models import InvoiceItem
+        import re
+        from datetime import timedelta
+        
+        today = timezone.now().date()
+        
+        pending_orders = LabOrder.objects.filter(status='PENDING').count()
+        samples_today = LabSample.objects.filter(collected_at__date=today).count()
+        
+        # Revenue from lab tests today
+        revenue_agg = InvoiceItem.objects.filter(
+            invoice__created_at__date=today,
+            description__icontains='Lab Test'
+        ).aggregate(total=Sum('total'))
+        revenue_today = revenue_agg['total'] or 0
+        
+        # TAT Score: % of completed orders finished within turnaround time
+        tat_score = "—"
+        done_statuses = ['COMPLETED', 'REPORT_UPLOADED']
+        completed_orders = LabOrder.objects.filter(
+            status__in=done_statuses
+        ).prefetch_related('tests')
+        
+        if completed_orders.exists():
+            on_time = 0
+            total_evaluated = 0
+            for order in completed_orders:
+                # Parse average turnaround_time from the order's tests
+                tat_hours_list = []
+                for test in order.tests.all():
+                    if test.turnaround_time:
+                        nums = re.findall(r'\d+', test.turnaround_time)
+                        if nums:
+                            tat_hours_list.append(int(nums[0]))
+                if not tat_hours_list:
+                    continue
+                avg_tat = sum(tat_hours_list) / len(tat_hours_list)
+                actual_hours = (order.updated_at - order.ordered_at).total_seconds() / 3600
+                total_evaluated += 1
+                if actual_hours <= avg_tat:
+                    on_time += 1
+            if total_evaluated > 0:
+                pct = int((on_time / total_evaluated) * 100)
+                tat_score = f"{pct}%"
+        
+        # New Dashboard Stats
+        processing_count = LabOrder.objects.filter(status='PROCESSING').count()
+        critical_reports = LabResult.objects.filter(is_abnormal=True, order__status__in=['COMPLETED', 'REPORT_UPLOADED', 'VERIFIED']).count()
+        
+        # Tests by department
+        from django.db.models import Count
+        dept_stats = LabTest.objects.filter(orders__status__in=['COMPLETED', 'REPORT_UPLOADED', 'VERIFIED']).values('category').annotate(count=Count('category')).order_by('-count')[:5]
+
+        # Recent activity
+        recent_requests = LabOrder.objects.select_related('patient', 'doctor').all().order_by('-ordered_at')[:10]
 
         context = {
-            "pending_tests": 0,
-            "samples_received": 0,
-            "tat_score": "—",
-            "revenue_today": "₹0",
-            "test_requests": [],
+            "pending_tests": pending_orders,
+            "processing_count": processing_count,
+            "samples_received": samples_today,
+            "critical_reports": critical_reports,
+            "tat_score": tat_score,
+            "revenue_today": f"₹{revenue_today:,.0f}",
+            "department_stats": dept_stats,
+            "test_requests": recent_requests,
         }
         return render(request, "categories/labs.html", context)
 
@@ -894,6 +953,7 @@ class PharmacySalesView(View):
             "recent_sales": recent_sales,
             "medicines": medicines,
             "preload_cart": rx_items_json,
+            "rx_id": rx_id,
             "success_message": request.GET.get('success', ''),
             "error_message": request.GET.get('error', ''),
         }
@@ -941,6 +1001,14 @@ class PharmacySalesView(View):
                 # Deduct stock
                 med.stock = max(0, med.stock - qty)
                 med.save()
+                
+            rx_id = request.POST.get('rx_id')
+            if rx_id:
+                from apps.clinical.models import Prescription
+                rx = Prescription.objects.filter(id=rx_id).first()
+                if rx and rx.status == 'PENDING':
+                    rx.status = 'DISPENSED'
+                    rx.save(update_fields=['status'])
                 
             return redirect(f"{request.path}?success=Checkout completed. Invoice {sale.invoice_number} generated.")
         except Exception as e:

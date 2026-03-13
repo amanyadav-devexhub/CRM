@@ -280,13 +280,54 @@ class SubAdminDashboardView(View):
         }
 
     def _lab_context(self, tenant):
-        """Lab dashboard context."""
+        """Lab dashboard context with real data."""
+        from django.utils import timezone as tz
+        from django.db.models import Sum
+        from apps.labs.models import LabOrder, LabSample
+        from apps.billing.models import InvoiceItem
+        import re
+
+        today = tz.now().date()
+        pending = LabOrder.objects.filter(status='PENDING').count()
+        samples = LabSample.objects.filter(collected_at__date=today).count()
+
+        rev = InvoiceItem.objects.filter(
+            invoice__created_at__date=today,
+            description__icontains='Lab Test'
+        ).aggregate(total=Sum('total'))['total'] or 0
+
+        # TAT score
+        tat_score = "—"
+        done = LabOrder.objects.filter(
+            status__in=['COMPLETED', 'REPORT_UPLOADED']
+        ).prefetch_related('tests')
+        if done.exists():
+            on_time = total_eval = 0
+            for order in done:
+                nums_list = []
+                for t in order.tests.all():
+                    if t.turnaround_time:
+                        ns = re.findall(r'\d+', t.turnaround_time)
+                        if ns:
+                            nums_list.append(int(ns[0]))
+                if not nums_list:
+                    continue
+                avg = sum(nums_list) / len(nums_list)
+                actual = (order.updated_at - order.ordered_at).total_seconds() / 3600
+                total_eval += 1
+                if actual <= avg:
+                    on_time += 1
+            if total_eval > 0:
+                tat_score = f"{int((on_time / total_eval) * 100)}%"
+
+        recent = LabOrder.objects.select_related('patient', 'doctor').order_by('-ordered_at')[:10]
+
         return {
-            "pending_tests": 0,
-            "samples_received": 0,
-            "tat_score": "—",
-            "revenue_today": "₹0",
-            "test_requests": [],
+            "pending_tests": pending,
+            "samples_received": samples,
+            "tat_score": tat_score,
+            "revenue_today": f"₹{rev:,.0f}",
+            "test_requests": recent,
         }
 
 

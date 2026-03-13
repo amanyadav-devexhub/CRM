@@ -486,6 +486,8 @@ class AdminPlanListView(View):
                         except Feature.DoesNotExist:
                             pass
                     
+                    # Force save again to trigger post_save signal after features/resources are linked
+                    plan.save()
                     messages.success(request, f"Plan '{display_name}' created.")
                 except Exception as e:
                     messages.error(request, f"Error creating plan: {str(e)}")
@@ -501,8 +503,7 @@ class AdminPlanListView(View):
                 plan.billing_cycle = request.POST.get("billing_cycle")
                 # Handle is_active status from checkbox
                 plan.is_active = 'is_active' in request.POST
-                plan.save()
-
+                
                 # Update features
                 PlanFeature.objects.filter(plan=plan).delete()
                 for feat_str in request.POST.getlist("features"):
@@ -525,6 +526,8 @@ class AdminPlanListView(View):
                         except Resource.DoesNotExist:
                             pass
 
+                # Force save to trigger post_save signal after features/resources are modified
+                plan.save()
                 messages.success(request, f"Plan '{plan.display_name}' updated.")
             except Exception as e:
                 messages.error(request, f"Error updating plan: {str(e)}")

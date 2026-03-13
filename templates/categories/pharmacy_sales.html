@@ -21,7 +21,7 @@
                         style="background: none; border: none; color: white; padding: 10px; outline: none; width: 100%;"
                         oninput="if(this.value.toLowerCase() === 'amox') { addItem('Amoxicillin 250mg', 120); this.value = ''; }">
                 </div>
-                <button class="btn-primary" onclick="addItem('Paracetamol 500mg', 25)">Add Paracetamol</button>
+                <button class="btn-primary" onclick="addItem('Paracetamol 500mg', 25)">Add Medicines</button>
             </div>
 
             <table class="data-table" id="posTable">
@@ -79,6 +79,9 @@
                 <input type="hidden" name="tax" id="formTax">
                 <input type="hidden" name="discount" id="formDiscount">
                 <input type="hidden" name="grand_total" id="formTotal">
+                {% if rx_id %}
+                <input type="hidden" name="rx_id" value="{{ rx_id }}">
+                {% endif %}
                 
                 <div style="margin-bottom: 24px;">
                     <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Payment Mode</label>
@@ -106,6 +109,19 @@
     ];
 
     let cart = [];
+    {% if preload_cart %}
+    try {
+        const preloaded = JSON.parse('{{ preload_cart|escapejs }}');
+        if (preloaded && preloaded.length > 0) {
+            cart = preloaded;
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(renderCart, 100);
+            });
+        }
+    } catch(e) {
+        console.error("Error parsing preloaded cart:", e);
+    }
+    {% endif %}
 
     // Attach search listener
     document.getElementById('posSearch').addEventListener('input', function(e) {

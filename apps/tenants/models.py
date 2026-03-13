@@ -357,7 +357,10 @@ from django.core.cache import cache
 
 def has_feature(self, feature_code):
     """
-    Central feature checking logic
+    Central feature checking logic.
+    Priority:
+      1. Plan features are the source of truth (controlled by superadmin)
+      2. TenantFeature overrides can explicitly grant/revoke a feature
     """
     cache_key = f"tenant_feature_{self.id}_{feature_code}"
     cached = cache.get(cache_key)
@@ -369,29 +372,34 @@ def has_feature(self, feature_code):
     subscription = getattr(self, "subscription", None)
 
     if not subscription or not subscription.is_active():
+        cache.set(cache_key, False, 300)
         return False
 
     try:
         feature = Feature.objects.get(code=feature_code, is_active=True)
     except Feature.DoesNotExist:
+        cache.set(cache_key, False, 300)
         return False
 
-    # 2️⃣ Tenant override (by feature_name CharField)
+    # 2️⃣ Check plan features (source of truth)
+    in_plan = subscription.plan.features.filter(
+        feature_id=feature.id
+    ).exists()
+
+    # 3️⃣ Check for explicit tenant override (can grant OR revoke)
     override = TenantFeature.objects.filter(
         tenant=self,
         feature_name=feature_code
     ).first()
 
     if override:
-        result = override.is_enabled
+        # Explicit override takes precedence
+        result = override.is_enabled and override.is_time_valid()
     else:
-        # 3️⃣ Plan default
-        # Since 'features' is now the related_name for PlanFeature objects
-        result = subscription.plan.features.filter(
-            feature_id=feature.id
-        ).exists()
+        # Fall back to plan
+        result = in_plan
 
-    cache.set(cache_key, result, 300)  # cache 5 min
+    cache.set(cache_key, result, 300)
     return result
 
 # Attach to Tenant model

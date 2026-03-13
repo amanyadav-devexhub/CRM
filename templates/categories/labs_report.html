@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Report - {{ order.patient.full_name }}</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 50px; color: #1a1a1a; line-height: 1.6; }
+        .report-header { display: flex; justify-content: space-between; border-bottom: 3px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px; }
+        .clinic-info h1 { margin: 0; color: #6366f1; font-size: 1.8rem; }
+        .patient-box { background: #f8f9fa; padding: 20px; border-radius: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+        .label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        .value { font-weight: 600; color: #333; }
+        .results-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .results-table th { text-align: left; padding: 12px; background: #6366f1; color: white; }
+        .results-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .abnormal { color: #dc2626; font-weight: 700; }
+        .footer { margin-top: 60px; border-top: 1px solid #eee; pt: 20px; display: flex; justify-content: space-between; font-size: 0.85rem; color: #666; }
+        .signature { text-align: center; width: 200px; }
+        .sig-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+        @media print { .no-print { display: none; } body { padding: 0; } }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: right; margin-bottom: 30px;">
+        <button onclick="window.print()" style="padding: 12px 25px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Download / Print Report</button>
+    </div>
+
+    <div class="report-header">
+        <div class="clinic-info">
+            <h1>{{ order.patient.tenant.name|upper }}</h1>
+            <div>Laboratory Department</div>
+            <div style="font-size: 0.85rem; color: #666;">ISO 9001:2015 Certified Lab</div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-weight: 700; font-size: 1.2rem;">LABORATORY REPORT</div>
+            <div style="color: #666;">Order ID: {{ order.id|stringformat:".8s"|upper }}</div>
+        </div>
+    </div>
+
+    <div class="patient-box">
+        <div>
+            <div class="label">Patient Name</div>
+            <div class="value">{{ order.patient.full_name }}</div>
+        </div>
+        <div>
+            <div class="label">Patient ID</div>
+            <div class="value">{{ order.patient.patient_id }}</div>
+        </div>
+        <div>
+            <div class="label">Gender / Age</div>
+            <div class="value">{{ order.patient.get_gender_display }} / {{ order.patient.age|default:"N/A" }}</div>
+        </div>
+        <div>
+            <div class="label">Referred By</div>
+            <div class="value">Dr. {{ order.doctor.get_full_name|default:order.doctor.username }}</div>
+        </div>
+        <div>
+            <div class="label">Collected At</div>
+            <div class="value">{{ order.samples.first.collected_at|date:"d M Y, H:i" }}</div>
+        </div>
+        <div>
+            <div class="label">Report Date</div>
+            <div class="value">{% now "d M Y, H:i" %}</div>
+        </div>
+    </div>
+
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Test Parameter</th>
+                <th>Result</th>
+                <th>Unit</th>
+                <th>Reference Range</th>
+                <th>Flag</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in results %}
+            <tr {% if res.is_abnormal %}style="background: #fff5f5;"{% endif %}>
+                <td>
+                    {% if res.parameter %}
+                        <div style="font-size: 0.8em; color: #666;">{{ res.test.name }}</div>
+                        <strong>{{ res.parameter.name }}</strong>
+                    {% else %}
+                        <strong>{{ res.test.name }}</strong>
+                    {% endif %}
+                </td>
+                <td class="{% if res.is_abnormal %}abnormal{% endif %}">{{ res.value }}</td>
+                <td>{{ res.unit|default:"-" }}</td>
+                <td>
+                    {% if res.parameter %}
+                        {{ res.parameter.normal_low }} - {{ res.parameter.normal_high }}
+                    {% else %}
+                        {{ res.test.reference_range }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if res.is_abnormal %}
+                    <span class="abnormal">ABNORMAL</span>
+                    {% else %}
+                    Normal
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 30px;">
+        <strong>Interpretations / Comments:</strong>
+        <p style="color: #444; font-size: 0.9rem;">{{ order.notes|default:"None" }}</p>
+    </div>
+
+    <div class="footer">
+        <div class="signature">
+            <div class="sig-line">Lab Technician</div>
+            <div style="font-size: 0.75rem;">Verified at: {% now "H:i" %}</div>
+        </div>
+        <div class="signature">
+            <div class="sig-line">Pathologist / Authorized Signatory</div>
+        </div>
+    </div>
+
+    <div style="text-align: center; font-size: 0.75rem; color: #999; margin-top: 40px;">
+        *** End of Report ***<br>
+        This is a computer generated report and does not require a physical signature if verified online.
+    </div>
+</body>
+</html>

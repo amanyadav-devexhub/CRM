@@ -25,7 +25,12 @@ from apps.tenants.template_views import (
     PharmacyInventoryView, PharmacyPurchasesView, PharmacySalesView, PharmacyPrescriptionsView,
     ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
     ClinicDashboardAPIView,CategoryLabsView,
-    CategoryLabsTestCatalogView, CategoryLabsOrderListView
+)
+from apps.labs.template_views import (
+    LabTestCatalogView, LabOrderListView,
+    LabOrderEntryView, LabOrderPrintSlipView, LabReportView,
+    LabSampleCollectionView, LabProcessingView, LabAnalyticsView,
+    LabInventoryView, LabStaffManagementView
 )
 from apps.communications.template_views import (
     CommunicationsIndexView, MessageListView,
@@ -204,14 +209,25 @@ urlpatterns = [
 
     # Hospital Flow
     path("categories/hospital/", include("apps.hospitals.urls")),
-    path("categories/pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
-    path("categories/pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
-    path("categories/pharmacy/purchases/", PharmacyPurchasesView.as_view(), name="pharmacy-purchases"),
-    path("categories/pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
-    path("categories/pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
-    path("categories/labs/", CategoryLabsView.as_view(), name="category-labs"),
-    path("categories/labs/catalog/", CategoryLabsTestCatalogView.as_view(), name="lab-test-catalog"),
-    path("categories/labs/orders/", CategoryLabsOrderListView.as_view(), name="lab-order-list"),
+    # Pharmacy Flow
+    path("pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
+    path("pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
+    path("pharmacy/purchases/", PharmacyPurchasesView.as_view(), name="pharmacy-purchases"),
+    path("pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
+    path("pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
+
+    # Laboratory Flow
+    path("lab/", CategoryLabsView.as_view(), name="category-labs"),
+    path("lab/catalog/", LabTestCatalogView.as_view(), name="lab-test-catalog"),
+    path("lab/orders/", LabOrderListView.as_view(), name="lab-order-list"),
+    path("lab/samples/", LabSampleCollectionView.as_view(), name="lab-sample-collection"),
+    path("lab/processing/", LabProcessingView.as_view(), name="lab-processing"),
+    path("lab/analytics/", LabAnalyticsView.as_view(), name="lab-analytics"),
+    path("lab/inventory/", LabInventoryView.as_view(), name="lab-inventory"),
+    path("lab/staff/", LabStaffManagementView.as_view(), name="lab-staff"),
+    path("lab/orders/<uuid:order_id>/", LabOrderEntryView.as_view(), name="lab-order-entry"),
+    path("lab/orders/<uuid:order_id>/print/", LabOrderPrintSlipView.as_view(), name="lab-order-print"),
+    path("lab/orders/<uuid:order_id>/report/", LabReportView.as_view(), name="lab-report"),
 
     # ── Communications HTML pages ──
     path("communications/", CommunicationsIndexView.as_view(), name="communications-index"),

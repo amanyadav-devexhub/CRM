@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Test Slip - {{ order.id|stringformat:".8s" }}</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
+        .slip-container { max-width: 600px; margin: auto; border: 2px solid #EEE; padding: 30px; border-radius: 12px; }
+        .header { text-align: center; border-bottom: 2px solid var(--accent-purple); padding-bottom: 15px; margin-bottom: 20px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .info-label { font-size: 0.8rem; color: #777; margin-bottom: 3px; }
+        .info-value { font-weight: 600; font-size: 1rem; }
+        .test-list { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .test-list th { text-align: left; background: #F8F9FA; padding: 10px; border-bottom: 2px solid #EEE; }
+        .test-list td { padding: 10px; border-bottom: 1px solid #EEE; }
+        .barcode { font-family: 'Libre Barcode 39', cursive; font-size: 3rem; text-align: center; margin: 20px 0; }
+        .footer { margin-top: 30px; font-size: 0.8rem; text-align: center; color: #999; }
+        @media print { .no-print { display: none; } body { padding: 0; } .slip-container { border: none; } }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: right; margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer;">Print Now</button>
+    </div>
+
+    <div class="slip-container">
+        <div class="header">
+            <h2 style="margin:0; color:#6366f1;">LABORATORY TEST SLIP</h2>
+            <div style="font-size: 0.9rem; color: #777; margin-top: 5px;">{{ order.patient.tenant.name|upper }}</div>
+        </div>
+
+        <div class="info-grid">
+            <div>
+                <div class="info-label">Order ID</div>
+                <div class="info-value">{{ order.id }}</div>
+            </div>
+            <div>
+                <div class="info-label">Patient Name</div>
+                <div class="info-value">{{ order.patient.full_name }}</div>
+            </div>
+            <div>
+                <div class="info-label">Patient ID</div>
+                <div class="info-value">{{ order.patient.patient_id }}</div>
+            </div>
+            <div>
+                <div class="info-label">Ordered Date</div>
+                <div class="info-value">{{ order.ordered_at|date:"d M Y, H:i" }}</div>
+            </div>
+        </div>
+
+        <table class="test-list">
+            <thead>
+                <tr>
+                    <th>Test Name</th>
+                    <th>Code</th>
+                    <th>Ref. Range</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in order.tests.all %}
+                <tr>
+                    <td>{{ test.name }}</td>
+                    <td><code>{{ test.code }}</code></td>
+                    <td>{{ test.reference_range }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if order.samples.exists %}
+        <div class="barcode">
+            *{{ order.samples.first.barcode }}*
+        </div>
+        <div style="text-align:center; font-size:0.8rem; color:#777;">Sample: {{ order.samples.first.barcode }}</div>
+        {% endif %}
+
+        <div class="footer">
+            Generated on {% now "d M Y, H:i" %}
+        </div>
+    </div>
+</body>
+</html>

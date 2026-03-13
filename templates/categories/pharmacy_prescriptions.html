@@ -33,10 +33,16 @@
                     </td>
                     <td>Dr. {{ p.doctor.user.get_full_name }}</td>
                     <td>
+                        {% if p.status == 'PENDING' %}
                         <span class="badge-tag trial">Pending POS</span>
+                        {% else %}
+                        <span class="badge-tag active">Dispensed</span>
+                        {% endif %}
                     </td>
                     <td>
+                        {% if p.status == 'PENDING' %}
                         <a href="{% url 'pharmacy-sales' %}?rx_id={{ p.id }}" class="btn-outline" style="font-size: 12px; padding: 6px 12px; text-decoration: none; display: inline-block;">Load to POS</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

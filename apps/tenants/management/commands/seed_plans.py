@@ -170,6 +170,9 @@ class Command(BaseCommand):
                         resource=resource_map[r_code],
                         limit_value=limit
                     )
+            
+            # Force save to trigger cache invalidation signals
+            plan.save()
 
             action = "Created" if created else "Updated"
             self.stdout.write(f"  {action} plan: {plan.display_name} ({features.count()} features, {len(resources_data)} limits)")

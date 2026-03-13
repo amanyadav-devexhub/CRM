@@ -69,6 +69,7 @@ class PatientDetailView(View):
             "insurance": patient.insurance_policies.all(),
             "documents": patient.documents.all(),
             "emergency_contacts": patient.emergency_contacts.all(),
+            "lab_orders": patient.lab_orders.all().order_by('-ordered_at'),
         })
 
 

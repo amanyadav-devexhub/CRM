@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block page_title %}Lab <span>/ Staff Management</span>{% endblock %}
+
+{% block content %}
+<div class="stats-grid animate-in" style="margin-bottom: 2rem;">
+    <!-- Active Staff -->
+    <div class="stat-card purple">
+        <div class="stat-info">
+            <div class="stat-label">Total Lab Staff</div>
+            <div class="stat-value">{{ staff_data|length }}</div>
+        </div>
+        <div class="stat-icon purple"><span class="material-icons-round">people</span></div>
+    </div>
+
+    <!-- Monthly Leader -->
+    {% if staff_data %}
+    <div class="stat-card blue">
+        <div class="stat-info">
+            <div class="stat-label">Top Performer (Month)</div>
+            <div class="stat-value" style="font-size: 1.5rem;">{{ staff_data.0.user.get_full_name|default:staff_data.0.user.username }}</div>
+        </div>
+        <div class="stat-icon blue"><span class="material-icons-round">emoji_events</span></div>
+    </div>
+    {% endif %}
+
+    <!-- Total Load -->
+    <div class="stat-card orange">
+        <div class="stat-info">
+            <div class="stat-label">Current Workload</div>
+            <div class="stat-value">{{ total_active_workload }}</div>
+        </div>
+        <div class="stat-icon orange"><span class="material-icons-round">work_history</span></div>
+    </div>
+</div>
+
+<div class="card animate-in">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3><span class="icon material-icons-round">badge</span> Technician Productivity Tracking</h3>
+        <span style="color:var(--text-muted); font-size:0.9rem;">Month: {{ now|date:"F Y" }}</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Technician</th>
+                    <th>Role</th>
+                    <th>Active Orders</th>
+                    <th>Completed (This Month)</th>
+                    <th>Total Lifetime</th>
+                    <th style="text-align:right;">Efficiency</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in staff_data %}
+                <tr>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="user-avatar" style="width:40px; height:40px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; color:var(--accent-purple); font-weight:700;">
+                                {{ item.user.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <div style="font-weight:600;">{{ item.user.get_full_name|default:item.user.username }}</div>
+                                <div style="font-size:0.8rem; color:var(--text-muted);">{{ item.user.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if item.user.is_superuser %}
+                            <span class="badge-tag active">Super User</span>
+                        {% else %}
+                            <span class="badge-tag" style="background:rgba(255,255,255,0.05);">Technician</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge-tag {% if item.active_assignments > 5 %}expired{% else %}trial{% endif %}">
+                            {{ item.active_assignments }} active
+                        </span>
+                    </td>
+                    <td style="font-weight:700; color:var(--accent-purple);">{{ item.monthly_completed }}</td>
+                    <td style="color:var(--text-muted);">{{ item.total_completed }}</td>
+                    <td style="text-align:right;">
+                        <div style="display:inline-flex; align-items:center; gap:8px;">
+                            <div style="width:100px; height:8px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden;">
+                                <div style="width:{{ item.efficiency_perc }}%; height:100%; background:var(--accent-purple);"></div>
+                            </div>
+                            <span style="font-size:0.85rem; font-weight:600;">{{ item.efficiency_perc }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:3rem; color:var(--text-muted);">No technician data found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top:2rem; color:var(--text-muted); font-size:0.85rem;">
+    <p>* Efficiency is calculated based on monthly completions relative to the top performer.</p>
+    <p>* Active orders include all assignments currently in PENDING, COLLECTED, or PROCESSING status.</p>
+</div>
+
+<style>
+    .user-avatar { font-family: 'Outfit', sans-serif; border: 1px solid rgba(255,255,255,0.1); }
+</style>
+{% endblock %}

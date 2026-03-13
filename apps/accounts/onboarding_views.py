@@ -298,14 +298,8 @@ class OnboardingStep3View(View):
                 trial=True,
             )
 
-            # 4b. Auto-provision features from plan
-            from apps.tenants.models import TenantFeature
-            for plan_feature in plan.features.all():
-                TenantFeature.objects.get_or_create(
-                    tenant=tenant,
-                    feature_name=plan_feature.feature.code,
-                    defaults={"is_enabled": True},
-                )
+            # 4b. Features are now derived from the plan directly.
+            # TenantFeature records are only created for explicit per-tenant overrides.
                 
             # 4c. Auto-provision category-based roles
             from apps.accounts.utils import provision_category_roles

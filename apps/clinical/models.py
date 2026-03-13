@@ -120,9 +120,15 @@ class Prescription(models.Model):
         'appointments.Appointment', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='prescriptions'
     )
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending POS'),
+        ('DISPENSED', 'Dispensed'),
+    ]
+
     doctor = models.ForeignKey(
         Doctor, on_delete=models.CASCADE, related_name='prescriptions'
     )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', help_text="Prescription status in pharmacy workflow")
     notes = models.TextField(blank=True, help_text="General instructions")
 
     created_at = models.DateTimeField(auto_now_add=True)

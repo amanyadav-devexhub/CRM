@@ -131,9 +131,9 @@
                 {% endif %}
                 
                 {% if request.user|has_permission:'lab.view_results' %}
-                <a href="{% url 'lab-order-list' %}" class="action-btn" style="text-decoration:none;">
+                <a href="{% url 'category-labs' %}" class="action-btn" style="text-decoration:none;">
                     <span class="icon material-icons-round">science</span>
-                    Lab Reports
+                    Lab
                 </a>
                 {% endif %}
             </div>

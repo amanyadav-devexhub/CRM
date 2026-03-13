@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard <span>/ Analytics</span>{% endblock %}
+
+{% block content %}
+<div class="stats-grid animate-in" style="margin-bottom: 2rem;">
+    <!-- Revenue Card -->
+    <div class="stat-card purple" style="grid-column: span 2; display:flex; flex-direction:column; justify-content:space-between;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="stat-info">
+                <div class="stat-label">Today's Revenue</div>
+                <div class="stat-value">₹{{ metrics.today_revenue|floatformat:2 }}</div>
+                <div style="font-size:0.85rem; color: rgba(255,255,255,0.7); margin-top:8px;">
+                    <span style="display:inline-block; margin-right:12px;">Week: ₹{{ metrics.week_revenue|floatformat:2 }}</span>
+                    <span>Month: ₹{{ metrics.month_revenue|floatformat:2 }}</span>
+                </div>
+            </div>
+            <div class="stat-icon purple"><span class="material-icons-round">payments</span></div>
+        </div>
+    </div>
+
+    <!-- Orders Card -->
+    <div class="stat-card blue">
+        <div class="stat-info">
+            <div class="stat-label">Orders Today</div>
+            <div class="stat-value">{{ metrics.today_orders }}</div>
+            <div style="font-size:0.85rem; color: rgba(255,255,255,0.7); margin-top:8px;">
+                Week: {{ metrics.week_orders }}
+            </div>
+        </div>
+        <div class="stat-icon blue"><span class="material-icons-round">assignment</span></div>
+    </div>
+
+    <!-- Rejection Rate -->
+    <div class="stat-card orange">
+        <div class="stat-info">
+            <div class="stat-label">Sample Cancellation Rate</div>
+            <div class="stat-value">{{ metrics.rejection_rate }}%</div>
+            <div style="font-size:0.85rem; color: rgba(255,255,255,0.7); margin-top:8px;">
+                Overall Cancellation Rate
+            </div>
+        </div>
+        <div class="stat-icon orange"><span class="material-icons-round">block</span></div>
+    </div>
+</div>
+
+<div class="content-grid" style="margin-bottom: 2rem;">
+    <!-- Top Tests Table -->
+    <div class="card animate-in" style="animation-delay: 0.1s;">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">trending_up</span> Most Performed Tests</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Code</th>
+                        <th style="text-align:right;">Completed Orders</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in top_tests %}
+                    <tr>
+                        <td style="font-weight:600;">{{ test.name }}</td>
+                        <td><code>{{ test.code }}</code></td>
+                        <td style="text-align:right;">
+                            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(99, 102, 241, 0.1); color:var(--accent-blue); padding:4px 10px; border-radius:12px; font-weight:600; font-size:0.9rem;">
+                                {{ test.order_count }} <span class="material-icons-round" style="font-size:14px;">check_circle</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding:2rem; color:var(--text-muted);">No completed tests found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tech Performance Table -->
+    <div class="card animate-in" style="animation-delay: 0.2s;">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">military_tech</span> Top Technicians</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Technician</th>
+                        <th style="text-align:right;">Completed Orders</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tech in tech_performance %}
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:32px; height:32px; border-radius:8px; background:var(--gradient-purple); color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px;">
+                                    {% if tech.technician__first_name %}{{ tech.technician__first_name.0 }}{% else %}{{ tech.technician__username.0|upper }}{% endif %}
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;">{% if tech.technician__first_name %}{{ tech.technician__first_name }} {{ tech.technician__last_name }}{% else %}{{ tech.technician__username }}{% endif %}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align:right;">
+                            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(16, 185, 129, 0.1); color:var(--accent-green); padding:4px 10px; border-radius:12px; font-weight:600; font-size:0.9rem;">
+                                {{ tech.completed_count }} <span class="material-icons-round" style="font-size:14px;">emoji_events</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align:center; padding:2rem; color:var(--text-muted);">No technician performance data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

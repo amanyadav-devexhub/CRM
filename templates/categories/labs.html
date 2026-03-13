@@ -1,41 +1,7 @@
 {% extends "base.html" %}
 
-{% block brand_gradient %}linear-gradient(135deg, #8b5cf6, #6366f1){% endblock %}
-{% block brand_text_gradient %}linear-gradient(135deg, #a78bfa, #c4b5fd){% endblock %}
-{% block nav_active_bg %}rgba(139, 92, 246, 0.12){% endblock %}
-{% block nav_active_color %}var(--accent-purple){% endblock %}
-{% block badge_bg %}var(--accent-purple){% endblock %}
-{% block brand_icon_letter %}L{% endblock %}
-{% block brand_name %}LabFlow{% endblock %}
-{% block brand_subtitle %}Laboratory Dashboard{% endblock %}
-{% block user_avatar_gradient %}linear-gradient(135deg, #8b5cf6, #6366f1){% endblock %}
-
 {% block nav_dashboard %}active{% endblock %}
 {% block page_title %}Dashboard <span>/ Laboratory Overview</span>{% endblock %}
-
-{% block sidebar_nav %}
-<div class="nav-section">
-    <div class="nav-section-title">Operations</div>
-    <a href="{% url 'category-labs' %}" class="nav-item active">
-        <span class="icon material-icons-round">dashboard</span>
-        Dashboard
-    </a>
-    <a href="{% url 'lab-test-catalog' %}"
-        class="nav-item {% if request.resolver_match.url_name == 'lab-test-catalog' %}active{% endif %}">
-        <span class="icon material-icons-round">biotech</span>
-        Test Catalog
-    </a>
-    <a href="{% url 'lab-order-list' %}"
-        class="nav-item {% if request.resolver_match.url_name == 'lab-order-list' %}active{% endif %}">
-        <span class="icon material-icons-round">assignment</span>
-        Orders
-    </a>
-    <a href="#" class="nav-item">
-        <span class="icon material-icons-round">description</span>
-        Reports
-    </a>
-</div>
-{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -77,21 +43,32 @@
     </div>
     <div class="stat-card green animate-in">
         <div class="stat-info">
-            <div class="stat-label">TAT Score</div>
-            <div class="stat-value">{{ tat_score }}</div>
-            <div class="stat-sub">Within turnaround time</div>
+            <div class="stat-label">Processing</div>
+            <div class="stat-value" data-target="{{ processing_count }}">0</div>
+            <div class="stat-sub">Actively working</div>
         </div>
         <div class="stat-icon green">
-            <span class="material-icons-round">speed</span>
+            <span class="material-icons-round">sync</span>
         </div>
     </div>
-    <div class="stat-card orange animate-in">
+
+    <div class="stat-card red animate-in" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), transparent); border-color: rgba(239, 68, 68, 0.1);">
+        <div class="stat-info">
+            <div class="stat-label">Critical Reports</div>
+            <div class="stat-value" data-target="{{ critical_reports }}" style="color: var(--accent-red);">0</div>
+            <div class="stat-sub">Abnormal findings</div>
+        </div>
+        <div class="stat-icon red" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">
+            <span class="material-icons-round">warning_amber</span>
+        </div>
+    </div>
+    <div class="stat-card indigo animate-in" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), transparent); border-color: rgba(99, 102, 241, 0.1);">
         <div class="stat-info">
             <div class="stat-label">Revenue</div>
             <div class="stat-value">{{ revenue_today }}</div>
             <div class="stat-sub">Today's completed</div>
         </div>
-        <div class="stat-icon orange">
+        <div class="stat-icon indigo" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-blue);">
             <span class="material-icons-round">payments</span>
         </div>
     </div>
@@ -137,7 +114,7 @@
                         </td>
                         <td>{{ order.ordered_at|date:"M d, H:i"|default:"--" }}</td>
                         <td>
-                            <a href="#" class="material-icons-round"
+                            <a href="{% url 'lab-order-entry' order.id %}" class="material-icons-round"
                                 style="color:var(--accent-purple); text-decoration:none;">edit_note</a>
                         </td>
                     </tr>
@@ -162,27 +139,18 @@
             </div>
             <div class="card-body">
                 <div class="quick-actions">
-                    <a href="{% url 'lab-order-list' %}" class="action-btn primary" style="text-decoration:none;">
-                        <span class="icon material-icons-round">add_task</span>
-                        New Order
-                    </a>
-                    <a href="{% url 'lab-test-catalog' %}" class="action-btn" style="text-decoration:none;">
-                        <span class="icon material-icons-round">biotech</span>
-                        
-                        Manage Catalog
-                    </a>
-                    <button class="action-btn">
-                        <span class="icon material-icons-round">qr_code_2</span>
-                        Label Sample
-                    </button>
-                    <button class="action-btn">
+                    <a href="{% url 'lab-inventory' %}" class="action-btn primary" style="text-decoration:none;">
                         <span class="icon material-icons-round">inventory_2</span>
-                        Reagent Stock
-                    </button>
-                    <button class="action-btn">
-                        <span class="icon material-icons-round">analytics</span>
+                        Inventory
+                    </a>
+                    <a href="{% url 'lab-order-list' %}?status=COMPLETED" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">description</span>
                         Reports
-                    </button>
+                    </a>
+                    <a href="{% url 'lab-sample-collection' %}" class="action-btn" style="text-decoration:none;">
+                        <span class="icon material-icons-round">vaccines</span>
+                        Sample Collection
+                    </a>
                 </div>
             </div>
         </div>
