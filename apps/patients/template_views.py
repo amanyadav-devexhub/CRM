@@ -161,3 +161,94 @@ class PatientDeleteView(View):
         patient = get_object_or_404(Patient, pk=pk)
         patient.delete()  # soft delete via SoftDeleteMixin
         return redirect("/patients/")
+
+
+# ──────────────────────────────────────────────
+# Medical History inline CRUD (modal based)
+# ──────────────────────────────────────────────
+
+class MedicalHistoryAddView(View):
+    """Add a new medical history record."""
+
+    def post(self, request, pk):
+        patient = get_object_or_404(Patient, pk=pk)
+        data = request.POST
+        
+        MedicalHistory.objects.create(
+            patient=patient,
+            condition=data.get("condition", "").strip(),
+            diagnosis_date=data.get("diagnosis_date") or None,
+            status=data.get("status", MedicalHistory.Status.ACTIVE),
+            notes=data.get("notes", "").strip()
+        )
+        
+        return redirect(f"/patients/{patient.id}/")
+
+
+class MedicalHistoryEditView(View):
+    """Edit an existing medical history record."""
+
+    def post(self, request, pk, mh_id):
+        patient = get_object_or_404(Patient, pk=pk)
+        record = get_object_or_404(MedicalHistory, pk=mh_id, patient=patient)
+        data = request.POST
+        
+        record.condition = data.get("condition", record.condition).strip()
+        record.diagnosis_date = data.get("diagnosis_date") or None
+        record.status = data.get("status", record.status)
+        record.notes = data.get("notes", record.notes).strip()
+        record.save()
+        
+        return redirect(f"/patients/{patient.id}/")
+
+
+class MedicalHistoryDeleteView(View):
+    """Delete a medical history record."""
+
+    def post(self, request, pk, mh_id):
+        patient = get_object_or_404(Patient, pk=pk)
+        record = get_object_or_404(MedicalHistory, pk=mh_id, patient=patient)
+        record.delete()
+        
+        return redirect(f"/patients/{patient.id}/")
+
+
+# ──────────────────────────────────────────────
+# Patient Documents inline CRUD (modal based)
+# ──────────────────────────────────────────────
+
+class PatientDocumentUploadView(View):
+    """Upload a new patient document."""
+
+    def post(self, request, pk):
+        patient = get_object_or_404(Patient, pk=pk)
+        data = request.POST
+        files = request.FILES
+        
+        if "file" in files:
+            PatientDocument.objects.create(
+                patient=patient,
+                file=files["file"],
+                document_type=data.get("document_type", PatientDocument.DocumentType.OTHER),
+                title=data.get("title", "Untitled Document").strip(),
+                description=data.get("description", "").strip(),
+                uploaded_by=request.user if request.user.is_authenticated else None
+            )
+            
+        return redirect(f"/patients/{patient.id}/")
+
+
+class PatientDocumentDeleteView(View):
+    """Delete a patient document."""
+
+    def post(self, request, pk, doc_id):
+        patient = get_object_or_404(Patient, pk=pk)
+        document = get_object_or_404(PatientDocument, pk=doc_id, patient=patient)
+        
+        # The physical file will be kept or deleted depending on your storage backend semantics
+        # If using standard FileField, deleting the model instance doesn't automatically delete the file
+        # To delete the file physically: document.file.delete(save=False)
+        document.file.delete(save=False)
+        document.delete()
+        
+        return redirect(f"/patients/{patient.id}/")

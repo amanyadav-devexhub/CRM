@@ -12,6 +12,8 @@ from apps.tenants.views import (
 from apps.patients.template_views import (
     PatientListView, PatientDetailView,
     PatientCreateView, PatientEditView, PatientDeleteView,
+    MedicalHistoryAddView, MedicalHistoryEditView, MedicalHistoryDeleteView,
+    PatientDocumentUploadView, PatientDocumentDeleteView,
 )
 from apps.tenants.admin_views import (
     AdminTenantListView, AdminSubscriptionListView, AdminPlanListView,
@@ -190,6 +192,11 @@ urlpatterns = [
     path("patients/<uuid:pk>/", PatientDetailView.as_view(), name="patient-detail"),
     path("patients/<uuid:pk>/edit/", PatientEditView.as_view(), name="patient-edit"),
     path("patients/<uuid:pk>/delete/", PatientDeleteView.as_view(), name="patient-delete"),
+    path("patients/<uuid:pk>/medical-history/add/", MedicalHistoryAddView.as_view(), name="medical-history-add"),
+    path("patients/<uuid:pk>/medical-history/<uuid:mh_id>/edit/", MedicalHistoryEditView.as_view(), name="medical-history-edit"),
+    path("patients/<uuid:pk>/medical-history/<uuid:mh_id>/delete/", MedicalHistoryDeleteView.as_view(), name="medical-history-delete"),
+    path("patients/<uuid:pk>/documents/upload/", PatientDocumentUploadView.as_view(), name="patient-document-upload"),
+    path("patients/<uuid:pk>/documents/<uuid:doc_id>/delete/", PatientDocumentDeleteView.as_view(), name="patient-document-delete"),
 
     # ── Tenant HTML pages ──
     path("tenants/create/", TenantCreatePageView.as_view(), name="tenant-create-page"),

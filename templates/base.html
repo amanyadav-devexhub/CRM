@@ -181,6 +181,7 @@
                     {% endif %}
 
                     {% if "pharmacy" in enabled_features %}
+                        {% if request.user|has_any_permission:'pharmacy.manage_inventory,pharmacy.dispense,pharmacy.update_stock,dashboard.pharmacy' %}
                     <div class="nav-section">
                         <div class="nav-section-title">Pharmacy</div>
                         <a href="{% url 'pharmacy-inventory' %}" class="nav-item {% block nav_pharmacy_inv %}{% endblock %}">
@@ -196,6 +197,7 @@
                             Sales & POS
                         </a>
                     </div>
+                        {% endif %}
                     {% else %}
                         {% if request.user|has_permission:'clinics.manage' %}
                         <div class="nav-section">
@@ -208,21 +210,29 @@
                     {% endif %}
 
                     {% if "lab" in enabled_features %}
+                        {% if request.user|has_any_permission:'lab.manage_inventory,lab.upload_results,lab.schedule_tests,lab.view_results,dashboard.lab' %}
                     <div class="nav-section">
                         <div class="nav-section-title">Laboratory</div>
+                        {% if request.user|has_any_permission:'lab.manage_inventory,dashboard.lab' %}
                         <a href="{% url 'lab-inventory' %}" class="nav-item {% block nav_lab_inv %}{% endblock %}">
                             <span class="icon material-icons-round">inventory_2</span>
                             Inventory
                         </a>
+                        {% endif %}
+                        {% if request.user|has_any_permission:'lab.upload_results,lab.schedule_tests,dashboard.lab' %}
                         <a href="{% url 'lab-sample-collection' %}" class="nav-item {% block nav_lab_samples %}{% endblock %}">
                             <span class="icon material-icons-round">vaccines</span>
                             Samples
                         </a>
+                        {% endif %}
+                        {% if request.user|has_any_permission:'lab.view_results,lab.upload_results,dashboard.lab' %}
                         <a href="{% url 'lab-order-list' %}?status=COMPLETED" class="nav-item {% block nav_lab_reports %}{% endblock %}">
                             <span class="icon material-icons-round">description</span>
                             Reports
                         </a>
+                        {% endif %}
                     </div>
+                        {% endif %}
                     {% else %}
                         {% if request.user|has_permission:'clinics.manage' %}
                         <div class="nav-section">

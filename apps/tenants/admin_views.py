@@ -879,7 +879,26 @@ class AdminRolesPermissionsView(View):
                     )
                     if selected_perms:
                         role_template.permissions.set(selected_perms)
-                    messages.success(request, f"Role '{role_name}' created for {category.name}.")
+
+                    # Propagate: Create this role for all tenants in the category
+                    from apps.accounts.models import Role
+                    from apps.tenants.models import Tenant
+                    tenants = Tenant.objects.filter(category_obj=category)
+                    created_count = 0
+                    for tenant in tenants:
+                        role, created = Role.objects.get_or_create(
+                            tenant=tenant,
+                            name=role_name,
+                            defaults={
+                                "is_system_role": True,
+                                "source_template": role_template,
+                            }
+                        )
+                        if created:
+                            role.permissions.set(role_template.permissions.all())
+                            created_count += 1
+                    
+                    messages.success(request, f"Role '{role_name}' created for {category.name} and provisioned to {created_count} tenant(s).")
             except Category.DoesNotExist:
                 messages.error(request, "Category not found.")
             return redirect(redirect_url)
@@ -896,6 +915,7 @@ class AdminRolesPermissionsView(View):
                 new_desc = request.POST.get("role_desc", "").strip()
                 is_active = request.POST.get("is_active") == "on"
 
+                old_name = role_template.name
                 if new_name:
                     role_template.name = new_name
                 role_template.code = new_code
@@ -903,7 +923,21 @@ class AdminRolesPermissionsView(View):
                 role_template.is_active = is_active
                 role_template.save(update_fields=["name", "code", "description", "is_active"])
 
-                messages.success(request, f"Role '{role_template.name}' updated.")
+                # Propagate: Sync permissions to all non-customized tenant roles
+                from apps.accounts.models import Role
+                synced = Role.objects.filter(
+                    source_template=role_template,
+                    is_customized=False
+                )
+                sync_count = synced.count()
+                for role in synced:
+                    role.permissions.set(role_template.permissions.all())
+                    # Also sync name if it changed
+                    if new_name and role.name == old_name:
+                        role.name = new_name
+                        role.save(update_fields=["name"])
+
+                messages.success(request, f"Role '{role_template.name}' updated and synced to {sync_count} tenant(s).")
             except CategoryRoleTemplate.DoesNotExist:
                 messages.error(request, "Role not found.")
             return redirect(redirect_url)
@@ -913,8 +947,23 @@ class AdminRolesPermissionsView(View):
             try:
                 role_template = CategoryRoleTemplate.objects.get(pk=role_id)
                 name = role_template.name
+
+                # Propagate: Remove linked tenant roles that aren't in use
+                from apps.accounts.models import Role
+                linked_roles = Role.objects.filter(source_template=role_template)
+                deleted_count = 0
+                for role in linked_roles:
+                    if not role.users.exists():
+                        role.delete()
+                        deleted_count += 1
+                    else:
+                        # Unlink but keep the role if users are assigned
+                        role.source_template = None
+                        role.is_customized = True
+                        role.save(update_fields=["source_template", "is_customized"])
+
                 role_template.delete()
-                messages.success(request, f"Role '{name}' deleted.")
+                messages.success(request, f"Role '{name}' deleted and removed from {deleted_count} tenant(s).")
             except CategoryRoleTemplate.DoesNotExist:
                 messages.error(request, "Role not found.")
             return redirect(redirect_url)

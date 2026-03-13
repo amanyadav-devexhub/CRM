@@ -95,8 +95,14 @@ def provision_category_roles(tenant):
             name=template.name,
             defaults={
                 "is_system_role": True,
+                "source_template": template,
             }
         )
         
+        # If it already existed but had no template link, set it now
+        if not created and not role.source_template:
+            role.source_template = template
+            role.save(update_fields=["source_template"])
+
         # Map permissions from the template
         role.permissions.set(template.permissions.all())

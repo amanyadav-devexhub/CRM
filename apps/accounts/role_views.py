@@ -125,6 +125,11 @@ class RoleEditView(View):
         selected_perms = request.POST.getlist("permissions")
         role.permissions.set(selected_perms)
 
+        # Mark as customized so superadmin template updates won't overwrite
+        if role.source_template and not role.is_customized:
+            role.is_customized = True
+            role.save(update_fields=["is_customized"])
+
         return redirect("/dashboard/settings/roles/")
 
 
@@ -141,7 +146,7 @@ class RoleDeleteView(View):
         if role.is_system_role:
             return redirect("/dashboard/settings/roles/")
             
-        if role.user_set.exists():
+        if role.users.exists():
             # In a real app, flash a message "Cannot delete role in use"
             return redirect("/dashboard/settings/roles/")
 
