@@ -245,23 +245,33 @@ class SubAdminDashboardView(View):
         from django.db.models import Sum
 
         try:
-            from apps.pharmacy.models import Medicine, Sale
+            from apps.pharmacy.models import Sale
+            from apps.inventory.models import InventoryItem, InventoryBatch
             today = tz.now().date()
             thirty_days = today + tz.timedelta(days=30)
 
-            medicines = Medicine.objects.all()
+            medicines = InventoryItem.objects.filter(item_type__code='MEDICINE')
             total_skus = medicines.count()
-            low_stock_count = medicines.filter(status='LOW_STOCK').count()
-            expired_count = medicines.filter(status='EXPIRED').count()
-            expiring_soon_count = medicines.filter(
-                expiry_date__lte=thirty_days, expiry_date__gt=today
-            ).count()
+            low_stock_count = medicines.filter(status__in=['LOW_STOCK', 'OUT_OF_STOCK']).count()
+            
+            expired_count = InventoryBatch.objects.filter(
+                item__item_type__code='MEDICINE',
+                expiry_date__lt=today,
+                quantity__gt=0
+            ).values('item').distinct().count()
+            
+            expiring_soon_count = InventoryBatch.objects.filter(
+                item__item_type__code='MEDICINE',
+                expiry_date__lte=thirty_days,
+                expiry_date__gt=today,
+                quantity__gt=0
+            ).values('item').distinct().count()
 
             today_sales = Sale.objects.filter(
                 created_at__date=today
             ).aggregate(total=Sum('grand_total'))['total'] or 0
 
-            inventory_highlights = medicines[:5]
+            inventory_highlights = medicines.order_by('total_stock')[:5]
         except Exception:
             total_skus = 0
             low_stock_count = 0

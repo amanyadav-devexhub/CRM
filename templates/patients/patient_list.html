@@ -29,31 +29,31 @@
 <!-- ─── Filters ─── -->
 <div class="card" style="margin-bottom:20px;">
     <div class="card-body" style="padding:14px 22px;">
-        <form method="get" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-            <div class="search-box" style="flex:1; min-width:200px;">
+        <form method="get" style="display:flex; align-items:center; gap:14px;">
+            <div class="search-box" style="flex:1; min-width:0;">
                 <span class="icon material-icons-round">search</span>
-                <input type="text" name="search" placeholder="Search by name, phone, ID…" value="{{ search_query }}"
+                <input type="text" name="search" placeholder="Search patients, appointments…" value="{{ search_query }}"
                     style="width:100%;">
             </div>
-            <select name="gender" class="form-select">
+            <select name="gender" class="form-select" style="min-width:unset; width:auto;">
                 <option value="">All Genders</option>
                 <option value="M" {% if gender_filter == "M" %}selected{% endif %}>Male</option>
                 <option value="F" {% if gender_filter == "F" %}selected{% endif %}>Female</option>
                 <option value="O" {% if gender_filter == "O" %}selected{% endif %}>Other</option>
             </select>
-            <select name="blood_group" class="form-select">
+            <select name="blood_group" class="form-select" style="min-width:unset; width:auto;">
                 <option value="">All Blood Groups</option>
                 {% for bg in blood_groups %}
                 <option value="{{ bg }}" {% if blood_filter == bg %}selected{% endif %}>{{ bg }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="action-btn" style="padding:10px 20px;">
+            <button type="submit" class="action-btn" style="padding:10px 20px; white-space:nowrap;">
                 <span class="icon material-icons-round">filter_list</span>
                 Filter
             </button>
             {% if search_query or gender_filter or blood_filter %}
             <a href="/patients/" class="action-btn"
-                style="padding:10px 16px; text-decoration:none; color:var(--accent-red);">
+                style="padding:10px 16px; text-decoration:none; color:var(--accent-red); white-space:nowrap;">
                 <span class="icon material-icons-round">close</span>
                 Clear
             </a>

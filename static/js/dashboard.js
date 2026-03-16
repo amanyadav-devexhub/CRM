@@ -55,3 +55,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ── Drawer Management Functions ──
+function openDrawer(id) {
+    const drawer = document.getElementById(id);
+    if (drawer) {
+        drawer.style.display = 'block';
+        setTimeout(() => drawer.classList.add('active'), 10);
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeDrawer(id) {
+    const drawer = document.getElementById(id);
+    if (drawer) {
+        drawer.classList.remove('active');
+        setTimeout(() => {
+            drawer.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 400);
+    }
+}
+
+// Close on backdrop click
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('drawer-overlay')) {
+        closeDrawer(e.target.id);
+    }
+});

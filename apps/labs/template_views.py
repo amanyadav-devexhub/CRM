@@ -8,6 +8,8 @@ from apps.patients.models import Patient
 from apps.billing.models import Invoice, InvoiceItem
 from apps.notifications.models import Notification
 from django.contrib.auth import get_user_model
+from django.db.models import Q
+from apps.inventory.models import InventoryItem, InventoryBatch, StockTransaction, ItemType
 
 class LabTestCatalogView(View):
     """Manage the catalog of laboratory tests."""
@@ -699,11 +701,11 @@ class LabAnalyticsView(View):
 
         return render(request, self.template_name, context)
 
-from .models import LabInventoryItem, LabInventoryTransaction
+# Lab Inventory models are deprecated in favor of apps.inventory models
 from django.db import transaction
 
 class LabInventoryView(View):
-    """Manage lab reagents and consumables."""
+    """Manage lab reagents and consumables via Global Inventory."""
     template_name = "categories/labs_inventory.html"
 
     def get(self, request):
@@ -714,7 +716,11 @@ class LabInventoryView(View):
             return redirect('/dashboard/?error=Unauthorized access to Inventory')
 
         search = request.GET.get('search', '').strip()
-        items = LabInventoryItem.objects.all().order_by('name')
+        
+        # Filter global inventory for lab items
+        items = InventoryItem.objects.filter(
+            item_type__code__in=['LAB_REAGENT', 'LAB_TEST_KIT', 'CONSUMABLE', 'EQUIPMENT']
+        ).order_by('name')
         
         if search:
             items = items.filter(Q(name__icontains=search) | Q(sku__icontains=search))
@@ -725,20 +731,26 @@ class LabInventoryView(View):
         expiry_count = 0
         
         for item in items:
-            item.is_low_stock = item.quantity_in_stock <= item.reorder_level
+            item.is_low_stock = item.total_stock <= (item.min_stock_level or 0)
             if item.is_low_stock:
                 low_stock_count += 1
                 
             item.is_expiring_soon = False
             item.is_expired = False
-            if item.expiry_date:
-                days_to_expiry = (item.expiry_date - now_date).days
+            
+            # Use total_stock and nearest expiry from batches
+            batch = item.batches.filter(quantity__gt=0).order_by('expiry_date').first()
+            if batch and batch.expiry_date:
+                days_to_expiry = (batch.expiry_date - now_date).days
                 if days_to_expiry < 0:
                     item.is_expired = True
                     expiry_count += 1
                 elif days_to_expiry <= 30:
                     item.is_expiring_soon = True
                     expiry_count += 1
+                item.expiry_date = batch.expiry_date
+            else:
+                item.expiry_date = None
 
         return render(request, self.template_name, {
             "items": items,
@@ -757,47 +769,92 @@ class LabInventoryView(View):
         try:
             with transaction.atomic():
                 if action == 'add_item':
-                    LabInventoryItem.objects.create(
+                    type_code = request.POST.get('category', 'LAB_REAGENT')
+                    # Legacy mapping
+                    if type_code == 'REAGENT': type_code = 'LAB_REAGENT'
+                    if type_code == 'OTHER': type_code = 'GENERAL'
+                    
+                    item_type = ItemType.objects.get(code=type_code)
+                    
+                    item = InventoryItem.objects.create(
                         name=request.POST.get('name'),
                         sku=request.POST.get('sku', ''),
-                        category=request.POST.get('category', 'REAGENT'),
+                        item_type=item_type,
                         unit=request.POST.get('unit', 'units'),
-                        quantity_in_stock=request.POST.get('quantity_in_stock', 0),
-                        reorder_level=request.POST.get('reorder_level', 10),
-                        expiry_date=request.POST.get('expiry_date') or None
+                        min_stock_level=request.POST.get('reorder_level', 10),
                     )
+                    
+                    initial_qty = float(request.POST.get('quantity_in_stock', 0))
+                    if initial_qty > 0:
+                        InventoryBatch.objects.create(
+                            item=item,
+                            batch_number=f"INIT-{item.sku or item.id}",
+                            quantity=initial_qty,
+                            expiry_date=request.POST.get('expiry_date') or None
+                        )
+                        item.total_stock = initial_qty
+                        item.save()
+                        
+                        StockTransaction.objects.create(
+                            item=item,
+                            transaction_type='IN',
+                            quantity=initial_qty,
+                            performed_by=request.user,
+                            notes="Initial stock entry"
+                        )
                     return redirect('/categories/labs/inventory/?success=Item added successfully.')
 
                 elif action == 'transaction':
                     item_id = request.POST.get('item_id')
                     trans_type = request.POST.get('transaction_type') # ADD, CONSUME, ADJUST
+                    type_map = {'ADD': 'IN', 'CONSUME': 'OUT', 'ADJUST': 'ADJUST'}
+                    global_type = type_map.get(trans_type, 'ADJUST')
+                    
                     quantity = float(request.POST.get('quantity', 0))
                     notes = request.POST.get('notes', '')
 
                     if quantity <= 0:
                         raise ValueError("Quantity must be greater than zero.")
 
-                    item = LabInventoryItem.objects.select_for_update().get(id=item_id)
+                    item = InventoryItem.objects.select_for_update().get(id=item_id)
                     
-                    if trans_type == 'ADD':
-                        item.quantity_in_stock += quantity
-                    elif trans_type == 'CONSUME':
-                        if item.quantity_in_stock < quantity:
+                    if global_type == 'IN':
+                        batch, _ = InventoryBatch.objects.get_or_create(
+                            item=item,
+                            batch_number=f"STOCK-IN-{timezone.now().strftime('%Y%m%d')}",
+                            defaults={'quantity': 0}
+                        )
+                        batch.quantity += quantity
+                        batch.save()
+                        item.total_stock += quantity
+                    elif global_type == 'OUT':
+                        if item.total_stock < quantity:
                             raise ValueError(f"Not enough stock to consume {quantity} {item.unit}.")
-                        item.quantity_in_stock -= quantity
-                    elif trans_type == 'ADJUST':
-                        # For adjust, we treat the input as the new absolute total,
-                        # but standard transaction log expects the diff
-                        diff = quantity - float(item.quantity_in_stock)
-                        # We log the positive diff and set type
-                        item.quantity_in_stock = quantity
-                        quantity = abs(diff) # Store absolute difference in logs
+                        
+                        remaining = quantity
+                        batches = item.batches.filter(quantity__gt=0).order_by('expiry_date', 'created_at')
+                        for b in batches:
+                            if remaining <= 0: break
+                            deduct = min(b.quantity, remaining)
+                            b.quantity -= deduct
+                            b.save()
+                            remaining -= deduct
+                        item.total_stock -= quantity
+                    elif global_type == 'ADJUST':
+                        diff = quantity - float(item.total_stock)
+                        batch = item.batches.order_by('-created_at').first()
+                        if not batch:
+                             batch = InventoryBatch.objects.create(item=item, batch_number="ADJUST", quantity=0)
+                        batch.quantity += diff
+                        batch.save()
+                        item.total_stock = quantity
+                        quantity = abs(diff)
                     
                     item.save()
 
-                    LabInventoryTransaction.objects.create(
+                    StockTransaction.objects.create(
                         item=item,
-                        transaction_type=trans_type,
+                        transaction_type=global_type,
                         quantity=quantity,
                         performed_by=request.user,
                         notes=notes

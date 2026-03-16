@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Count
+import json
 
 from .models import Client, Domain, Tenant, Category
 
@@ -531,20 +532,29 @@ class CategoryPharmacyView(View):
     """Pharmacy dashboard with real inventory stats."""
     def get(self, request):
 
-        from apps.pharmacy.models import Medicine, Sale
+        from apps.pharmacy.models import Sale
+        from apps.inventory.models import InventoryItem, InventoryBatch
         from django.db.models import Sum
 
         today = timezone.now().date()
         thirty_days = today + timezone.timedelta(days=30)
 
-        medicines = Medicine.objects.all()
+        medicines = InventoryItem.objects.filter(item_type__code='MEDICINE')
         total_skus = medicines.count()
         low_stock_count = medicines.filter(status__in=['LOW_STOCK', 'OUT_OF_STOCK']).count()
-        expired_count = medicines.filter(status='EXPIRED').count()
-        expiring_soon_count = medicines.filter(
+        
+        expired_count = InventoryBatch.objects.filter(
+            item__item_type__code='MEDICINE',
+            expiry_date__lt=today,
+            quantity__gt=0
+        ).values('item').distinct().count()
+        
+        expiring_soon_count = InventoryBatch.objects.filter(
+            item__item_type__code='MEDICINE',
             expiry_date__lte=thirty_days,
-            expiry_date__gt=today
-        ).count()
+            expiry_date__gt=today,
+            quantity__gt=0
+        ).values('item').distinct().count()
 
         # Today's sales
         today_sales_agg = Sale.objects.filter(
@@ -553,24 +563,25 @@ class CategoryPharmacyView(View):
         today_sales = today_sales_agg['total'] or 0.00
 
         # Profit Margin (Estimated from today's sales)
-        # For simplicity, we'll calculate (Total Selling - Total Purchase) for items sold today
         from apps.pharmacy.models import SaleItem
         sold_items = SaleItem.objects.filter(sale__created_at__date=today)
         total_cost = 0
         for item in sold_items:
-            total_cost += item.medicine.purchase_price * item.quantity
+            batch = item.item.batches.order_by('-created_at').first()
+            if batch:
+                total_cost += float(batch.purchase_price) * item.quantity
         
         profit = float(today_sales) - float(total_cost)
         profit_margin = (profit / float(today_sales) * 100) if today_sales > 0 else 0
 
         # Top Selling Medicines
         from django.db.models import Count
-        top_selling = SaleItem.objects.values('medicine__name').annotate(
+        top_selling = SaleItem.objects.values('item__name').annotate(
             total_sold=Sum('quantity')
         ).order_by('-total_sold')[:5]
 
         # Inventory highlights (prioritize low stock and expiring items)
-        inventory_highlights = medicines.order_by('stock')[:6]
+        inventory_highlights = medicines.order_by('total_stock')[:6]
 
         context = {
             "total_skus": total_skus,
@@ -581,6 +592,7 @@ class CategoryPharmacyView(View):
             "profit_margin": round(profit_margin, 1),
             "top_selling_medicines": top_selling,
             "inventory_highlights": inventory_highlights,
+            "is_global_inventory": True,
         }
         return render(request, "categories/pharmacy.html", context)
 
@@ -743,178 +755,21 @@ class CategoryListView(View):
 # Pharmacy Sub-views — real data
 # ──────────────────────────────────────────────
 class PharmacyInventoryView(View):
-    """Pharmacy inventory management with real Medicine data."""
-    template_name = "categories/pharmacy_inventory.html"
-
+    """Deprecated: Redirects to Global Inventory."""
     def get(self, request):
-        from apps.pharmacy.models import Medicine
-        medicines = Medicine.objects.all()
-
-        # Optional filter from query param
-        filter_type = request.GET.get('filter')
-        if filter_type == 'low-stock':
-            medicines = medicines.filter(status__in=['LOW_STOCK', 'EXPIRED'])
-
-        context = {
-            "medicines": medicines,
-            "success_message": request.GET.get('success', ''),
-            "error_message": request.GET.get('error', ''),
-        }
-        return render(request, self.template_name, context)
+        return redirect('/dashboard/inventory/?type_code=MEDICINE')
 
     def post(self, request):
-        """Handle Add Stock form submission."""
-        from apps.pharmacy.models import Medicine
-        from django.shortcuts import redirect
-        from urllib.parse import urlencode
-        import uuid as _uuid
-
-        print("=" * 60)
-        print("📥 POST received on pharmacy-inventory")
-        print(f"   POST data: {dict(request.POST)}")
-        print("=" * 60)
-
-        name = request.POST.get('name', '').strip()
-        batch = request.POST.get('batch_number', '').strip()
-        qty = request.POST.get('quantity', '0')
-        price = request.POST.get('price', '0')
-        mrp = request.POST.get('mrp', '0')
-        tax_rate = request.POST.get('tax_rate', '0')
-        barcode = request.POST.get('barcode', '').strip()
-        min_stock = request.POST.get('min_stock_level', '10')
-        category = request.POST.get('category', 'General')
-        expiry = request.POST.get('expiry_date', '')
-
-        try:
-            qty = int(qty)
-            price = float(price)
-            mrp = float(mrp)
-            tax_rate = float(tax_rate)
-            min_stock = int(min_stock)
-        except (ValueError, TypeError):
-            qty = 0
-            price = 0.0
-            mrp = 0.0
-            tax_rate = 0.0
-            min_stock = 10
-
-        if not expiry:
-            expiry = (timezone.now() + timezone.timedelta(days=365)).date()
-        else:
-            from datetime import datetime as _dt
-            expiry = _dt.strptime(expiry, "%Y-%m-%d").date()
-
-        # Auto-generate SKU
-        sku = f"PHA-{_uuid.uuid4().hex[:6].upper()}"
-
-        try:
-            med = Medicine.objects.create(
-                name=name,
-                sku=sku,
-                category=category,
-                batch_number=batch,
-                price=price,
-                mrp=mrp,
-                tax_rate=tax_rate,
-                barcode=barcode if barcode else None,
-                min_stock_level=min_stock,
-                stock=qty,
-                expiry_date=expiry,
-            )
-            print(f"✅ Medicine created: {med.name} (SKU: {med.sku}, ID: {med.id})")
-            msg = f"Successfully added {name} (Batch {batch})"
-            return redirect(f"{request.path}?success={msg}")
-        except Exception as e:
-            print(f"❌ Error creating medicine: {e}")
-            import traceback
-            traceback.print_exc()
-            medicines = Medicine.objects.all()
-            return render(request, self.template_name, {
-                "medicines": medicines,
-                "error_message": str(e),
-            })
+        return redirect('/dashboard/inventory/?type_code=MEDICINE')
 
 
 class PharmacyPurchasesView(View):
-    """Pharmacy purchases and supplier management."""
-    template_name = "categories/pharmacy_purchases.html"
-
+    """Deprecated: Redirects to Global Suppliers/Purchases."""
     def get(self, request):
-        from apps.pharmacy.models import Supplier, PurchaseOrder, Medicine
-        suppliers = Supplier.objects.all()
-        purchase_orders = PurchaseOrder.objects.all()
-        medicines = Medicine.objects.all()
-        context = {
-            "suppliers": suppliers,
-            "purchase_orders": purchase_orders,
-            "medicines": medicines,
-            "success_message": request.GET.get('success', ''),
-            "error_message": request.GET.get('error', ''),
-        }
-        return render(request, self.template_name, context)
+        return redirect('/dashboard/inventory/suppliers/?type_code=MEDICINE')
 
     def post(self, request):
-        from apps.pharmacy.models import Supplier, PurchaseOrder, PurchaseOrderItem, PurchaseInvoice, Medicine
-        from django.shortcuts import redirect
-        import uuid
-        
-        action = request.POST.get('action')
-        
-        if action == 'add_supplier':
-            name = request.POST.get('name')
-            email = request.POST.get('email', '')
-            phone = request.POST.get('phone', '')
-            Supplier.objects.create(name=name, email=email, phone=phone)
-            return redirect(f"{request.path}?success=Supplier added successfully")
-            
-        elif action == 'create_po':
-            supplier_id = request.POST.get('supplier_id')
-            medicine_id = request.POST.get('medicine_id')
-            try:
-                qty = int(request.POST.get('quantity', 0))
-                price = float(request.POST.get('unit_price', 0))
-            except ValueError:
-                return redirect(f"{request.path}?error=Invalid quantity or price")
-                
-            sup = Supplier.objects.get(id=supplier_id)
-            med = Medicine.objects.get(id=medicine_id)
-            total = qty * price
-            
-            # Create PO
-            po = PurchaseOrder.objects.create(
-                order_number=f"PO-{uuid.uuid4().hex[:6].upper()}",
-                supplier=sup,
-                status='RECEIVED',
-                total_amount=total
-            )
-            
-            # Create PO Item
-            PurchaseOrderItem.objects.create(
-                purchase_order=po,
-                medicine=med,
-                quantity=qty,
-                received_quantity=qty,
-                unit_price=price,
-                total=total
-            )
-            
-            # Create Invoice
-            PurchaseInvoice.objects.create(
-                purchase_order=po,
-                supplier=sup,
-                invoice_number=f"INV-{uuid.uuid4().hex[:6].upper()}",
-                total_amount=total,
-                payment_status='PAID'
-            )
-            
-            # Update Medicine Stock
-            med.stock += qty
-            med.purchase_price = price
-            med.save()
-            
-            return redirect(f"{request.path}?success=Order received. Stock updated for {med.name}.")
-            
-        return redirect(request.path)
+        return redirect('/dashboard/inventory/suppliers/?type_code=MEDICINE')
 
 
 class PharmacySalesView(View):
@@ -922,46 +777,64 @@ class PharmacySalesView(View):
     template_name = "categories/pharmacy_sales.html"
 
     def get(self, request):
-        from apps.pharmacy.models import Sale, Medicine
+        from apps.pharmacy.models import Sale
+        from apps.inventory.models import InventoryItem
         recent_sales = Sale.objects.all()[:10]
-        medicines = Medicine.objects.filter(stock__gt=0)
+        medicines = InventoryItem.objects.filter(item_type__code='MEDICINE', total_stock__gt=0)
         
         rx_items_json = "[]"
         rx_id = request.GET.get('rx_id')
         if rx_id:
             try:
                 from apps.clinical.models import Prescription
-                import json
                 rx = Prescription.objects.get(id=rx_id)
                 items_data = []
                 for item in rx.items.all():
-                    # Attempt to find medicine with similar name in pharmacy inventory
                     med = medicines.filter(name__icontains=item.medicine_name).first()
                     if med:
+                        batch = med.batches.order_by('expiry_date', 'created_at').filter(is_active=True, quantity__gt=0).first()
+                        price = float(batch.mrp) if batch and batch.mrp else float(batch.selling_price) if batch else 0.0
+                        tax_rate = float(batch.tax_rate) if batch else 0.0
                         items_data.append({
                             "id": str(med.id),
                             "name": med.name,
-                            "price": float(med.mrp),
+                            "price": price,
                             "qty": 1,
-                            "tax_rate": float(med.tax_rate)
+                            "tax_rate": tax_rate
                         })
                 rx_items_json = json.dumps(items_data)
             except Exception as e:
                 print(f"Error loading prescription: {e}")
 
+        medicines_data = []
+        for m in medicines:
+            batch = m.batches.filter(is_active=True, quantity__gt=0).order_by('expiry_date', 'created_at').first()
+            price = float(batch.mrp) if batch and batch.mrp else float(batch.selling_price) if batch else 0.0
+            tax_rate = float(batch.tax_rate) if batch else 0.0
+            medicines_data.append({
+                "id": str(m.id),
+                "name": m.name,
+                "price": price,
+                "stock": float(m.total_stock),
+                "tax_rate": tax_rate
+            })
+            
         context = {
             "recent_sales": recent_sales,
-            "medicines": medicines,
+            "medicines_data": json.dumps(medicines_data),
             "preload_cart": rx_items_json,
             "rx_id": rx_id,
             "success_message": request.GET.get('success', ''),
             "error_message": request.GET.get('error', ''),
+            "is_global_inventory": True,
         }
         return render(request, self.template_name, context)
 
     def post(self, request):
-        from apps.pharmacy.models import Sale, SaleItem, Medicine
-        import uuid, json
+        from apps.pharmacy.models import Sale, SaleItem
+        from apps.inventory.models import InventoryItem, StockTransaction
+        import uuid
+        from decimal import Decimal
         
         try:
             cart_data = json.loads(request.POST.get('cart_data', '[]'))
@@ -986,21 +859,42 @@ class PharmacySalesView(View):
             
             # Create Items and Update Stock
             for item in cart_data:
-                med = Medicine.objects.get(id=item['id'])
-                qty = int(item['qty'])
-                price = float(item['price'])
+                med = InventoryItem.objects.get(id=item['id'])
+                qty_dec = Decimal(str(item.get('qty', 1)))
+                price = Decimal(str(item.get('price', 0)))
                 
                 SaleItem.objects.create(
                     sale=sale,
-                    medicine=med,
-                    quantity=qty,
+                    item=med,
+                    quantity=qty_dec,
                     unit_price=price,
-                    total=qty * price
+                    total=qty_dec * price
                 )
                 
-                # Deduct stock
-                med.stock = max(0, med.stock - qty)
-                med.save()
+                # Deduct stock from batches (FIFO/FEFO)
+                for batch in med.batches.filter(is_active=True, quantity__gt=0).order_by('expiry_date', 'created_at'):
+                    if qty_dec <= 0:
+                        break
+                    if batch.quantity >= qty_dec:
+                        batch.quantity -= qty_dec
+                        batch.save()
+                        qty_dec = Decimal('0')
+                    else:
+                        qty_dec -= batch.quantity
+                        batch.quantity = Decimal('0')
+                        batch.save()
+                
+                # Record transaction
+                StockTransaction.objects.create(
+                    item=med,
+                    transaction_type='OUT',
+                    quantity=qty_dec,
+                    performed_by=request.user,
+                    notes=f"Sold in POS Invoice {sale.invoice_number}"
+                )
+                
+                # Update item total
+                med.update_stock_status()
                 
             rx_id = request.POST.get('rx_id')
             if rx_id:

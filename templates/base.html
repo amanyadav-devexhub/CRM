@@ -184,11 +184,11 @@
                         {% if request.user|has_any_permission:'pharmacy.manage_inventory,pharmacy.dispense,pharmacy.update_stock,dashboard.pharmacy' %}
                     <div class="nav-section">
                         <div class="nav-section-title">Pharmacy</div>
-                        <a href="{% url 'pharmacy-inventory' %}" class="nav-item {% block nav_pharmacy_inv %}{% endblock %}">
+                        <a href="{% url 'inventory:inventory-dashboard' %}?type_code=MEDICINE" class="nav-item {% block nav_pharmacy_inv %}{% endblock %}">
                             <span class="icon material-icons-round">inventory_2</span>
                             Inventory
                         </a>
-                        <a href="{% url 'pharmacy-purchases' %}" class="nav-item {% block nav_pharmacy_pur %}{% endblock %}">
+                        <a href="{% url 'inventory:inventory-suppliers' %}?type_code=MEDICINE" class="nav-item {% block nav_pharmacy_pur %}{% endblock %}">
                             <span class="icon material-icons-round">local_shipping</span>
                             Purchases
                         </a>
@@ -214,7 +214,7 @@
                     <div class="nav-section">
                         <div class="nav-section-title">Laboratory</div>
                         {% if request.user|has_any_permission:'lab.manage_inventory,dashboard.lab' %}
-                        <a href="{% url 'lab-inventory' %}" class="nav-item {% block nav_lab_inv %}{% endblock %}">
+                        <a href="{% url 'inventory:inventory-dashboard' %}?type_code=LAB_REAGENT" class="nav-item {% block nav_lab_inv %}{% endblock %}">
                             <span class="icon material-icons-round">inventory_2</span>
                             Inventory
                         </a>
@@ -244,13 +244,13 @@
                         {% endif %}
                     {% endif %}
 
-                    <div class="nav-section">
+                    {% comment %} <div class="nav-section">
                         <div class="nav-section-title">Operations</div>
-                        <a href="{% url 'inventory-dashboard' %}" class="nav-item {% block nav_inventory %}{% endblock %}">
+                        <a href="{% url 'inventory:inventory-dashboard' %}" class="nav-item {% block nav_inventory %}{% endblock %}">
                             <span class="icon material-icons-round">inventory_2</span>
                             Global Inventory
                         </a>
-                    </div>
+                    </div> {% endcomment %}
                 </div>
 
                 <div class="nav-section">
@@ -321,6 +321,9 @@
                     <h1>{% block page_title %}Dashboard{% endblock %}</h1>
                 </div>
                 <div class="topbar-right">
+                    <div class="page-actions-container" style="display: flex; align-items: center; gap: 12px; margin-right: 12px;">
+                        {% block page_actions %}{% endblock %}
+                    </div>
                     <div class="search-box">
                         <span class="icon material-icons-round">search</span>
                         <input type="text" placeholder="Search patients, appointments…">
@@ -386,9 +389,43 @@
         </div>
     </div>
 
+    <!-- Toast Notifications -->
+    <div id="toast-container" style="position:fixed; top:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:12px;">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast {{ message.tags }}" style="min-width:300px; background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); padding:16px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); display:flex; align-items:center; gap:12px; animation: slideIn 0.3s ease-out; border-left:4px solid {% if message.tags == 'success' %}#10b981{% elif message.tags == 'error' %}#ef4444{% else %}#3b82f6{% endif %};">
+                <span class="material-icons-round" style="color: {% if message.tags == 'success' %}#10b981{% elif message.tags == 'error' %}#ef4444{% else %}#3b82f6{% endif %};">
+                    {% if message.tags == 'success' %}check_circle{% elif message.tags == 'error' %}error{% else %}info{% endif %}
+                </span>
+                <div style="flex:1; font-size:14px; color:#1f2937; font-weight:500;">{{ message }}</div>
+                <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#9ca3af; cursor:pointer;">
+                    <span class="material-icons-round" style="font-size:18px;">close</span>
+                </button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast { transition: opacity 0.3s ease; }
+    </style>
+
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Auto-hide toast messages after 5 seconds
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+            });
+
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = document.getElementById('themeIcon');
             

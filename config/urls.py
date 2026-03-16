@@ -190,7 +190,7 @@ urlpatterns = [
     path("dashboard/analytics/doctors/", DoctorAnalyticsView.as_view(), name="analytics-doctors"),
 
     # ── Global Inventory ──
-    path("dashboard/inventory/", include("apps.inventory.urls")),
+    path("dashboard/inventory/", include("apps.inventory.urls", namespace='inventory')),
 
     # ── Patient HTML pages ──
     path("patients/", PatientListView.as_view(), name="patient-list"),

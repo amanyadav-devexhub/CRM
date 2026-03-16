@@ -103,45 +103,9 @@ class LabResult(models.Model):
     def __str__(self):
         return f"{self.test.name} Result for {self.order.patient}"
 
-class LabInventoryItem(models.Model):
-    """Laboratory inventory items such as reagents, consumables, etc."""
-    CATEGORY_CHOICES = [
-        ('REAGENT', 'Reagent'),
-        ('CONSUMABLE', 'Consumable'),
-        ('EQUIPMENT', 'Equipment / Part'),
-        ('OTHER', 'Other'),
-    ]
-    
-    name = models.CharField(max_length=200)
-    sku = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Stock Keeping Unit / Barcode")
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='REAGENT')
-    unit = models.CharField(max_length=50, help_text="e.g., kits, boxes, ml")
-    quantity_in_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    reorder_level = models.DecimalField(max_digits=10, decimal_places=2, default=10.00, help_text="Alert when stock falls below this level")
-    expiry_date = models.DateField(null=True, blank=True)
-    last_updated = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+# Lab Inventory models are deprecated and migrated to apps.inventory
+# See migration 0005_migrate_lab_inventory.py
 
-    def __str__(self):
-        return f"{self.name} ({self.quantity_in_stock} {self.unit})"
-
-class LabInventoryTransaction(models.Model):
-    """Tracking stock additions, consumption, or adjustments."""
-    TRANSACTION_TYPES = [
-        ('ADD', 'Stock Added (Purchase)'),
-        ('CONSUME', 'Stock Consumed (Usage)'),
-        ('ADJUST', 'Manual Adjustment (Correction/Damage)'),
-    ]
-
-    item = models.ForeignKey(LabInventoryItem, on_delete=models.CASCADE, related_name='transactions')
-    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, help_text="Amount added or consumed")
-    date = models.DateTimeField(auto_now_add=True)
-    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='inventory_transactions')
-    notes = models.TextField(blank=True)
-
-    def __str__(self):
-        return f"{self.get_transaction_type_display()} - {self.item.name} ({self.quantity})"
 
 class LabOrderAuditLog(models.Model):
     """Tracks all result modifications, approval chains, and status changes for compliance."""

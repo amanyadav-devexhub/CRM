@@ -9,19 +9,25 @@
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
     <!-- Sales Entry -->
     <div class="card" style="border-top: 3px solid #3b82f6;">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>New Transaction</h3>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="number" id="quickQty" value="1" min="0.01" step="any" placeholder="Qty" 
+                    style="width: 70px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 8px; border-radius: 8px; outline: none; text-align: center;">
+                <select id="quickSelect" onchange="if(this.value) { const m = availableMeds.find(x => x.id === this.value); const q = parseFloat(document.getElementById('quickQty').value || 1); addItem(m.id, m.name, m.price, m.tax_rate, q); this.value=''; document.getElementById('quickQty').value=1; }" 
+                    style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 8px 12px; border-radius: 8px; outline: none; font-size: 14px; min-width: 220px;">
+                    <option value="">-- Quick Select Medicine --</option>
+                </select>
+            </div>
         </div>
         <div class="card-body">
             <div style="display: flex; gap: 12px; margin-bottom: 20px;">
                 <div class="search-box"
                     style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 4px 12px;">
                     <span class="material-icons-round" style="color: var(--text-muted);">search</span>
-                    <input type="text" id="posSearch" placeholder="Search product (typing 'Amox' adds Amoxicillin)..."
-                        style="background: none; border: none; color: white; padding: 10px; outline: none; width: 100%;"
-                        oninput="if(this.value.toLowerCase() === 'amox') { addItem('Amoxicillin 250mg', 120); this.value = ''; }">
+                    <input type="text" id="posSearch" placeholder="Search product..."
+                        style="background: none; border: none; color: white; padding: 10px; outline: none; width: 100%;">
                 </div>
-                <button class="btn-primary" onclick="addItem('Paracetamol 500mg', 25)">Add Medicines</button>
             </div>
 
             <table class="data-table" id="posTable">
@@ -102,11 +108,7 @@
 </div>
 
 <script>
-    const availableMeds = [
-        {% for m in medicines %}
-        { id: "{{ m.id }}", name: "{{ m.name|escapejs }}", price: {{ m.mrp }}, stock: {{ m.stock }}, tax_rate: {{ m.tax_rate }} },
-        {% endfor %}
-    ];
+    const availableMeds = JSON.parse('{{ medicines_data|escapejs }}' || '[]');
 
     let cart = [];
     {% if preload_cart %}
@@ -128,42 +130,43 @@
         const query = e.target.value.toLowerCase();
         if(query.length < 2) return;
         
+        // Find match in available meds
         const match = availableMeds.find(m => m.name.toLowerCase().includes(query));
         if (match) {
-            // Automatically add first match just for demo usability
-            addItem(match.id, match.name, match.price, match.tax_rate);
-            e.target.value = '';
+            // For better UX, let's not auto-add on every keystroke
+            // But if the user types the exact name or a specific trigger, add it
+            if (match.name.toLowerCase() === query) {
+                addItem(match.id, match.name, match.price, match.tax_rate);
+                e.target.value = '';
+            }
         }
     });
 
-    // Provide a list of buttons for easy clicking instead of just typing
-    const searchContainer = document.querySelector('.search-box');
-    const dropdown = document.createElement('div');
-    dropdown.innerHTML = `
-        <select onchange="if(this.value) { const m = availableMeds.find(x => x.id === this.value); addItem(m.id, m.name, m.price, m.tax_rate); this.value=''; }" style="margin-left: 12px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px; border-radius: 4px; outline: none;">
-            <option value="">-- Quick Select Medicine --</option>
-            ${availableMeds.map(m => `<option value="${m.id}">${m.name} (₹${m.price} - Stock: ${m.stock})</option>`).join('')}
-        </select>
-    `;
-    searchContainer.parentNode.appendChild(dropdown);
+    // Populate Quick Select
+    const quickSelect = document.getElementById('quickSelect');
+    if (quickSelect && availableMeds.length > 0) {
+        availableMeds.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = `${m.name} (₹${m.price} - Stock: ${m.stock})`;
+            quickSelect.appendChild(opt);
+        });
+    }
 
-    // Remove the hardcoded Paracetamol button
-    searchContainer.nextElementSibling?.remove();
-
-    function addItem(id, name, price, tax_rate) {
+    function addItem(id, name, price, tax_rate, q = 1) {
         document.getElementById('empty-row')?.remove();
         
         // Check if already in cart
         const existing = cart.find(i => i.id === id);
         if (existing) {
-            existing.qty += 1;
+            existing.qty += q;
         } else {
-            const item = { id, name, price: parseFloat(price), qty: 1, tax_rate: parseFloat(tax_rate) };
+            const item = { id, name, price: parseFloat(price), qty: q, tax_rate: parseFloat(tax_rate) };
             cart.push(item);
         }
         
         renderCart();
-        if (typeof showToast === 'function') showToast(`Added ${name} to cart`, 'success');
+        if (typeof showToast === 'function') showToast(`Added ${q} ${name} to cart`, 'success');
     }
 
     function renderCart() {
@@ -176,7 +179,7 @@
                     <td style="padding: 12px 20px; color: white;">${item.name}</td>
                     <td style="padding: 12px 20px; color: var(--text-secondary);">₹${item.price.toFixed(2)}</td>
                     <td style="padding: 12px 20px; color: var(--text-secondary);">
-                        <input type="number" value="${item.qty}" min="1" style="width: 50px; background: none; border: 1px solid var(--border-color); color: white; text-align: center; border-radius: 4px;" onchange="updateQty(${index}, this.value)">
+                        <input type="number" value="${item.qty}" min="0.01" step="any" style="width: 70px; background: none; border: 1px solid var(--border-color); color: white; text-align: center; border-radius: 4px;" onchange="updateQty(${index}, this.value)">
                     </td>
                     <td style="padding: 12px 20px; color: white; font-weight: 600;">₹${(item.price * item.qty).toFixed(2)}</td>
                     <td style="padding: 12px 20px;"><button onclick="removeItem(${index})" class="icon-btn" style="color: #ff4757;"><span class="material-icons-round">delete</span></button></td>
@@ -187,7 +190,7 @@
     }
 
     function updateQty(index, val) {
-        const n = parseInt(val);
+        const n = parseFloat(val);
         if (n > 0) cart[index].qty = n;
         renderCart();
     }

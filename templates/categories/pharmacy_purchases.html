@@ -98,9 +98,9 @@
             </button>
         </div>
         <div class="drawer-body">
-            <form method="post" action="{% url 'pharmacy-purchases' %}" id="supplierForm" class="drawer-form">
+            <form method="post" action="{% url 'inventory:inventory-suppliers' %}" id="supplierForm" class="drawer-form">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="add_supplier">
+                <input type="hidden" name="redirect_url" value="pharmacy-purchases">
                 
                 <div class="form-group">
                     <label class="form-label">Supplier Name*</label>

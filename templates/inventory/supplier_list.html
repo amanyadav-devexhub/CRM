@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block page_title %}Inventory Suppliers{% endblock %}
+{% block page_subtitle %}Manage suppliers for medicines, reagents, and equipment.{% endblock %}
+
+
+
+{% block content %}
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+    <button class="btn-primary" onclick="openDrawer('addSupplierDrawer')">
+        <span class="material-icons-round">add</span>
+        Add Supplier
+    </button>
+</div>
+<div class="card animate-in">
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Supplier Name</th>
+                    <th>Contact Info</th>
+                    <th>Item Types</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in suppliers %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: white;">{{ supplier.name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ supplier.contact_person }}</div>
+                    </td>
+                    <td>
+                        <div style="font-size: 14px;">{{ supplier.email }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ supplier.phone }}</div>
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                            {% for type in supplier.item_types.all %}
+                            <span class="badge-tag" style="background: rgba(168, 85, 247, 0.1); color: #a855f7; font-size: 10px;">{{ type.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if supplier.is_active %}
+                        <span class="badge-tag active">Active</span>
+                        {% else %}
+                        <span class="badge-tag expired">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="icon-btn" onclick="openEditSupplier('{{ supplier.id }}')" title="Edit Supplier"><span class="material-icons-round">edit</span></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No suppliers found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Supplier Drawer -->
+<div id="addSupplierDrawer" class="drawer-overlay">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h2>Add New Supplier</h2>
+            <button class="drawer-close" onclick="closeDrawer('addSupplierDrawer')">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <form method="post" action="{% url 'inventory:inventory-suppliers' %}" id="addSupplierForm" class="drawer-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Supplier Name*</label>
+                    <input type="text" name="name" required placeholder="e.g. PharmaCorp India" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact Person</label>
+                    <input type="text" name="contact_person" placeholder="e.g. Rahul Sharma" class="form-input">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" placeholder="contact@supplier.com" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" placeholder="+91 9876543210" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GST Number</label>
+                    <input type="text" name="gst_number" placeholder="22AAAAA0000A1Z5" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Item Types Provided</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 8px;">
+                        {% for type in item_types %}
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px;">
+                            <input type="checkbox" name="item_types" value="{{ type.id }}" style="width: auto;">
+                            <span>{{ type.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Office Address</label>
+                    <textarea name="address" class="form-input" rows="3" placeholder="Full address..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button type="button" class="btn-secondary" onclick="closeDrawer('addSupplierDrawer')">Cancel</button>
+            <button type="submit" form="addSupplierForm" class="btn-primary">Save Supplier</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Supplier Drawer -->
+<div id="editSupplierDrawer" class="drawer-overlay">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h2>Edit Supplier</h2>
+            <button class="drawer-close" onclick="closeDrawer('editSupplierDrawer')">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <form method="post" action="" id="editSupplierForm" class="drawer-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Supplier Name*</label>
+                    <input type="text" name="name" id="editSupplierName" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact Person</label>
+                    <input type="text" name="contact_person" id="editSupplierContact" class="form-input">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" id="editSupplierEmail" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" id="editSupplierPhone" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GST Number</label>
+                    <input type="text" name="gst_number" id="editSupplierGst" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Item Types Provided</label>
+                    <div id="editItemTypesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 8px;">
+                        {% for type in item_types %}
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px;">
+                            <input type="checkbox" name="item_types" value="{{ type.id }}" class="edit-type-checkbox" style="width: auto;">
+                            <span>{{ type.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Office Address</label>
+                    <textarea name="address" id="editSupplierAddress" class="form-input" rows="3"></textarea>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" name="is_active" id="editSupplierActive" style="width: auto;">
+                    <label class="form-label" style="margin: 0;">Is Active</label>
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button type="button" class="btn-secondary" onclick="closeDrawer('editSupplierDrawer')">Cancel</button>
+            <button type="submit" form="editSupplierForm" class="btn-primary">Update Supplier</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+</style>
+</style>
+
+<script>
+    function openEditSupplier(supplierId) {
+        fetch(`/dashboard/inventory/suppliers/${supplierId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editSupplierName').value = data.name;
+                document.getElementById('editSupplierContact').value = data.contact_person;
+                document.getElementById('editSupplierEmail').value = data.email;
+                document.getElementById('editSupplierPhone').value = data.phone;
+                document.getElementById('editSupplierGst').value = data.gst_number;
+                document.getElementById('editSupplierAddress').value = data.address;
+                document.getElementById('editSupplierActive').checked = data.is_active;
+                
+                // Set item types checkboxes
+                document.querySelectorAll('.edit-type-checkbox').forEach(cb => {
+                    cb.checked = data.item_types.includes(cb.value);
+                });
+                
+                // Set form action
+                document.getElementById('editSupplierForm').action = `/dashboard/inventory/suppliers/${supplierId}/edit/`;
+                
+                openDrawer('editSupplierDrawer');
+            })
+            .catch(error => {
+                console.error('Error fetching supplier details:', error);
+                alert('Failed to load supplier details.');
+            });
+    }
+</script>
+{% endblock %}

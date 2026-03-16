@@ -15,22 +15,42 @@ from django.shortcuts import render
 # URL prefix → feature code mapping
 # ──────────────────────────────────────────────
 URL_FEATURE_MAP = {
-    "/patients/":       "patients",
-    "/appointments/":   "appointments",
-    "/billing/":        "billing",
-    "/pharmacy/":       "pharmacy",
-    "/labs/":           "lab",
-    "/communications/": "communications",
-    "/notifications/":  "notifications",
-    "/analytics/":      "analytics",
+    # Standalone routes
+    "/patients/":                "patients",
+    "/pharmacy/":                "pharmacy",
+    "/lab/":                     "lab",
+    "/communications/":          "communications",
+    "/notifications/":           "notifications",
+
+    # Dashboard sub-routes
+    "/dashboard/appointments/":  "appointments",
+    "/dashboard/billing/":       "billing",
+    "/dashboard/clinical/":      "clinical_notes",
+    "/dashboard/analytics/":     "analytics",
+
+    # API routes
+    "/api/patients/":            "patients",
+    "/api/communications/":      "communications",
+    "/api/notifications/":       "notifications",
 }
 
 # Paths that are exempt from feature checks
 EXEMPT_PREFIXES = (
-    "/", "/login/", "/register/", "/verify-otp/", "/resend-otp/",
-    "/logout/", "/admin/", "/admin-dashboard/", "/dashboard/",
-    "/onboarding/", "/static/", "/api/", "/categories/",
+    "/login/", "/register/", "/verify-otp/", "/resend-otp/",
+    "/logout/", "/admin/", "/admin-dashboard/",
+    "/onboarding/", "/static/", "/categories/",
     "/tenants/",
+    "/api/tenants/", "/api/auth/",
+    # Safe dashboard paths (no feature gating needed)
+    "/dashboard/settings/",
+    "/dashboard/staff/",
+    "/dashboard/doctors/",
+    "/dashboard/schedules/",
+)
+
+# Exact paths that are exempt (dashboard home pages)
+EXEMPT_EXACT = (
+    "/", "/dashboard", "/dashboard/doctor", "/dashboard/reception",
 )
 
 
@@ -44,29 +64,43 @@ class FeatureFlagMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         path = request.path
+        
+        # Strip trailing slash for exact matching to avoid /dashboard vs /dashboard/ issues
+        clean_path = path.rstrip("/") if path != "/" else "/"
 
-        # 1. Skip exempt paths
-        if path in ("/", ""):
+        # 1. Skip exact exempt paths (dashboard home, root, etc.)
+        if clean_path in EXEMPT_EXACT:
             return None
+
+        # 2. Skip exempt prefixes
         for prefix in EXEMPT_PREFIXES:
-            if prefix != "/" and path.startswith(prefix):
+            if path.startswith(prefix):
                 return None
 
-        # 2. Check view-level required_feature attribute
+        # 3. Check view-level required_feature attribute
         feature_code = getattr(view_func, "required_feature", None)
 
-        # 3. Fallback: URL prefix mapping
+        # 4. Fallback: URL prefix mapping
         if not feature_code:
-            for prefix, code in URL_FEATURE_MAP.items():
-                if path.startswith(prefix):
-                    feature_code = code
-                    break
+            if path.startswith("/dashboard/inventory/"):
+                type_code = request.GET.get("type_code")
+                if type_code == "MEDICINE":
+                    feature_code = "pharmacy"
+                elif type_code == "LAB_REAGENT":
+                    feature_code = "lab"
+                else:
+                    feature_code = "pharmacy_or_lab"
+            else:
+                for prefix, code in URL_FEATURE_MAP.items():
+                    if path.startswith(prefix):
+                        feature_code = code
+                        break
 
         # No feature requirement found — allow
         if not feature_code:
             return None
 
-        # 4. Must have authenticated user with a tenant
+        # 5. Must have authenticated user with a tenant
         if not request.user.is_authenticated:
             return None  # RoleRouteMiddleware handles auth redirects
 
@@ -78,8 +112,12 @@ class FeatureFlagMiddleware:
         if not tenant:
             return None  # No tenant = onboarding user, let them through
 
-        # 5. Check feature access
-        if not tenant.has_feature(feature_code):
+        # 6. Check feature access
+        if feature_code == "pharmacy_or_lab":
+            if not (tenant.has_feature("pharmacy") or tenant.has_feature("lab")):
+                return render(request, "feature_locked.html", status=403)
+        elif not tenant.has_feature(feature_code):
             return render(request, "feature_locked.html", status=403)
 
         return None
+

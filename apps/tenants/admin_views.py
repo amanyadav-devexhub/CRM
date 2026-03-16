@@ -1083,14 +1083,36 @@ class AdminInventoryTypesView(View):
 
     def get(self, request):
         from apps.inventory.models import ItemType, ItemCategory
-        item_types = ItemType.objects.prefetch_related('categories').all()
+        from django.core.paginator import Paginator
+        
+        # Base querysets
+        item_types = ItemType.objects.all().order_by('name')
+        categories = ItemCategory.objects.select_related('item_type').all().order_by('item_type__name', 'name')
+        
+        # Pagination for Item Types
+        types_page = request.GET.get('page_types', 1)
+        types_paginator = Paginator(item_types, 20)
+        types_page_obj = types_paginator.get_page(types_page)
+        
+        # Pagination for Categories
+        categories_page = request.GET.get('page_categories', 1)
+        categories_paginator = Paginator(categories, 20)
+        categories_page_obj = categories_paginator.get_page(categories_page)
+
+        active_tab = request.GET.get("tab", "item-types")
+        
+        # Build context including all item_types for the dropdown in "Add Category" panel
         return render(request, self.template_name, {
-            "item_types": item_types,
+            "types_page_obj": types_page_obj,
+            "categories_page_obj": categories_page_obj,
+            "all_item_types": item_types, # For select dropdown in form
+            "active_tab": active_tab,
         })
 
     def post(self, request):
         from apps.inventory.models import ItemType, ItemCategory
         action = request.POST.get("action")
+        active_tab = request.POST.get("active_tab", "all-items")
 
         if action == "add_type":
             name = request.POST.get("type_name", "").strip()
@@ -1132,5 +1154,27 @@ class AdminInventoryTypesView(View):
             state = "activated" if category.is_active else "deactivated"
             messages.success(request, f"Category '{category.name}' {state}.")
 
-        return redirect("admin-inventory-types")
+        elif action == "delete_type":
+            type_id = request.POST.get("type_id")
+            item_type = get_object_or_404(ItemType, id=type_id)
+            name = item_type.name
+            try:
+                item_type.delete()
+                messages.success(request, f"Item Type '{name}' deleted successfully.")
+            except Exception as e:
+                messages.error(request, f"Cannot delete '{name}': it is referenced by other records.")
+
+        elif action == "delete_category":
+            cat_id = request.POST.get("category_id")
+            category = get_object_or_404(ItemCategory, id=cat_id)
+            name = category.name
+            try:
+                category.delete()
+                messages.success(request, f"Category '{name}' deleted successfully.")
+            except Exception as e:
+                messages.error(request, f"Cannot delete '{name}': it is referenced by other records.")
+
+        from django.urls import reverse
+        redirect_url = reverse("admin-inventory-types")
+        return redirect(f"{redirect_url}?tab={active_tab}")
 

@@ -383,6 +383,115 @@
     </div>
 </div>
 
+<!-- ─── Consumables & Supplies ─── -->
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header" style="justify-content:space-between; display:flex;">
+        <h3><span class="icon material-icons-round">inventory_2</span> Consumables & Supplies</h3>
+        <button type="button" class="action-btn" onclick="openConsumptionModal()" style="padding:4px 8px; font-size:12px; background:rgba(16,185,129,.1); color:#10b981; border:none; cursor:pointer; border-radius:6px;">
+            <span class="material-icons-round" style="font-size:14px;">add_shopping_cart</span> Record Use
+        </button>
+    </div>
+    <div class="card-body" style="padding:0;">
+        {% if recent_consumption %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Used By</th>
+                    <th>Billable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in recent_consumption %}
+                <tr>
+                    <td>{{ tx.timestamp|date:"d M H:i" }}</td>
+                    <td style="font-weight:500;">{{ tx.item.name }}</td>
+                    <td>{{ tx.quantity|stringformat:"d"|default:tx.quantity }}</td>
+                    <td>{{ tx.performed_by.username }}</td>
+                    <td>
+                        <span class="badge-tag {% if tx.is_billable %}active{% else %}trial{% endif %}">
+                            {% if tx.is_billable %}Yes{% else %}No{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">shopping_basket</div>
+            <p>No consumables recorded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ─── Consumption Modal ─── -->
+<div id="consumptionModal" class="modal-backdrop" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div class="modal-card" style="background:var(--card-bg); width:100%; max-width:500px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); overflow:hidden; box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+        <div style="padding:24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:18px;">Record Consumable Usage</h3>
+            <button type="button" onclick="closeConsumptionModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <form id="consumptionForm" method="post" action="{% url 'inventory:record-consumption' %}">
+            {% csrf_token %}
+            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+            <input type="hidden" name="redirect_url" value="{{ request.path }}">
+            
+            <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">Select Item <span style="color:var(--accent-red);">*</span></label>
+                    <select name="item_id" required class="form-input select2" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;">
+                        <option value="">-- Select Item --</option>
+                        {% for item in inventory_items %}
+                        <option value="{{ item.id }}">{{ item.name }} ({{ item.total_stock }} available)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:13px; color:var(--text-secondary);">Quantity <span style="color:var(--accent-red);">*</span></label>
+                        <input type="number" name="quantity" value="1" min="1" required class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;">
+                    </div>
+                    
+                    <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:13px; color:var(--text-secondary);">Billable</label>
+                        <select name="is_billable" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;">
+                            <option value="true" selected>Yes - Add to Bill</option>
+                            <option value="false">No - Clinic Cost</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">Notes</label>
+                    <textarea name="notes" rows="2" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px; resize:vertical;" placeholder="e.g. Used during wound dressing"></textarea>
+                </div>
+            </div>
+            
+            <div style="padding:16px 24px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:flex-end; gap:12px; background:rgba(0,0,0,0.2);">
+                <button type="button" onclick="closeConsumptionModal()" style="padding:10px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#fff; cursor:pointer;">Cancel</button>
+                <button type="submit" style="padding:10px 16px; border-radius:8px; border:none; background:var(--accent-green); color:#fff; font-weight:500; cursor:pointer;">Record Usage</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openConsumptionModal() {
+        document.getElementById('consumptionModal').style.display = 'flex';
+    }
+    function closeConsumptionModal() {
+        document.getElementById('consumptionModal').style.display = 'none';
+        document.getElementById('consumptionForm').reset();
+    }
+</script>
+
 <!-- ─── Documents + Emergency Contacts ─── -->
 <div class="content-grid equal">
     <div class="card">

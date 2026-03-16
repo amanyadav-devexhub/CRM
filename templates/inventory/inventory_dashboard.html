@@ -1,18 +1,9 @@
 {% extends "base.html" %}
 
 {% block page_title %}Global Inventory Dashboard{% endblock %}
-{% block page_subtitle %}Centralized management for medical supplies, reagents, and equipment.{% endblock %}
+{% block page_subtitle %}Centralized management for medical supplies, reagents, and equipment. (Schema: {{ request.tenant.schema_name }}){% endblock %}
 
-{% block page_actions %}
-<div class="search-box" style="margin-right: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 4px 12px;">
-    <span class="material-icons-round" style="font-size: 20px; color: var(--text-muted);">search</span>
-    <input type="text" id="inventorySearch" placeholder="Search items..." style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px;">
-</div>
-<button class="btn-primary" onclick="openDrawer('addItemDrawer')">
-    <span class="material-icons-round">add</span>
-    Add Item
-</button>
-{% endblock %}
+
 
 {% block content %}
 <div class="stats-grid animate-in" style="margin-bottom: 2rem;">
@@ -46,6 +37,17 @@
     </div>
 </div>
 
+<div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="search-box" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 4px 12px; min-width: 300px;">
+        <span class="material-icons-round" style="font-size: 20px; color: var(--text-muted);">search</span>
+        <input type="text" id="inventorySearch" placeholder="Search items..." style="background: none; border: none; color: white; padding: 8px; outline: none; font-size: 14px; width: 100%;">
+    </div>
+    <button class="btn-primary" onclick="openDrawer('addItemDrawer')">
+        <span class="material-icons-round">add</span>
+        Add Item
+    </button>
+</div>
+
 <div class="card animate-in">
     <div class="card-body" style="padding: 0;">
         <table class="data-table" id="inventoryTable">
@@ -63,7 +65,6 @@
                 <tr>
                     <td>
                         <div style="font-weight: 600; color: white;">{{ item.name }}</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">SKU: {{ item.sku }}</div>
                     </td>
                     <td>
                         <div style="display:flex; flex-direction:column; gap:4px;">
@@ -90,7 +91,7 @@
                     </td>
                     <td>
                         <div style="display:flex; gap:8px;">
-                            <button class="icon-btn" title="Edit Item"><span class="material-icons-round">edit</span></button>
+                            <button class="icon-btn" onclick="openEditItem('{{ item.id }}')" title="Edit Item"><span class="material-icons-round">edit</span></button>
                             <button class="icon-btn" onclick="openStockTransaction('{{ item.id }}', '{{ item.name|escapejs }}')" title="Update Stock"><span class="material-icons-round">swap_vert</span></button>
                         </div>
                     </td>
@@ -117,29 +118,20 @@
             </button>
         </div>
         <div class="drawer-body">
-            <form method="post" action="{% url 'inventory-item-create' %}" class="drawer-form" id="addItemForm">
+            <form method="post" action="{% url 'inventory:inventory-item-create' %}" class="drawer-form" id="addItemForm">
                 {% csrf_token %}
                 <div class="form-group">
                     <label class="form-label">Item Name</label>
                     <input type="text" name="name" required placeholder="e.g. Paracetamol 500mg" class="form-input">
                 </div>
                 
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">SKU</label>
-                        <input type="text" name="sku" required placeholder="SKU-123" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Unit</label>
-                        <input type="text" name="unit" value="pcs" required class="form-input">
-                    </div>
-                </div>
+
 
                 <div class="grid-2">
                     <div class="form-group">
                         <label class="form-label">Item Type</label>
                         <select name="item_type" id="typeSelect" required class="form-select" onchange="fetchCategories(this.value)">
-                            <option value="">Select Type</option>
+                            <option value="">Select Type ({% if item_types %}{{ item_types|length }}{% else %}0{% endif %} types found)</option>
                             {% for t in item_types %}
                             <option value="{{ t.id }}">{{ t.name }}</option>
                             {% endfor %}
@@ -155,14 +147,18 @@
 
                 <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                     <h4 style="margin-bottom: 1rem; color: var(--accent-purple);">Initial Stock (Batch)</h4>
+                    <div class="form-group">
+                        <label class="form-label">Batch Number</label>
+                        <input type="text" name="batch_number" placeholder="B2024-001" class="form-input">
+                    </div>
                     <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Batch Number</label>
-                            <input type="text" name="batch_number" placeholder="B2024-001" class="form-input">
-                        </div>
                         <div class="form-group">
                             <label class="form-label">Initial Qty</label>
                             <input type="number" name="quantity" value="0" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Unit</label>
+                            <input type="text" name="unit" value="pcs" required class="form-input">
                         </div>
                     </div>
                     <div class="grid-2">
@@ -185,6 +181,59 @@
         <div class="drawer-footer">
             <button class="btn-secondary" onclick="closeDrawer('addItemDrawer')">Cancel</button>
             <button type="submit" form="addItemForm" class="btn-primary">Save Item</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Item Drawer -->
+<div id="editItemDrawer" class="drawer-overlay">
+    <div class="drawer-panel" style="width: 500px;">
+        <div class="drawer-header">
+            <h2>Edit Inventory Item</h2>
+            <button class="drawer-close" onclick="closeDrawer('editItemDrawer')">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <form method="post" action="" class="drawer-form" id="editItemForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" name="name" id="editItemName" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Unit</label>
+                    <input type="text" name="unit" id="editItemUnit" required class="form-input">
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Item Type</label>
+                        <select name="item_type" id="editTypeSelect" required class="form-select" onchange="fetchCategories(this.value, 'editCatSelect')">
+                            <option value="">Select Type</option>
+                            {% for t in item_types %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select name="item_category" id="editCatSelect" class="form-select">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Min Stock Level</label>
+                    <input type="number" name="min_stock_level" id="editItemMinStock" class="form-input">
+                </div>
+            </form>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn-secondary" onclick="closeDrawer('editItemDrawer')">Cancel</button>
+            <button type="submit" form="editItemForm" class="btn-primary">Update Item</button>
         </div>
     </div>
 </div>
@@ -227,8 +276,8 @@
 </div>
 
 <script>
-    function fetchCategories(typeId) {
-        const catSelect = document.getElementById('catSelect');
+    function fetchCategories(typeId, targetId = 'catSelect') {
+        const catSelect = document.getElementById(targetId);
         catSelect.innerHTML = '<option value="">Loading...</option>';
         
         if (!typeId) {
@@ -239,13 +288,48 @@
         fetch(`/dashboard/inventory/ajax/categories/?type_id=${typeId}`)
             .then(response => response.json())
             .then(data => {
+                const currentVal = catSelect.getAttribute('data-pending-val');
                 catSelect.innerHTML = '<option value="">Select Category</option>';
                 data.forEach(cat => {
                     const opt = document.createElement('option');
                     opt.value = cat.id;
                     opt.textContent = cat.name;
+                    if (currentVal && currentVal == cat.id) {
+                        opt.selected = true;
+                    }
                     catSelect.appendChild(opt);
                 });
+                catSelect.removeAttribute('data-pending-val');
+            });
+    }
+
+    function openEditItem(itemId) {
+        // Fetch item details via AJAX
+        fetch(`/dashboard/inventory/${itemId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editItemName').value = data.name;
+                document.getElementById('editItemUnit').value = data.unit;
+                document.getElementById('editItemMinStock').value = data.min_stock_level;
+                document.getElementById('editTypeSelect').value = data.item_type_id;
+                
+                // Set pending category value to be selected after fetch
+                const catSelect = document.getElementById('editCatSelect');
+                if (data.item_category_id) {
+                    catSelect.setAttribute('data-pending-val', data.item_category_id);
+                }
+                
+                // Trigger category fetch
+                fetchCategories(data.item_type_id, 'editCatSelect');
+                
+                // Set form action
+                document.getElementById('editItemForm').action = `/dashboard/inventory/${itemId}/edit/`;
+                
+                openDrawer('editItemDrawer');
+            })
+            .catch(error => {
+                console.error('Error fetching item details:', error);
+                alert('Failed to load item details.');
             });
     }
 

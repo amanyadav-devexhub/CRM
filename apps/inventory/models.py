@@ -63,6 +63,7 @@ class Supplier(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     gst_number = models.CharField(max_length=50, blank=True)
+    item_types = models.ManyToManyField(ItemType, blank=True, related_name='suppliers')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -199,6 +200,12 @@ class StockTransaction(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, related_name='global_inventory_transactions'
     )
+    
+    # ── Bedside / Procedure Tracking ──
+    patient_id = models.UUIDField(null=True, blank=True, help_text="Linked patient (from tenant schema)")
+    appointment_id = models.UUIDField(null=True, blank=True, help_text="Linked appointment (from tenant schema)")
+    is_billable = models.BooleanField(default=True, help_text="Charge this item to the patient")
+    
     notes = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 

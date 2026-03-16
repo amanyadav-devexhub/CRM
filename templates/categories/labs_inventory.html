@@ -69,9 +69,9 @@
                     <td><span class="badge-tag" style="background:rgba(255,255,255,0.05);">{{ item.get_category_display }}</span></td>
                     <td><code>{{ item.sku|default:"-" }}</code></td>
                     <td style="font-weight:700; {% if item.is_low_stock %}color:var(--accent-orange);{% endif %}">
-                        {{ item.quantity_in_stock|floatformat:2 }} {{ item.unit }}
+                        {{ item.total_stock|floatformat:2 }} {{ item.unit }}
                     </td>
-                    <td style="color:var(--text-muted); font-size:0.9rem;">{{ item.reorder_level }} {{ item.unit }}</td>
+                    <td style="color:var(--text-muted); font-size:0.9rem;">{{ item.min_stock_level }} {{ item.unit }}</td>
                     <td>
                         {% if item.expiry_date %}
                             <span style="{% if item.is_expired %}color:var(--accent-red);{% elif item.is_expiring_soon %}color:var(--accent-orange);{% endif %} font-size:0.9rem;">
@@ -133,10 +133,10 @@
                 <div class="form-group">
                     <label>Category</label>
                     <select name="category">
-                        <option value="REAGENT">Reagent</option>
+                        <option value="LAB_REAGENT">Reagent</option>
                         <option value="CONSUMABLE">Consumable</option>
                         <option value="EQUIPMENT">Equipment</option>
-                        <option value="OTHER">Other</option>
+                        <option value="GENERAL">Other</option>
                     </select>
                 </div>
                 <div class="form-group">

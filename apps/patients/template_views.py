@@ -62,6 +62,19 @@ class PatientDetailView(View):
 
     def get(self, request, pk):
         patient = get_object_or_404(Patient, pk=pk)
+        from apps.inventory.models import InventoryItem, StockTransaction
+        
+        # Consumables for bedside tracking
+        consumables = InventoryItem.objects.filter(
+            item_type__code__in=['CONSUMABLE', 'MEDICAL_SUPPLY', 'SURGICAL_ITEM']
+        ).select_related('item_type')
+        
+        # Recent consumption for this patient
+        recent_consumption = StockTransaction.objects.filter(
+            patient_id=patient.id,
+            transaction_type='OUT'
+        ).select_related('item', 'performed_by').order_by('-timestamp')[:10]
+
         return render(request, "patients/patient_detail.html", {
             "patient": patient,
             "medical_history": patient.medical_history.all(),
@@ -70,6 +83,8 @@ class PatientDetailView(View):
             "documents": patient.documents.all(),
             "emergency_contacts": patient.emergency_contacts.all(),
             "lab_orders": patient.lab_orders.all().order_by('-ordered_at'),
+            "inventory_items": consumables,
+            "recent_consumption": recent_consumption,
         })
 
 

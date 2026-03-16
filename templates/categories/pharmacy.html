@@ -216,7 +216,7 @@
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     {% for item in top_selling_medicines %}
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
-                        <div style="font-weight: 500; font-size: 14px; color: white;">{{ item.medicine__name }}</div>
+                        <div style="font-weight: 500; font-size: 14px; color: white;">{{ item.item__name }}</div>
                         <div style="font-size: 12px; color: var(--text-muted);">{{ item.total_sold }} sold</div>
                     </div>
                     {% empty %}

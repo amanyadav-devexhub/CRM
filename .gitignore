@@ -2,6 +2,7 @@
 text_files/
 implementation.md
 
+
 # Python bytecode
 __pycache__/
 *.pyc
@@ -24,3 +25,5 @@ HealthCRM_Dummy_Data.xlsx
 link_tenants.py
 fix_links.py
 remove_local_sidebars.py
+debug_urls.py
+all_matches.txt
