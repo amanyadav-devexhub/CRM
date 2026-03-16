@@ -32,25 +32,46 @@
             <h3>Quick Actions</h3>
         </div>
         <div class="action-stack">
-            {% if apt.status == "SCHEDULED" or apt.status == "CONFIRMED" %}
+
+            {% if apt.status == "SCHEDULED" %}
+            <!-- ── Step 1: Doctor must Confirm or Cancel ── -->
+            {% if is_assigned_doctor %}
+            <div class="action-label">Doctor Confirmation Required</div>
+            <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="confirm">
+                <button type="submit" class="action-btn green">
+                    <span class="material-icons-round">check_circle</span> Confirm Appointment
+                </button>
+            </form>
+            <button type="button" class="action-btn red" id="showCancelBtn" onclick="document.getElementById('cancelSection').style.display='block'; this.style.display='none';">
+                <span class="material-icons-round">cancel</span> Cancel Appointment
+            </button>
+            <div id="cancelSection" style="display:none;">
+                <form method="post" onsubmit="return confirm('Cancel this appointment?')">{% csrf_token %}
+                    <input type="hidden" name="action" value="decline">
+                    <textarea name="reason" class="filter-input" rows="3" style="width:100%; margin-bottom:.5rem;" placeholder="Reason for cancelling..." required></textarea>
+                    <button type="submit" class="action-btn red">
+                        <span class="material-icons-round">send</span> Submit Cancellation
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="pending-notice">
+                <span class="material-icons-round">hourglass_top</span>
+                Awaiting confirmation from Dr. {{ apt.doctor.name }}
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if apt.status == "CONFIRMED" %}
+            <!-- ── Step 2: After confirmation — Check-in, Status, Cancel ── -->
             <form method="post">{% csrf_token %}
                 <input type="hidden" name="action" value="check_in">
-                <button type="submit" class="action-btn green">
-                    <span class="material-icons-round">login</span> Check In
+                <button type="submit" class="action-btn teal">
+                    <span class="material-icons-round">login</span> Check In Patient
                 </button>
             </form>
-            {% endif %}
 
-            {% if apt.status == "IN_PROGRESS" %}
-            <form method="post">{% csrf_token %}
-                <input type="hidden" name="action" value="check_out">
-                <button type="submit" class="action-btn blue">
-                    <span class="material-icons-round">logout</span> Check Out
-                </button>
-            </form>
-            {% endif %}
-
-            {% if apt.status != "COMPLETED" and apt.status != "CANCELLED" %}
             <form method="post">{% csrf_token %}
                 <input type="hidden" name="action" value="update_status">
                 <select name="status" class="filter-input" style="width:100%; margin-bottom:.5rem;">
@@ -69,8 +90,82 @@
                 </button>
             </form>
             {% endif %}
+
+            {% if apt.status == "IN_PROGRESS" %}
+            <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="check_out">
+                <button type="submit" class="action-btn blue">
+                    <span class="material-icons-round">logout</span> Check Out Patient
+                </button>
+            </form>
+
+            <form method="post">{% csrf_token %}
+                <input type="hidden" name="action" value="update_status">
+                <select name="status" class="filter-input" style="width:100%; margin-bottom:.5rem;">
+                    {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if apt.status == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="action-btn muted">Update Status</button>
+            </form>
+            {% endif %}
+
         </div>
     </div>
+</div>
+
+<!-- ─── Activity Timeline ─── -->
+<div class="detail-card" style="margin-top:1.25rem;">
+    <div class="card-header">
+        <span class="material-icons-round" style="color:#8b5cf6;">timeline</span>
+        <h3>Activity Timeline</h3>
+    </div>
+
+    {% if activities %}
+    <div class="timeline">
+        {% for act in activities %}
+        <div class="timeline-item">
+            <div class="timeline-dot {{ act.action|lower }}"></div>
+            <div class="timeline-content">
+                <div class="timeline-header">
+                    <span class="timeline-action {{ act.action|lower }}">
+                        <span class="material-icons-round timeline-icon">
+                            {% if act.action == 'BOOKED' %}event_available
+                            {% elif act.action == 'CONFIRMED' %}check_circle
+                            {% elif act.action == 'DECLINED' %}do_not_disturb
+                            {% elif act.action == 'CHECKED_IN' %}login
+                            {% elif act.action == 'CHECKED_OUT' %}logout
+                            {% elif act.action == 'COMPLETED' %}task_alt
+                            {% elif act.action == 'CANCELLED' %}cancel
+                            {% elif act.action == 'NO_SHOW' %}person_off
+                            {% else %}swap_horiz{% endif %}
+                        </span>
+                        {{ act.get_action_display }}
+                    </span>
+                    <span class="timeline-time">{{ act.performed_at|date:"d M Y" }} · {{ act.performed_at|time:"h:i A" }}</span>
+                </div>
+                <div class="timeline-meta">
+                    {% if act.performed_by %}
+                    <span class="timeline-user">
+                        <span class="material-icons-round" style="font-size:14px;">person</span>
+                        {{ act.performed_by.first_name }} {{ act.performed_by.last_name }}
+                        {% if act.performed_by.role %}({{ act.performed_by.role.name }}){% endif %}
+                    </span>
+                    {% endif %}
+                    {% if act.notes %}
+                    <span class="timeline-note">{{ act.notes }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:2rem; text-align:center; color:rgba(241,245,249,.4);">
+        <span class="material-icons-round" style="font-size:2rem; display:block; margin-bottom:.5rem;">history</span>
+        <p>No activity recorded yet.</p>
+    </div>
+    {% endif %}
 </div>
 
 <div style="margin-top:1rem;">
@@ -106,6 +201,8 @@
     .action-btn { width: 100%; padding: .6rem 1rem; border-radius: 10px; border: none; cursor: pointer; font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: .5rem; justify-content: center; transition: all .15s; }
     .action-btn.green { background: rgba(16,185,129,.12); color: #10b981; }
     .action-btn.green:hover { background: rgba(16,185,129,.2); }
+    .action-btn.teal { background: rgba(20,184,166,.12); color: #14b8a6; }
+    .action-btn.teal:hover { background: rgba(20,184,166,.2); }
     .action-btn.blue { background: rgba(59,130,246,.12); color: #3b82f6; }
     .action-btn.blue:hover { background: rgba(59,130,246,.2); }
     .action-btn.muted { background: rgba(255,255,255,.06); color: rgba(241,245,249,.7); }
@@ -116,6 +213,46 @@
     .filter-input option { background: #111827; }
     .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: rgba(241,245,249,.5); text-decoration: none; }
     .btn-back:hover { color: #3b82f6; }
+
+    /* ── Timeline ── */
+    .timeline { display: flex; flex-direction: column; position: relative; padding-left: 24px; }
+    .timeline::before { content: ''; position: absolute; left: 10px; top: 8px; bottom: 8px; width: 2px; background: rgba(255,255,255,.06); border-radius: 2px; }
+
+    .timeline-item { display: flex; gap: 16px; padding: .75rem 0; position: relative; }
+    .timeline-item:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,.03); }
+
+    .timeline-dot { width: 10px; height: 10px; border-radius: 50%; position: absolute; left: -19px; top: 1.1rem; z-index: 1; }
+    .timeline-dot.booked { background: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,.4); }
+    .timeline-dot.confirmed { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,.4); }
+    .timeline-dot.declined { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,.4); }
+    .timeline-dot.checked_in { background: #14b8a6; box-shadow: 0 0 8px rgba(20,184,166,.4); }
+    .timeline-dot.checked_out { background: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,.4); }
+    .timeline-dot.completed { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,.4); }
+    .timeline-dot.cancelled, .timeline-dot.no_show { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,.4); }
+    .timeline-dot.status_changed { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,.4); }
+
+    .timeline-content { flex: 1; }
+    .timeline-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; }
+    .timeline-action { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 600; }
+    .timeline-icon { font-size: 16px; }
+    .timeline-action.booked { color: #3b82f6; }
+    .timeline-action.confirmed { color: #10b981; }
+    .timeline-action.declined { color: #ef4444; }
+    .timeline-action.checked_in { color: #14b8a6; }
+    .timeline-action.checked_out { color: #8b5cf6; }
+    .timeline-action.completed { color: #10b981; }
+    .timeline-action.cancelled, .timeline-action.no_show { color: #ef4444; }
+    .timeline-action.status_changed { color: #f59e0b; }
+
+    .timeline-time { font-size: .75rem; color: rgba(241,245,249,.35); }
+
+    .timeline-meta { margin-top: .35rem; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+    .timeline-user { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; color: rgba(241,245,249,.55); }
+    .timeline-note { font-size: .78rem; color: rgba(241,245,249,.4); font-style: italic; }
+
+    .action-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: #fbbf24; margin-bottom: .25rem; }
+    .pending-notice { display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem; border-radius: 10px; background: rgba(251,191,36,.08); color: #fbbf24; font-size: .85rem; font-weight: 500; }
+    .pending-notice .material-icons-round { font-size: 1.1rem; }
 </style>
 
 {% endblock %}

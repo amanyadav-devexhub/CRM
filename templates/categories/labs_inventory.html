@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block page_title %}Lab <span>/ Inventory Management</span>{% endblock %}
+
+{% block content %}
+<div class="stats-grid animate-in" style="margin-bottom: 2rem;">
+    <!-- Stock Summary -->
+    <div class="stat-card purple">
+        <div class="stat-info">
+            <div class="stat-label">Total Inventory Items</div>
+            <div class="stat-value">{{ items.count }}</div>
+        </div>
+        <div class="stat-icon purple"><span class="material-icons-round">inventory</span></div>
+    </div>
+
+    <!-- Alerts Card -->
+    <div class="stat-card orange">
+        <div class="stat-info">
+            <div class="stat-label">Low Stock Alerts</div>
+            <div class="stat-value">{{ low_stock_count }}</div>
+        </div>
+        <div class="stat-icon orange"><span class="material-icons-round">warning</span></div>
+    </div>
+
+    <!-- Expiry Alerts -->
+    <div class="stat-card red">
+        <div class="stat-info">
+            <div class="stat-label">Expiry Alerts</div>
+            <div class="stat-value">{{ expiry_count }}</div>
+        </div>
+        <div class="stat-icon red"><span class="material-icons-round">event_busy</span></div>
+    </div>
+</div>
+
+<div class="action-bar" style="margin-bottom: 2rem; display:flex; justify-content:space-between; align-items:center;">
+    <div class="search-box">
+        <form method="get" style="display:flex; gap:10px;">
+            <input type="text" name="search" placeholder="Search by name or SKU..." value="{{ request.GET.search }}" style="padding:8px 15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:white; min-width:300px;">
+            <button type="submit" class="action-btn purple"><span class="material-icons-round">search</span></button>
+        </form>
+    </div>
+    <button class="action-btn purple" onclick="togglePanel('addItemPanel')">
+        <span class="material-icons-round">add</span> Add New Item
+    </button>
+</div>
+
+<div class="card animate-in">
+    <div class="card-header">
+        <h3><span class="icon material-icons-round">list</span> Inventory Stock</h3>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>SKU</th>
+                    <th>In Stock</th>
+                    <th>Min Level</th>
+                    <th>Expiry</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td style="font-weight:600;">{{ item.name }}</td>
+                    <td><span class="badge-tag" style="background:rgba(255,255,255,0.05);">{{ item.get_category_display }}</span></td>
+                    <td><code>{{ item.sku|default:"-" }}</code></td>
+                    <td style="font-weight:700; {% if item.is_low_stock %}color:var(--accent-orange);{% endif %}">
+                        {{ item.quantity_in_stock|floatformat:2 }} {{ item.unit }}
+                    </td>
+                    <td style="color:var(--text-muted); font-size:0.9rem;">{{ item.reorder_level }} {{ item.unit }}</td>
+                    <td>
+                        {% if item.expiry_date %}
+                            <span style="{% if item.is_expired %}color:var(--accent-red);{% elif item.is_expiring_soon %}color:var(--accent-orange);{% endif %} font-size:0.9rem;">
+                                {{ item.expiry_date|date:"d M Y" }}
+                            </span>
+                        {% else %}
+                            <span style="color:var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.is_expired %}
+                            <span class="badge-tag expired">EXPIRED</span>
+                        {% elif item.is_expiring_soon %}
+                            <span class="badge-tag trial">EXPIRING</span>
+                        {% elif item.is_low_stock %}
+                            <span class="badge-tag trial">LOW STOCK</span>
+                        {% else %}
+                            <span class="badge-tag active">HEALTHY</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:right;">
+                        <button class="tbl-action" onclick="openUpdateStock('{{ item.id }}', '{{ item.name|escapejs }}', '{{ item.unit|escapejs }}')" title="Update Stock">
+                            <span class="material-icons-round">swap_vert</span>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align:center; padding:3rem; color:var(--text-muted);">No inventory items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- SIDE PANELS overlay -->
+<div id="sidePanelOverlay" class="panel-overlay" onclick="togglePanel(null)"></div>
+
+<!-- Add Item Panel -->
+<div id="addItemPanel" class="side-panel">
+    <div class="panel-header">
+        <h3>Add New Inventory Item</h3>
+        <button class="close-btn" onclick="togglePanel('addItemPanel')"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="panel-content">
+        <form method="post" class="dynamic-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_item">
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" name="name" required placeholder="e.g., EDTA Tubes">
+            </div>
+            <div class="form-group">
+                <label>SKU / Barcode</label>
+                <input type="text" name="sku" placeholder="Optional SKU">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="REAGENT">Reagent</option>
+                        <option value="CONSUMABLE">Consumable</option>
+                        <option value="EQUIPMENT">Equipment</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Base Unit</label>
+                    <input type="text" name="unit" required placeholder="kits, boxes, ml">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Initial Quantity</label>
+                    <input type="number" step="0.01" name="quantity_in_stock" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Reorder Level</label>
+                    <input type="number" step="0.01" name="reorder_level" value="10">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Expiry Date</label>
+                <input type="date" name="expiry_date">
+            </div>
+            <div style="margin-top:2rem;">
+                <button type="submit" class="submit-btn purple">Save Item</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Update Stock Panel -->
+<div id="updateStockPanel" class="side-panel">
+    <div class="panel-header">
+        <h3>Update Stock: <span id="update_item_name"></span></h3>
+        <button class="close-btn" onclick="togglePanel('updateStockPanel')"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="panel-content">
+        <form method="post" class="dynamic-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="transaction">
+            <input type="hidden" name="item_id" id="update_item_id">
+            <div class="form-group">
+                <label>Transaction Type</label>
+                <select name="transaction_type" id="trans_type">
+                    <option value="ADD">Stock IN (Receive)</option>
+                    <option value="CONSUME">Stock OUT (Consume)</option>
+                    <option value="ADJUST">Manual Adjustment</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantity (<span id="update_item_unit"></span>)</label>
+                <input type="number" step="0.01" name="quantity" required min="0.01">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" placeholder="Reasons for adjustment or reference..."></textarea>
+            </div>
+            <div style="margin-top:2rem;">
+                <button type="submit" class="submit-btn purple">Update Inventory</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePanel(panelId) {
+        document.querySelectorAll('.side-panel').forEach(p => {
+            if(p.id !== panelId) p.classList.remove('active');
+        });
+        const overlay = document.getElementById('sidePanelOverlay');
+        if (panelId) {
+            const panel = document.getElementById(panelId);
+            panel.classList.add('active');
+            overlay.classList.add('active');
+        } else {
+            overlay.classList.remove('active');
+            document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('active'));
+        }
+    }
+
+    function openUpdateStock(id, name, unit) {
+        document.getElementById('update_item_id').value = id;
+        document.getElementById('update_item_name').innerText = name;
+        document.getElementById('update_item_unit').innerText = unit;
+        togglePanel('updateStockPanel');
+    }
+</script>
+
+<style>
+    .panel-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:900; opacity:0; visibility:hidden; transition:0.3s; backdrop-filter:blur(4px); }
+    .panel-overlay.active { opacity:1; visibility:visible; }
+    .side-panel { position:fixed; top:0; right:-450px; width:450px; height:100%; background:#1e1e2e; z-index:1000; transition:0.4s cubic-bezier(0.4, 0, 0.2, 1); padding:40px; box-shadow:-10px 0 30px rgba(0,0,0,0.3); }
+    .side-panel.active { right:0; }
+    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
+    .close-btn { background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer; }
+</style>
+{% endblock %}

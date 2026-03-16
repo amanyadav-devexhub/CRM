@@ -1,41 +1,6 @@
-{% extends "categories/base_mgmt.html" %}
+{% extends "categories/base_pharmacy.html" %}
 
-{% block hub_icon %}medication{% endblock %}
-{% block hub_name %}PharmTrack{% endblock %}
-
-{% block hub_nav %}
-<div class="nav-section">
-    <div class="nav-section-title">Operations</div>
-    <a href="{% url 'category-pharmacy' %}" class="nav-item">
-        <span class="icon material-icons-round">dashboard</span>
-        Dashboard
-    </a>
-    <a href="{% url 'pharmacy-inventory' %}" class="nav-item">
-        <span class="icon material-icons-round">inventory_2</span>
-        Inventory
-    </a>
-    <a href="{% url 'pharmacy-sales' %}" class="nav-item active">
-        <span class="icon material-icons-round">shopping_cart</span>
-        Sales & POS
-    </a>
-    <a href="{% url 'pharmacy-prescriptions' %}" class="nav-item">
-        <span class="icon material-icons-round">receipt_long</span>
-        Prescriptions
-    </a>
-</div>
-
-<div class="nav-section">
-    <div class="nav-section-title">Reports</div>
-    <a href="#" class="nav-item">
-        <span class="icon material-icons-round">analytics</span>
-        Sales Report
-    </a>
-    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item" style="color: var(--accent-orange);">
-        <span class="icon material-icons-round">warning</span>
-        Expiry Alerts
-    </a>
-</div>
-{% endblock %}
+{% block nav_sales %}active{% endblock %}
 
 {% block page_title %}Point of Sale (POS){% endblock %}
 {% block page_subtitle %}Process new sales and manage transactions.{% endblock %}
@@ -43,7 +8,7 @@
 {% block content %}
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
     <!-- Sales Entry -->
-    <div class="card">
+    <div class="card" style="border-top: 3px solid #3b82f6;">
         <div class="card-header">
             <h3>New Transaction</h3>
         </div>
@@ -56,7 +21,7 @@
                         style="background: none; border: none; color: white; padding: 10px; outline: none; width: 100%;"
                         oninput="if(this.value.toLowerCase() === 'amox') { addItem('Amoxicillin 250mg', 120); this.value = ''; }">
                 </div>
-                <button class="btn-primary" onclick="addItem('Paracetamol 500mg', 25)">Add Paracetamol</button>
+                <button class="btn-primary" onclick="addItem('Paracetamol 500mg', 25)">Add Medicines</button>
             </div>
 
             <table class="data-table" id="posTable">
@@ -80,7 +45,7 @@
     </div>
 
     <!-- Checkout Sidebar -->
-    <div class="card" style="background: rgba(55, 66, 250, 0.05);">
+    <div class="card" style="background: rgba(55, 66, 250, 0.05); border-top: 3px solid #10b981;">
         <div class="card-header">
             <h3>Cart Summary</h3>
         </div>
@@ -90,72 +55,183 @@
                 <span id="subtotal">₹0.00</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                <span style="color: var(--text-secondary);">Tax (GST 12%)</span>
+                <span style="color: var(--text-secondary);">Tax</span>
                 <span id="tax">₹0.00</span>
             </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span style="color: var(--text-secondary);">Discount</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="color: var(--text-muted);">₹</span>
+                    <input type="number" id="discountInput" value="0" style="width: 60px; background: none; border: none; border-bottom: 1px solid var(--border-color); color: white; text-align: right; outline: none; padding: 2px;" onchange="updateSummary()">
+                </div>
+            </div>
+            
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
-                <span style="font-weight: 700; font-size: 18px;">Total</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                <span style="font-weight: 700; font-size: 18px;">Grand Total</span>
                 <span style="font-weight: 700; font-size: 18px; color: #2ed573;" id="total">₹0.00</span>
             </div>
-            <button class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;"
-                onclick="processCheckout()">
-                Process Checkout
-            </button>
+            
+            <form id="checkoutForm" method="post" action="{% url 'pharmacy-sales' %}">
+                {% csrf_token %}
+                <input type="hidden" name="cart_data" id="cartDataPayload">
+                <input type="hidden" name="subtotal" id="formSubtotal">
+                <input type="hidden" name="tax" id="formTax">
+                <input type="hidden" name="discount" id="formDiscount">
+                <input type="hidden" name="grand_total" id="formTotal">
+                {% if rx_id %}
+                <input type="hidden" name="rx_id" value="{{ rx_id }}">
+                {% endif %}
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Payment Mode</label>
+                    <select name="payment_mode" style="width: 100%; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; color: white; outline: none;">
+                        <option value="CASH">Cash</option>
+                        <option value="CARD">Card / POS</option>
+                        <option value="UPI">UPI / QR</option>
+                        <option value="INSURANCE">Insurance</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: #10b981;" onclick="processCheckout()">
+                    Complete Sale
+                </button>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-    let cart = [];
+    const availableMeds = [
+        {% for m in medicines %}
+        { id: "{{ m.id }}", name: "{{ m.name|escapejs }}", price: {{ m.mrp }}, stock: {{ m.stock }}, tax_rate: {{ m.tax_rate }} },
+        {% endfor %}
+    ];
 
-    function addItem(name, price) {
+    let cart = [];
+    {% if preload_cart %}
+    try {
+        const preloaded = JSON.parse('{{ preload_cart|escapejs }}');
+        if (preloaded && preloaded.length > 0) {
+            cart = preloaded;
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(renderCart, 100);
+            });
+        }
+    } catch(e) {
+        console.error("Error parsing preloaded cart:", e);
+    }
+    {% endif %}
+
+    // Attach search listener
+    document.getElementById('posSearch').addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase();
+        if(query.length < 2) return;
+        
+        const match = availableMeds.find(m => m.name.toLowerCase().includes(query));
+        if (match) {
+            // Automatically add first match just for demo usability
+            addItem(match.id, match.name, match.price, match.tax_rate);
+            e.target.value = '';
+        }
+    });
+
+    // Provide a list of buttons for easy clicking instead of just typing
+    const searchContainer = document.querySelector('.search-box');
+    const dropdown = document.createElement('div');
+    dropdown.innerHTML = `
+        <select onchange="if(this.value) { const m = availableMeds.find(x => x.id === this.value); addItem(m.id, m.name, m.price, m.tax_rate); this.value=''; }" style="margin-left: 12px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px; border-radius: 4px; outline: none;">
+            <option value="">-- Quick Select Medicine --</option>
+            ${availableMeds.map(m => `<option value="${m.id}">${m.name} (₹${m.price} - Stock: ${m.stock})</option>`).join('')}
+        </select>
+    `;
+    searchContainer.parentNode.appendChild(dropdown);
+
+    // Remove the hardcoded Paracetamol button
+    searchContainer.nextElementSibling?.remove();
+
+    function addItem(id, name, price, tax_rate) {
         document.getElementById('empty-row')?.remove();
-        const item = { name, price, qty: 1 };
-        cart.push(item);
+        
+        // Check if already in cart
+        const existing = cart.find(i => i.id === id);
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            const item = { id, name, price: parseFloat(price), qty: 1, tax_rate: parseFloat(tax_rate) };
+            cart.push(item);
+        }
+        
         renderCart();
-        if (typeof showToast === 'function') showToast(`Added ${name} to cart`);
+        if (typeof showToast === 'function') showToast(`Added ${name} to cart`, 'success');
     }
 
     function renderCart() {
         const tbody = document.querySelector('#posTable tbody');
-        tbody.innerHTML = cart.map((item, index) => `
-            <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 12px 20px; color: white;">${item.name}</td>
-                <td style="padding: 12px 20px; color: var(--text-secondary);">₹${item.price.toFixed(2)}</td>
-                <td style="padding: 12px 20px; color: var(--text-secondary);">${item.qty}</td>
-                <td style="padding: 12px 20px; color: white; font-weight: 600;">₹${(item.price * item.qty).toFixed(2)}</td>
-                <td style="padding: 12px 20px;"><button onclick="removeItem(${index})" class="icon-btn" style="color: #ff4757;"><span class="material-icons-round">delete</span></button></td>
-            </tr>
-        `).join('');
-        updateSummary();
-    }
-
-    function removeItem(index) {
-        cart.splice(index, 1);
         if (cart.length === 0) {
-            document.querySelector('#posTable tbody').innerHTML = `<tr id="empty-row"><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Cart is empty. Add items to start.</td></tr>`;
+            tbody.innerHTML = `<tr id="empty-row"><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Cart is empty. Add items to start.</td></tr>`;
         } else {
-            renderCart();
+            tbody.innerHTML = cart.map((item, index) => `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 12px 20px; color: white;">${item.name}</td>
+                    <td style="padding: 12px 20px; color: var(--text-secondary);">₹${item.price.toFixed(2)}</td>
+                    <td style="padding: 12px 20px; color: var(--text-secondary);">
+                        <input type="number" value="${item.qty}" min="1" style="width: 50px; background: none; border: 1px solid var(--border-color); color: white; text-align: center; border-radius: 4px;" onchange="updateQty(${index}, this.value)">
+                    </td>
+                    <td style="padding: 12px 20px; color: white; font-weight: 600;">₹${(item.price * item.qty).toFixed(2)}</td>
+                    <td style="padding: 12px 20px;"><button onclick="removeItem(${index})" class="icon-btn" style="color: #ff4757;"><span class="material-icons-round">delete</span></button></td>
+                </tr>
+            `).join('');
         }
         updateSummary();
     }
 
+    function updateQty(index, val) {
+        const n = parseInt(val);
+        if (n > 0) cart[index].qty = n;
+        renderCart();
+    }
+
+    function removeItem(index) {
+        cart.splice(index, 1);
+        renderCart();
+    }
+
     function updateSummary() {
         const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        const tax = subtotal * 0.12;
-        const total = subtotal + tax;
+        
+        // Calculate tax line by line based on item tax_rate
+        const tax = cart.reduce((acc, item) => {
+            const itemTotal = item.price * item.qty;
+            return acc + (itemTotal * (item.tax_rate / 100));
+        }, 0);
+
+        const discount = parseFloat(document.getElementById('discountInput').value || 0);
+        const total = subtotal + tax - discount;
 
         document.getElementById('subtotal').innerText = `₹${subtotal.toFixed(2)}`;
         document.getElementById('tax').innerText = `₹${tax.toFixed(2)}`;
-        document.getElementById('total').innerText = `₹${total.toFixed(2)}`;
+        document.getElementById('total').innerText = `₹${Math.max(0, total).toFixed(2)}`;
+        
+        // Update hidden form inputs
+        document.getElementById('formSubtotal').value = subtotal.toFixed(2);
+        document.getElementById('formTax').value = tax.toFixed(2);
+        document.getElementById('formDiscount').value = discount.toFixed(2);
+        document.getElementById('formTotal').value = Math.max(0, total).toFixed(2);
+        document.getElementById('cartDataPayload').value = JSON.stringify(cart);
     }
 
     function processCheckout() {
-        if (cart.length === 0) return alert('Cart is empty!');
-        if (typeof showToast === 'function') showToast(`Successfully processed payment for ₹${document.getElementById('total').innerText}`);
-        cart = [];
-        renderCart();
+        if (cart.length === 0) return alert('Cannot process empty cart.');
+        document.getElementById('checkoutForm').submit();
     }
+    
+    // Check for success/error messages passed via backend
+    {% if success_message %}
+        document.addEventListener('DOMContentLoaded', () => showToast("{{ success_message }}", 'success'));
+    {% endif %}
+    {% if error_message %}
+        document.addEventListener('DOMContentLoaded', () => showToast("{{ error_message }}", 'error'));
+    {% endif %}
 </script>
 {% endblock %}

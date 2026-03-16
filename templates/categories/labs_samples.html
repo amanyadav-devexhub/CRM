@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard <span>/ Sample Collection</span>{% endblock %}
+
+{% block content %}
+<div class="card" style="animation: slideUp 0.3s ease-out;">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round" style="color:var(--accent-orange)">vaccines</span>
+            Pending Collections
+        </h3>
+    </div>
+    <div class="card-body" style="padding:0">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Patient</th>
+                    <th>Tests Requiring Samples</th>
+                    <th>Priority</th>
+                    <th>Ordered At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><code>{{ order.id|stringformat:".8s" }}</code></td>
+                    <td>
+                        <strong>{{ order.patient.full_name }}</strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">ID: {{ order.patient.patient_id }}</div>
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                            {% for test in order.tests.all %}
+                            <span class="badge-tag trial" title="{{ test.name }}">{{ test.code }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if order.priority == 'URGENT' or order.priority == 'STAT' %}
+                        <span style="color:var(--accent-red); font-weight:600;">{{ order.get_priority_display }}</span>
+                        {% else %}
+                        {{ order.get_priority_display }}
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.85rem; color:var(--text-muted);">{{ order.ordered_at|date:"M d, H:i" }}</td>
+                    <td>
+                        <button class="btn-primary" onclick="openCollectionPanel('{{ order.id }}', '{{ order.patient.full_name|escapejs }}', '{{ order.tests.first.sample_type|default:"Blood"|escapejs }}')" style="padding: 6px 12px; font-size: 12px;">
+                            <span class="material-icons-round" style="font-size:16px;">bloodtype</span> Collect
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:3rem; color:var(--text-muted)">
+                        <span class="material-icons-round" style="font-size:3rem; display:block; margin-bottom:10px; opacity:0.4;">check_circle_outline</span>
+                        Hooray! No pending sample collections.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Side Panel Overlay -->
+<div class="side-panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+
+<!-- Collect Sample Panel -->
+<div class="side-panel" id="collection-panel">
+    <div class="side-panel-header">
+        <h3>
+            <span class="material-icons-round" style="color:var(--accent-orange)">vaccines</span>
+            Collect Sample
+        </h3>
+        <button type="button" onclick="closePanel()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+            <span class="material-icons-round">close</span>
+        </button>
+    </div>
+    <div class="side-panel-content">
+        <div style="background:var(--bg-secondary); padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid var(--border-color);">
+            <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Patient</div>
+            <strong style="font-size:16px; color:var(--text-primary);" id="panel-patient-name">Patient Name</strong>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="order_id" id="panel-order-id" value="">
+            
+            <div class="form-group">
+                <label>Primary Sample Type</label>
+                <select name="sample_type" id="panel-sample-type" class="form-control" required>
+                    <option value="Blood">Blood (Venipuncture)</option>
+                    <option value="Urine">Urine</option>
+                    <option value="Saliva">Saliva / Swab</option>
+                    <option value="Stool">Stool</option>
+                    <option value="Tissue">Tissue / Biopsy</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Barcode / Vial ID</label>
+                <div style="position:relative;">
+                    <span class="material-icons-round" style="position:absolute; left:10px; top:10px; color:var(--text-muted);">qr_code_scanner</span>
+                    <input type="text" name="barcode" class="form-control" placeholder="Scan or typing vial ID..." style="padding-left:36px;">
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Leave empty to auto-generate based on Order ID</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Collection Location</label>
+                <input type="text" name="location" class="form-control" placeholder="e.g. Room 102, Phlebotomy Station A">
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button type="submit" class="btn-primary" style="width:100%; padding:12px; font-size:1rem; justify-content:center; background:linear-gradient(135deg, #f59e0b, #d97706);">
+                    <span class="material-icons-round">check_circle</span> Mark as Collected
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if success_message %}
+<div class="alert success animate-in"
+    style="position:fixed; bottom:2rem; right:2rem; background:var(--accent-green); color:white; padding:1rem 2rem; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); z-index:1001;">
+    {{ success_message }}
+</div>
+<script>setTimeout(() => document.querySelector('.alert').remove(), 3000);</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openCollectionPanel(orderId, patientName, suggestedType) {
+    document.getElementById('panel-order-id').value = orderId;
+    document.getElementById('panel-patient-name').textContent = patientName;
+    
+    // Try to auto-select suggested type if it matches our options
+    const typeSelect = document.getElementById('panel-sample-type');
+    for (let i = 0; i < typeSelect.options.length; i++) {
+        if (typeSelect.options[i].value.toLowerCase() === (suggestedType || '').toLowerCase()) {
+            typeSelect.selectedIndex = i;
+            break;
+        }
+    }
+
+    document.getElementById('collection-panel').classList.add('open');
+    document.getElementById('panel-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePanel() {
+    document.getElementById('collection-panel').classList.remove('open');
+    document.getElementById('panel-overlay').classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+</script>
+{% endblock %}

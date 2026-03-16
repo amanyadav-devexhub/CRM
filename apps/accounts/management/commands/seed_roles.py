@@ -1,75 +1,157 @@
 from django.core.management.base import BaseCommand
 from apps.accounts.models import Role, Permission
-from apps.tenants.models import Tenant
-
+from apps.tenants.models import Tenant, CategoryRoleTemplate, Category
 
 class Command(BaseCommand):
-    help = "Seed default roles for all tenants"
+    help = "Seed CategoryRoleTemplates for admin panel and assign to all tenants"
 
     def handle(self, *args, **kwargs):
+        categories = Category.objects.all()
+        if not categories.exists():
+            self.stdout.write(self.style.WARNING("No categories found. Please create categories in the admin dashboard before seeding." ))
+            return
 
+        # 1. Seed CategoryRoleTemplates (Admin Panel Roles)
+        role_definitions = {
+            "Admin / Super Admin": {
+                "code": "admin",
+                "is_active": True,
+                "is_admin": True,
+                "perms": [
+                    "dashboard.admin", "users.manage", "roles.manage", "departments.manage",
+                    "reports.view", "clinics.manage", "billing.access", "audit.view"
+                ]
+            },
+            "Clinic Manager / Head of Department": {
+                "code": "manager",
+                "is_active": True,
+                "is_admin": False,
+                "perms": [
+                    "dashboard.manager", "reports.view", "leave.manage", 
+                    "appointments.assign_doctor", "staff.view_schedule", 
+                    "appointments.moderate", "inventory.approve_requests"
+                ]
+            },
+            "Doctor / Specialist": {
+                "code": "doctor",
+                "is_active": True,
+                "is_admin": False,
+                "perms": [
+                    "dashboard.doctor", "patients.view_records", "patients.edit_records",
+                    "patients.edit_medical_history", "prescriptions.edit",
+                    "patients.edit_vitals", "prescriptions.issue", "lab.view_results",
+                    "appointments.schedule"
+                ]
+            },
+            "Nurse / Assistant": {
+                "code": "nurse",
+                "is_active": True,
+                "is_admin": False,
+                "perms": [
+                    "dashboard.nurse", "patients.view_records", "patients.update_vitals",
+                    "procedures.assist", "lab.view_results", "appointments.manage_limited"
+                ]
+            },
+            "Receptionist / Front Desk": {
+                "code": "receptionist",
+                "is_active": True,
+                "is_admin": False,
+                "perms": [
+                    "dashboard.reception", "patients.register", "appointments.schedule",
+                    "billing.access", "notifications.send", "patients.check_in_out"
+                ]
+            },
+            "Lab Technician / Diagnostic Staff": {
+                "code": "lab_technician",
+                "is_active": True,
+                "is_admin": False,
+                "perms": [
+                    "dashboard.lab", "lab.upload_results", "lab.manage_inventory",
+                    "lab.schedule_tests"
+                ]
+            },
+            "Pharmacist": {
+                "code": "pharmacist",
+                "is_active": True,
+                "is_admin": False,
+                "perms": [
+                    "dashboard.pharmacy", "pharmacy.manage_inventory", "pharmacy.dispense",
+                    "pharmacy.view_prescriptions", "pharmacy.update_stock"
+                ]
+            },
+            "Patient / Portal Access": {
+                "code": "patient",
+                "is_active": True,
+                "is_admin": False,
+                "perms": [
+                    "dashboard.patient", "patients.view_own_records", "lab.view_results",
+                    "pharmacy.view_prescriptions", "appointments.schedule", "billing.pay",
+                    "notifications.receive"
+                ]
+            }
+        }
+
+        self.stdout.write("--- Seeding Admin Panel Roles (CategoryRoleTemplate) ---")
+        for cat in categories:
+            for role_name, data in role_definitions.items():
+                template, created = CategoryRoleTemplate.objects.get_or_create(
+                    category=cat,
+                    name=role_name,
+                    defaults={
+                        "code": data["code"],
+                        "is_active": data["is_active"],
+                        "is_admin_role": data["is_admin"]
+                    }
+                )
+                
+                # Update existing templates with new fields if they were already created
+                if not created:
+                    template.code = data["code"]
+                    template.is_active = data["is_active"]
+                    template.is_admin_role = data["is_admin"]
+                    template.save()
+
+                perm_objs = []
+                for perm_code in data["perms"]:
+                    try:
+                        p = Permission.objects.get(code=perm_code)
+                        perm_objs.append(p)
+                    except Permission.DoesNotExist:
+                        pass
+                
+                template.permissions.set(perm_objs)
+
+        self.stdout.write(self.style.SUCCESS("CategoryRoleTemplates seeded successfully.\n"))
+
+        # 2. Assign these templates to Tenants
+        self.stdout.write("--- Assigning Roles to Tenants ---")
         tenants = Tenant.objects.all()
 
         for tenant in tenants:
+            category_obj = tenant.category_obj
+            category_code = tenant.category
+            
+            if category_obj:
+                templates = CategoryRoleTemplate.objects.filter(category=category_obj)
+            else:
+                templates = CategoryRoleTemplate.objects.filter(category__code=category_code)
 
-            admin_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Admin",
-                defaults={"is_system_role": True}
-            )
+            if not templates.exists():
+                templates = CategoryRoleTemplate.objects.filter(category__code="CLINIC")
 
-            doctor_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Doctor",
-                defaults={"is_system_role": True}
-            )
+            for template in templates:
+                role, created = Role.objects.get_or_create(
+                    tenant=tenant,
+                    name=template.name,
+                    defaults={"is_system_role": True}
+                )
 
-            receptionist_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Receptionist",
-                defaults={"is_system_role": True}
-            )
+                # Assign permissions
+                role.permissions.set(template.permissions.all())
+                
+                if created:
+                    self.stdout.write(self.style.SUCCESS(f"Created role '{role.name}' for {tenant.name}"))
+                else:
+                    self.stdout.write(f"Updated role '{role.name}' for {tenant.name}")
 
-            billing_role, _ = Role.objects.get_or_create(
-                tenant=tenant,
-                name="Billing Staff",
-                defaults={"is_system_role": True}
-            )
-
-            # Assign Permissions
-            self.assign_permissions(admin_role, all_permissions=True)
-            self.assign_permissions(doctor_role, doctor=True)
-            self.assign_permissions(receptionist_role, receptionist=True)
-            self.assign_permissions(billing_role, billing=True)
-
-        self.stdout.write(self.style.SUCCESS("Roles seeded successfully"))
-
-    def assign_permissions(self, role, all_permissions=False, doctor=False, receptionist=False, billing=False):
-
-        if all_permissions:
-            role.permissions.set(Permission.objects.all())
-            return
-
-        if doctor:
-            perms = Permission.objects.filter(code__startswith="patient.") | \
-                    Permission.objects.filter(code__startswith="appointment.") | \
-                    Permission.objects.filter(code="dashboard.doctor") | \
-                    Permission.objects.filter(code="dashboard.lab") | \
-                    Permission.objects.filter(code="dashboard.pharmacy")
-            role.permissions.set(perms)
-
-        if receptionist:
-            perms = Permission.objects.filter(code__in=[
-                "patient.view",
-                "patient.create",
-                "appointment.view",
-                "appointment.create",
-                "billing.view",
-                "billing.create",
-                "dashboard.reception",
-            ])
-            role.permissions.set(perms)
-
-        if billing:
-            perms = Permission.objects.filter(code__startswith="billing.")
-            role.permissions.set(perms)
+        self.stdout.write(self.style.SUCCESS("\nAll roles seeded and mapped successfully!"))

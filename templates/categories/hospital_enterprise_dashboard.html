@@ -54,7 +54,7 @@
         <span class="icon material-icons-round">stethoscope</span>
         Clinic Panel
     </a>
-    <a href="/categories/labs/" class="nav-item">
+    <a href="/lab/" class="nav-item">
         <span class="icon material-icons-round">biotech</span>
         Laboratory
     </a>
@@ -78,7 +78,7 @@
         </div>
         <div class="stat-icon blue"><span class="material-icons-round">hotel</span></div>
     </a>
-    <a href="{% url 'labs-hub' %}" class="stat-card orange animate-in" style="text-decoration:none; color:inherit;">
+    <a href="{% url 'category-labs' %}" class="stat-card orange animate-in" style="text-decoration:none; color:inherit;">
         <div class="stat-info">
             <div class="stat-label">Lab Backlog</div>
             <div class="stat-value">{{ pending_lab_reports }}</div>

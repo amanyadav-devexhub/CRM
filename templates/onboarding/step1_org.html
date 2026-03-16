@@ -557,41 +557,16 @@
 
                 <label class="field-label">What type of organization are you registering as?</label>
                 <div class="category-grid">
+                    {% for cat in categories %}
                     <label class="category-option">
-                        <input type="radio" name="category" value="HOSPITAL" {% if data.category == "HOSPITAL" %}checked{%
-                            endif %} onchange="showQuestions('HOSPITAL')">
+                        <input type="radio" name="category" value="{{ cat.code }}" {% if data.category == cat.code %}checked{% endif %}{% if forloop.first and not data.category %} checked{% endif %} onchange="showQuestions('{{ cat.code }}')">
                         <div class="cat-card">
-                            <div class="cat-icon">🏨</div>
-                            <div class="cat-label">Hospital</div>
-                            <div class="cat-desc">Multi-department</div>
+                            <div class="cat-icon"><span class="material-icons-round">{{ cat.icon }}</span></div>
+                            <div class="cat-label">{{ cat.name }}</div>
+                            {% if cat.description %}<div class="cat-desc">{{ cat.description }}</div>{% endif %}
                         </div>
                     </label>
-                    <label class="category-option">
-                        <input type="radio" name="category" value="CLINIC" {% if data.category == "CLINIC" or not
-                            data.category %}checked{% endif %} onchange="showQuestions('CLINIC')">
-                        <div class="cat-card">
-                            <div class="cat-icon">🏥</div>
-                            <div class="cat-label">Clinic</div>
-                            <div class="cat-desc">Small to mid practice</div>
-                        </div>
-                    </label>
-                    <label class="category-option">
-                        <input type="radio" name="category" value="LAB" {% if data.category == "LAB" %}checked{% endif %}
-                            onchange="showQuestions('LAB')">
-                        <div class="cat-card">
-                            <div class="cat-icon">🔬</div>
-                            <div class="cat-label">Laboratory</div>
-                            <div class="cat-desc">Diagnostics & testing</div>
-                        </div>
-                    </label>
-                    <label class="category-option">
-                        <input type="radio" name="category" value="PHARMACY" {% if data.category == "PHARMACY" %}checked{% endif %} onchange="showQuestions('PHARMACY')">
-                        <div class="cat-card">
-                            <div class="cat-icon">💊</div>
-                            <div class="cat-label">Pharmacy</div>
-                            <div class="cat-desc">Retail / chain pharmacy</div>
-                        </div>
-                    </label>
+                    {% endfor %}
                 </div>
 
 

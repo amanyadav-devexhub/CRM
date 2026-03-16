@@ -52,6 +52,8 @@ class StaffCreateView(View):
                 "employee_type": "",
                 "department": "",
                 "phone": "",
+                "specialization": "General",
+                "consultation_fee": 0,
             },
         }
         return render(request, "dashboard/staff/form.html", context)
@@ -85,11 +87,23 @@ class StaffCreateView(View):
 
         if errors:
             roles = Role.objects.filter(tenant=tenant)
+            # Ensure form_data has all expected keys to avoid template lookup errors
+            form_data = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "username": username,
+                "employee_type": employee_type,
+                "department": department,
+                "phone": phone,
+                "specialization": request.POST.get("specialization", "General"),
+                "consultation_fee": request.POST.get("consultation_fee", 0),
+            }
             return render(request, "dashboard/staff/form.html", {
                 "errors": errors,
                 "employee_types": Employee.EMPLOYEE_TYPES,
                 "roles": roles,
-                "form_data": request.POST,
+                "form_data": form_data,
             })
 
         # Generate secure credentials
@@ -168,6 +182,8 @@ class StaffEditView(View):
                 "employee_type": "",
                 "department": "",
                 "phone": "",
+                "specialization": "General",
+                "consultation_fee": 0,
             },
         }
         return render(request, "dashboard/staff/form.html", context)
@@ -179,11 +195,43 @@ class StaffEditView(View):
 
         employee = get_object_or_404(Employee, pk=pk, user__tenant=tenant)
         user = employee.user
+        
+        errors = []
+
+        first_name = request.POST.get("first_name", "").strip()
+        last_name = request.POST.get("last_name", "").strip()
+        email = request.POST.get("email", "").strip()
+        
+        if not first_name:
+            errors.append("First name is required.")
+        if email and User.objects.filter(email=email).exclude(pk=user.pk).exists():
+            errors.append("Email already registered to another user.")
+            
+        if errors:
+            roles = Role.objects.filter(tenant=tenant)
+            form_data = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "employee_type": employee_type,
+                "department": request.POST.get("department", "").strip(),
+                "phone": request.POST.get("phone", "").strip(),
+                "specialization": request.POST.get("specialization", "General"),
+                "consultation_fee": request.POST.get("consultation_fee", 0),
+            }
+            return render(request, "dashboard/staff/form.html", {
+                "employee": employee,
+                "errors": errors,
+                "employee_types": Employee.EMPLOYEE_TYPES,
+                "roles": roles,
+                "editing": True,
+                "form_data": form_data,
+            })
 
         # Update user fields
-        user.first_name = request.POST.get("first_name", "").strip()
-        user.last_name = request.POST.get("last_name", "").strip()
-        user.email = request.POST.get("email", "").strip()
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
 
         role_id = request.POST.get("role", "")
         if role_id:
@@ -191,14 +239,32 @@ class StaffEditView(View):
                 user.role = Role.objects.get(pk=role_id, tenant=tenant)
             except Role.DoesNotExist:
                 pass
+        else:
+            user.role = None
         user.save()
 
         # Update employee fields
-        employee.employee_type = request.POST.get("employee_type", employee.employee_type)
+        employee_type = request.POST.get("employee_type", employee.employee_type)
+        employee.employee_type = employee_type
         employee.department = request.POST.get("department", "").strip()
         employee.phone = request.POST.get("phone", "").strip()
         employee.is_active = request.POST.get("is_active") == "on"
         employee.save()
+        
+        # Update or create Doctor record
+        if employee_type == "DOCTOR":
+            specialization = request.POST.get("specialization", "General")
+            consultation_fee = request.POST.get("consultation_fee", 0)
+            Doctor.objects.update_or_create(
+                user=user,
+                defaults={
+                    "name": f"{first_name} {last_name}".strip(),
+                    "specialization": specialization,
+                    "phone": employee.phone,
+                    "email": email,
+                    "consultation_fee": consultation_fee or 0,
+                }
+            )
 
         return redirect("/dashboard/staff/")
 

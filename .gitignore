@@ -22,3 +22,5 @@ Thumbs.db
 generate_dummy_data.py
 HealthCRM_Dummy_Data.xlsx
 link_tenants.py
+fix_links.py
+remove_local_sidebars.py

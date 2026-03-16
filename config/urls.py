@@ -12,20 +12,28 @@ from apps.tenants.views import (
 from apps.patients.template_views import (
     PatientListView, PatientDetailView,
     PatientCreateView, PatientEditView, PatientDeleteView,
+    MedicalHistoryAddView, MedicalHistoryEditView, MedicalHistoryDeleteView,
+    PatientDocumentUploadView, PatientDocumentDeleteView,
 )
 from apps.tenants.admin_views import (
     AdminTenantListView, AdminSubscriptionListView, AdminPlanListView,
     AdminFeatureListView, AdminSettingsView, AdminAnalyticsView,
     AdminRevenueView, AdminTenantDetailView,
+    AdminBroadcastView, AdminBroadcastToggleView,
 )
 from apps.tenants.template_views import (
     TenantCreatePageView,
     CategoryIndexView, CategoryClinicView, CategoryPharmacyView,
     CategoryListView,
-    PharmacyInventoryView, PharmacySalesView, PharmacyPrescriptionsView,
+    PharmacyInventoryView, PharmacyPurchasesView, PharmacySalesView, PharmacyPrescriptionsView,
     ClinicDoctorsView, ClinicAppointmentsView, ClinicPatientsView,
     ClinicDashboardAPIView,CategoryLabsView,
-    CategoryLabsTestCatalogView, CategoryLabsOrderListView
+)
+from apps.labs.template_views import (
+    LabTestCatalogView, LabOrderListView,
+    LabOrderEntryView, LabOrderPrintSlipView, LabReportView,
+    LabSampleCollectionView, LabProcessingView, LabAnalyticsView,
+    LabInventoryView, LabStaffManagementView
 )
 from apps.communications.template_views import (
     CommunicationsIndexView, MessageListView,
@@ -52,13 +60,17 @@ from apps.accounts.role_views import (
 )
 from apps.appointments.views import (
     AppointmentListView, AppointmentCreateView, AppointmentDetailView,
+    AvailableSlotsAPIView,
 )
 from apps.billing.views import (
     BillingListView, BillingCreateView, BillingDetailView,
 )
 from apps.clinical.views import (
-    ClinicalNoteListView, ClinicalNoteCreateView, 
-    PrescriptionListView, PrescriptionCreateView,
+    ClinicalNoteListView, ClinicalNoteCreateView, ClinicalNoteEditView,
+    PrescriptionListView, PrescriptionCreateView, PrescriptionDetailView,
+)
+from apps.clinical.schedule_views import (
+    ScheduleListView, ScheduleCreateView, ScheduleEditView, ScheduleDeleteView,
 )
 from apps.analytics.views import (
     AnalyticsDashboardView, RevenueAnalyticsView,
@@ -119,6 +131,8 @@ urlpatterns = [
     path("admin-plans/", AdminPlanListView.as_view(), name="admin-plans"),
     path("admin-features/", AdminFeatureListView.as_view(), name="admin-features"),
     path("admin-settings/", AdminSettingsView.as_view(), name="admin-settings"),
+    path("admin-broadcast/", AdminBroadcastView.as_view(), name="admin-broadcast"),
+    path("admin-broadcast/<uuid:pk>/toggle/", AdminBroadcastToggleView.as_view(), name="admin-broadcast-toggle"),
     path("admin-analytics/", AdminAnalyticsView.as_view(), name="admin-analytics"),
     path("admin-revenue/", AdminRevenueView.as_view(), name="admin-revenue"),
 
@@ -143,9 +157,16 @@ urlpatterns = [
     # ── Doctors ──
     path("dashboard/doctors/", DoctorListView.as_view(), name="doctor-list"),
 
+    # ── Schedules ──
+    path("dashboard/schedules/", ScheduleListView.as_view(), name="schedule-list"),
+    path("dashboard/schedules/create/", ScheduleCreateView.as_view(), name="schedule-create"),
+    path("dashboard/schedules/<uuid:pk>/edit/", ScheduleEditView.as_view(), name="schedule-edit"),
+    path("dashboard/schedules/<uuid:pk>/delete/", ScheduleDeleteView.as_view(), name="schedule-delete"),
+
     # ── Appointments ──
     path("dashboard/appointments/", AppointmentListView.as_view(), name="appointment-list"),
     path("dashboard/appointments/book/", AppointmentCreateView.as_view(), name="appointment-create"),
+    path("dashboard/appointments/slots/", AvailableSlotsAPIView.as_view(), name="available-slots"),
     path("dashboard/appointments/<uuid:pk>/", AppointmentDetailView.as_view(), name="appointment-detail"),
 
     # ── Billing ──
@@ -156,8 +177,10 @@ urlpatterns = [
     # ── Clinical Notes & Prescriptions ──
     path("dashboard/clinical/notes/", ClinicalNoteListView.as_view(), name="note-list"),
     path("dashboard/clinical/notes/create/", ClinicalNoteCreateView.as_view(), name="note-create"),
+    path("dashboard/clinical/notes/<uuid:pk>/edit/", ClinicalNoteEditView.as_view(), name="note-edit"),
     path("dashboard/clinical/prescriptions/", PrescriptionListView.as_view(), name="prescription-list"),
     path("dashboard/clinical/prescriptions/create/", PrescriptionCreateView.as_view(), name="prescription-create"),
+    path("dashboard/clinical/prescriptions/<uuid:pk>/", PrescriptionDetailView.as_view(), name="prescription-detail"),
     path("dashboard/clinical/prescriptions/<uuid:pk>/pdf/", PrescriptionCreateView.as_view(), name="prescription-pdf"), # Placeholder for now
 
     # ── Analytics & Reports ──
@@ -166,12 +189,20 @@ urlpatterns = [
     path("dashboard/analytics/appointments/", AppointmentAnalyticsView.as_view(), name="analytics-appointments"),
     path("dashboard/analytics/doctors/", DoctorAnalyticsView.as_view(), name="analytics-doctors"),
 
+    # ── Global Inventory ──
+    path("dashboard/inventory/", include("apps.inventory.urls")),
+
     # ── Patient HTML pages ──
     path("patients/", PatientListView.as_view(), name="patient-list"),
     path("patients/create/", PatientCreateView.as_view(), name="patient-create"),
     path("patients/<uuid:pk>/", PatientDetailView.as_view(), name="patient-detail"),
     path("patients/<uuid:pk>/edit/", PatientEditView.as_view(), name="patient-edit"),
     path("patients/<uuid:pk>/delete/", PatientDeleteView.as_view(), name="patient-delete"),
+    path("patients/<uuid:pk>/medical-history/add/", MedicalHistoryAddView.as_view(), name="medical-history-add"),
+    path("patients/<uuid:pk>/medical-history/<uuid:mh_id>/edit/", MedicalHistoryEditView.as_view(), name="medical-history-edit"),
+    path("patients/<uuid:pk>/medical-history/<uuid:mh_id>/delete/", MedicalHistoryDeleteView.as_view(), name="medical-history-delete"),
+    path("patients/<uuid:pk>/documents/upload/", PatientDocumentUploadView.as_view(), name="patient-document-upload"),
+    path("patients/<uuid:pk>/documents/<uuid:doc_id>/delete/", PatientDocumentDeleteView.as_view(), name="patient-document-delete"),
 
     # ── Tenant HTML pages ──
     path("tenants/create/", TenantCreatePageView.as_view(), name="tenant-create-page"),
@@ -191,13 +222,25 @@ urlpatterns = [
 
     # Hospital Flow
     path("categories/hospital/", include("apps.hospitals.urls")),
-    path("categories/pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
-    path("categories/pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
-    path("categories/pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
-    path("categories/pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
-    path("categories/labs/", CategoryLabsView.as_view(), name="category-labs"),
-    path("categories/labs/catalog/", CategoryLabsTestCatalogView.as_view(), name="lab-test-catalog"),
-    path("categories/labs/orders/", CategoryLabsOrderListView.as_view(), name="lab-order-list"),
+    # Pharmacy Flow
+    path("pharmacy/", CategoryPharmacyView.as_view(), name="category-pharmacy"),
+    path("pharmacy/inventory/", PharmacyInventoryView.as_view(), name="pharmacy-inventory"),
+    path("pharmacy/purchases/", PharmacyPurchasesView.as_view(), name="pharmacy-purchases"),
+    path("pharmacy/sales/", PharmacySalesView.as_view(), name="pharmacy-sales"),
+    path("pharmacy/prescriptions/", PharmacyPrescriptionsView.as_view(), name="pharmacy-prescriptions"),
+
+    # Laboratory Flow
+    path("lab/", CategoryLabsView.as_view(), name="category-labs"),
+    path("lab/catalog/", LabTestCatalogView.as_view(), name="lab-test-catalog"),
+    path("lab/orders/", LabOrderListView.as_view(), name="lab-order-list"),
+    path("lab/samples/", LabSampleCollectionView.as_view(), name="lab-sample-collection"),
+    path("lab/processing/", LabProcessingView.as_view(), name="lab-processing"),
+    path("lab/analytics/", LabAnalyticsView.as_view(), name="lab-analytics"),
+    path("lab/inventory/", LabInventoryView.as_view(), name="lab-inventory"),
+    path("lab/staff/", LabStaffManagementView.as_view(), name="lab-staff"),
+    path("lab/orders/<uuid:order_id>/", LabOrderEntryView.as_view(), name="lab-order-entry"),
+    path("lab/orders/<uuid:order_id>/print/", LabOrderPrintSlipView.as_view(), name="lab-order-print"),
+    path("lab/orders/<uuid:order_id>/report/", LabReportView.as_view(), name="lab-report"),
 
     # ── Communications HTML pages ──
     path("communications/", CommunicationsIndexView.as_view(), name="communications-index"),

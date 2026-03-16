@@ -193,6 +193,20 @@ class SubAdminDashboardView(View):
         elif tenant_category == "LAB":
             context = self._lab_context(tenant)
         else:
+            # Fallback check: if clinic user manually hits /dashboard/ but has a specific role
+            if hasattr(request.user, "employee_profile"):
+                etype = request.user.employee_profile.employee_type
+                if etype == "DOCTOR":
+                    return redirect("/dashboard/doctor/")
+                if etype == "RECEPTIONIST":
+                    return redirect("/dashboard/reception/")
+            elif request.user.role:
+                role_name = request.user.role.name.lower()
+                if "doctor" in role_name:
+                    return redirect("/dashboard/doctor/")
+                elif "reception" in role_name or "front desk" in role_name:
+                    return redirect("/dashboard/reception/")
+            
             context = self._clinic_context(tenant)
 
         return render(request, template, context)
@@ -266,13 +280,54 @@ class SubAdminDashboardView(View):
         }
 
     def _lab_context(self, tenant):
-        """Lab dashboard context."""
+        """Lab dashboard context with real data."""
+        from django.utils import timezone as tz
+        from django.db.models import Sum
+        from apps.labs.models import LabOrder, LabSample
+        from apps.billing.models import InvoiceItem
+        import re
+
+        today = tz.now().date()
+        pending = LabOrder.objects.filter(status='PENDING').count()
+        samples = LabSample.objects.filter(collected_at__date=today).count()
+
+        rev = InvoiceItem.objects.filter(
+            invoice__created_at__date=today,
+            description__icontains='Lab Test'
+        ).aggregate(total=Sum('total'))['total'] or 0
+
+        # TAT score
+        tat_score = "—"
+        done = LabOrder.objects.filter(
+            status__in=['COMPLETED', 'REPORT_UPLOADED']
+        ).prefetch_related('tests')
+        if done.exists():
+            on_time = total_eval = 0
+            for order in done:
+                nums_list = []
+                for t in order.tests.all():
+                    if t.turnaround_time:
+                        ns = re.findall(r'\d+', t.turnaround_time)
+                        if ns:
+                            nums_list.append(int(ns[0]))
+                if not nums_list:
+                    continue
+                avg = sum(nums_list) / len(nums_list)
+                actual = (order.updated_at - order.ordered_at).total_seconds() / 3600
+                total_eval += 1
+                if actual <= avg:
+                    on_time += 1
+            if total_eval > 0:
+                tat_score = f"{int((on_time / total_eval) * 100)}%"
+
+        recent = LabOrder.objects.select_related('patient', 'doctor').order_by('-ordered_at')[:10]
+
         return {
-            "pending_tests": 0,
-            "samples_received": 0,
-            "tat_score": "—",
-            "revenue_today": "₹0",
-            "test_requests": [],
+            "pending_tests": pending,
+            "samples_received": samples,
+            "tat_score": tat_score,
+            "revenue_today": f"₹{rev:,.0f}",
+            "test_requests": recent,
         }
 
 
@@ -406,12 +461,48 @@ class DoctorDashboardView(LoginRequiredMixin, View):
     """Tailored dashboard for doctors."""
 
     def get(self, request):
+        from datetime import date
+        from apps.appointments.models import Appointment
+        from apps.clinical.models import Doctor
+
         tenant = getattr(request.user, "tenant", None)
-        
+
+        # Find the doctor profile for the logged-in user
+        doctor = getattr(request.user, 'doctor_profile', None)
+
+        today_qs = Appointment.objects.none()
+        recent_qs = Appointment.objects.none()
+        today_count = 0
+
+        if doctor:
+            today_qs = Appointment.objects.filter(
+                doctor=doctor,
+                appointment_date=date.today(),
+            ).exclude(status='CANCELLED').select_related('patient').order_by('appointment_time')[:5]
+
+            today_count = Appointment.objects.filter(
+                doctor=doctor,
+                appointment_date=date.today(),
+            ).exclude(status='CANCELLED').count()
+
+            recent_qs = Appointment.objects.filter(
+                doctor=doctor,
+            ).exclude(status='CANCELLED').select_related('patient').order_by('-appointment_date', '-appointment_time')[:5]
+
+        # Fetch recent patients generally to populate the list
+        try:
+            from apps.patients.models import Patient
+            recent_patients = Patient.objects.order_by("-created_at")[:5]
+        except Exception:
+            recent_patients = []
+
         context = {
             "tenant_category": tenant.category if tenant else "CLINIC",
-            "today_appointments": 0,
+            "today_appointments": today_count,
             "pending_labs": 0,
+            "appointments": today_qs,
+            "recent_appointments": recent_qs,
+            "recent_patients": recent_patients,
         }
         return render(request, "dashboard/roles/doctor.html", context)
 

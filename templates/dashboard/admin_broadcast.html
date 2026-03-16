@@ -1,0 +1,168 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Platform Broadcasts{% endblock %}
+
+{% block content %}
+<div class="content-grid" style="grid-template-columns: 1fr 2fr; gap: 24px;">
+    
+    <!-- ─── Create Broadcast Form ─── -->
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">{% if editing %}edit{% else %}campaign{% endif %}</span> {% if editing %}Edit Broadcast{% else %}New Broadcast{% endif %}</h3>
+            {% if editing %}
+            <a href="{% url 'admin-broadcast' %}" style="font-size:12px; color:var(--text-secondary); text-decoration:none;">Cancel Edit</a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'admin-broadcast' %}" style="display:flex; flex-direction:column; gap:16px;">
+                {% csrf_token %}
+                {% if editing %}<input type="hidden" name="broadcast_id" value="{{ editing.id }}">{% endif %}
+                
+                <div class="form-group">
+                    <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Subject</label>
+                    <input type="text" name="subject" value="{{ editing.subject|default:'' }}" required class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px;" placeholder="e.g. System Maintenance Update">
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Message Details</label>
+                    <textarea name="message" required rows="4" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:10px; border-radius:8px; resize:vertical;" placeholder="Write the full broadcast message here...">{{ editing.message|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-size:13px; color:var(--text-secondary); margin-bottom:8px; display:block;">Target Audience</label>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="radio" name="target_type" value="ALL" {% if not editing or editing.target_type == 'ALL' %}checked{% endif %} onclick="toggleTargets('ALL')">
+                            <span>All Tenants</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="radio" name="target_type" value="CATEGORY" {% if editing and editing.target_type == 'CATEGORY' %}checked{% endif %} onclick="toggleTargets('CATEGORY')">
+                            <span>Specific Categories</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="radio" name="target_type" value="SPECIFIC" {% if editing and editing.target_type == 'SPECIFIC' %}checked{% endif %} onclick="toggleTargets('SPECIFIC')">
+                            <span>Specific Tenants</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Category Select -->
+                <div id="category_select" class="form-group" style="{% if not editing or editing.target_type != 'CATEGORY' %}display:none;{% endif %}">
+                    <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Select Categories</label>
+                    <div style="max-height: 150px; overflow-y: auto; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px;">
+                        {% for cat in categories %}
+                        <label style="display:flex; align-items:center; gap:8px; padding:4px; cursor:pointer;">
+                            <input type="checkbox" name="target_categories" value="{{ cat.code }}" {% if editing and cat.code in editing.target_categories %}checked{% endif %}>
+                            <span>{{ cat.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tenant Select -->
+                <div id="tenant_select" class="form-group" style="{% if not editing or editing.target_type != 'SPECIFIC' %}display:none;{% endif %}">
+                    <label style="font-size:13px; color:var(--text-secondary); margin-bottom:4px; display:block;">Select Tenants</label>
+                    <div style="max-height: 150px; overflow-y: auto; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px;">
+                        {% for t in tenants %}
+                        <label style="display:flex; align-items:center; gap:8px; padding:4px; cursor:pointer;">
+                            <input type="checkbox" name="target_tenants" value="{{ t.id }}" {% if editing and t in editing.target_tenants.all %}checked{% endif %}>
+                            <span>{{ t.name }} ({{ t.category }})</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);">
+                        <input type="checkbox" name="is_active" {% if not editing or editing.is_active %}checked{% endif %}>
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; color:#10b981;">Set Active Immediately</span>
+                            <span style="font-size:11px; color:var(--text-secondary);">This will deactivate any currently active broadcast.</span>
+                        </div>
+                    </label>
+                </div>
+                
+                <button type="submit" style="padding:12px; border-radius:8px; border:none; background:var(--accent-purple); color:#fff; font-weight:600; cursor:pointer; margin-top:8px;">{% if editing %}Update Broadcast{% else %}Create Broadcast{% endif %}</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ─── Broadcast History ─── -->
+    <div class="card">
+        <div class="card-header">
+            <h3><span class="icon material-icons-round">history</span> Broadcast History</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if broadcasts %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Subject</th>
+                        <th>Target</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in broadcasts %}
+                    <tr>
+                        <td>
+                            {% if b.is_active %}
+                            <span class="badge-tag active" style="background:rgba(16,185,129,0.15); color:#10b981;">Active</span>
+                            {% else %}
+                            <span class="badge-tag" style="background:rgba(255,255,255,0.05); color:var(--text-secondary);">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight:500;">
+                            {{ b.subject }}
+                        </td>
+                        <td>
+                            <span class="badge-tag trial">
+                                {% if b.target_type == 'ALL' %}All Tenants
+                                {% elif b.target_type == 'CATEGORY' %}Categories ({{ b.target_categories|length }})
+                                {% elif b.target_type == 'SPECIFIC' %}Specific ({{ b.target_tenants.count }})
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td style="color:var(--text-secondary); font-size:13px;">{{ b.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div style="display:flex; gap:8px;">
+                                <a href="?edit={{ b.id }}" class="tbl-action" title="Edit Broadcast" style="color:var(--text-secondary); text-decoration:none; display:flex; align-items:center;">
+                                    <span class="material-icons-round" style="font-size:18px;">edit</span>
+                                </a>
+                                <form method="post" action="{% url 'admin-broadcast-toggle' b.id %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    {% if b.is_active %}
+                                    <button type="submit" class="tbl-action" title="Deactivate" style="color:var(--accent-red); background:none; border:none; cursor:pointer;">
+                                        <span class="material-icons-round" style="font-size:18px;">power_settings_new</span>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="tbl-action" title="Activate" style="color:var(--accent-green); background:none; border:none; cursor:pointer;">
+                                        <span class="material-icons-round" style="font-size:18px;">play_circle</span>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon material-icons-round">campaign</div>
+                <p>No broadcast history found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleTargets(mode) {
+        document.getElementById('category_select').style.display = (mode === 'CATEGORY') ? 'block' : 'none';
+        document.getElementById('tenant_select').style.display = (mode === 'SPECIFIC') ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

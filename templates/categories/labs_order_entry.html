@@ -1,40 +1,19 @@
-{% extends "categories/base_mgmt.html" %}
+{% extends "base.html" %}
 
-{% block mgmt_color %}var(--accent-purple){% endblock %}
-{% block mgmt_gradient %}var(--gradient-purple){% endblock %}
-{% block hub_icon %}biotech{% endblock %}
-{% block hub_name %}LabFlow{% endblock %}
-
-{% block hub_nav %}
-<div class="nav-section">
-    <div class="nav-section-title">Operations</div>
-    <a href="{% url 'labs-hub' %}" class="nav-item">
-        <span class="icon material-icons-round">dashboard</span>
-        Dashboard
-    </a>
-    <a href="{% url 'lab-test-catalog' %}" class="nav-item">
-        <span class="icon material-icons-round">biotech</span>
-        Test Catalog
-    </a>
-    <a href="{% url 'lab-order-list' %}" class="nav-item active">
-        <span class="icon material-icons-round">assignment</span>
-        Orders
-    </a>
-    <a href="#" class="nav-item">
-        <span class="icon material-icons-round">description</span>
-        Reports
-    </a>
-</div>
-{% endblock %}
-
-{% block page_title %}Lab Order Execution{% endblock %}
+{% block page_title %}Dashboard <span>/ Order Execution</span>{% endblock %}
 
 {% block content %}
 <div class="content-grid" style="grid-template-columns: 350px 1fr;">
     <!-- Order Summary Sidebar -->
     <div class="card animate-in">
-        <div class="card-header">
-            <h3>Order Info</h3>
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>
+                <span class="icon material-icons-round">info</span>
+                Order Info
+            </h3>
+            <a href="{% url 'lab-order-print' order.id %}" target="_blank" class="btn-text" style="display:flex; align-items:center; gap:0.5rem; text-decoration:none; font-weight:600;">
+                <span class="material-icons-round" style="font-size:1.2rem;">print</span> Print Slip
+            </a>
         </div>
         <div class="card-body">
             <div style="display:grid; gap:1.2rem;">
@@ -50,9 +29,14 @@
                 <div>
                     <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.3rem;">Order Status</div>
                     <span
-                        class="badge-tag {% if order.status == 'COMPLETED' %}active{% elif order.status == 'PENDING' %}expired{% else %}trial{% endif %}">
+                        class="badge-tag {% if order.status == 'COMPLETED' or order.status == 'REPORT_UPLOADED' %}active{% elif order.status == 'PENDING' %}expired{% else %}trial{% endif %}">
                         {{ order.get_status_display }}
                     </span>
+                    {% if order.status == 'COMPLETED' or order.status == 'REPORT_UPLOADED' %}
+                    <a href="{% url 'lab-report' order.id %}" target="_blank" class="btn-text" style="display:block; margin-top:0.5rem; text-decoration:none; font-weight:600; color:var(--accent-green);">
+                        <span class="material-icons-round" style="vertical-align:middle; font-size:1.1rem;">visibility</span> View Full Report
+                    </a>
+                    {% endif %}
                 </div>
                 <div>
                     <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.3rem;">Priority</div>
@@ -61,12 +45,52 @@
                         {{ order.get_priority_display }}
                     </span>
                 </div>
+                <div>
+                    <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.3rem;">Technician</div>
+                    <div style="font-weight:600;">
+                        {% if order.technician %}
+                        {{ order.technician.get_full_name|default:order.technician.username }}
+                        {% else %}
+                        <span style="color:var(--text-muted)">Unassigned</span>
+                        {% endif %}
+                    </div>
+                </div>
                 {% if order.notes %}
                 <div>
                     <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.3rem;">Clinical Notes</div>
                     <div style="font-size:0.9rem; font-style:italic;">"{{ order.notes }}"</div>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Audit Trail Sidebar -->
+        <div class="card animate-in" style="animation-delay:0.3s; margin-top: 2rem;">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">history</span>
+                    Audit Trail
+                </h3>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto; padding: 0;">
+                <div class="timeline" style="padding: 1.5rem;">
+                    {% for log in audit_logs %}
+                    <div class="timeline-item" style="margin-bottom: 1.5rem; position: relative; padding-left: 25px; border-left: 2px solid rgba(255,255,255,0.1);">
+                        <div class="timeline-marker" style="position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-purple); border: 2px solid #1e1e2e;"></div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">{{ log.action }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem;">
+                            {{ log.timestamp|date:"d M, H:i" }} by {{ log.user.username|default:"System" }}
+                        </div>
+                        {% if log.details %}
+                        <div style="font-size: 0.8rem; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                            {{ log.details }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div style="text-align: center; color: var(--text-muted); padding: 1rem;">No activity logged yet.</div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
@@ -77,36 +101,64 @@
         <!-- Sample Collection -->
         <div class="card animate-in" style="animation-delay:0.1s">
             <div class="card-header">
-                <h3>Sample Collection</h3>
+                <h3>
+                    <span class="icon material-icons-round">science</span>
+                    Sample Collection
+                </h3>
             </div>
             <div class="card-body">
                 {% if order.samples.exists %}
                 <div
-                    style="background:#f8f9fa; padding:1.5rem; border-radius:12px; display:flex; items-center; gap:1.5rem;">
+                    style="background:rgba(46,213,115,0.06); padding:1.5rem; border-radius:12px; display:flex; gap:1.5rem; border-left: 3px solid #2ed573;">
                     <span class="material-icons-round"
                         style="color:var(--accent-green); font-size:3rem;">check_circle</span>
                     <div>
                         <div style="font-weight:600; font-size:1.1rem;">Sample(s) Collected</div>
                         {% for sample in order.samples.all %}
                         <div style="color:var(--text-muted); font-size:0.9rem;">
-                            {{ sample.sample_type }} collected on {{ sample.collected_at|date:"M d, Y at H:i" }}
+                            <strong>{{ sample.sample_type }}</strong> collected on {{ sample.collected_at|date:"M d, Y at H:i" }}
+                            <br>
+                            <small>Barcode: <code>{{ sample.barcode }}</code> | Location: {{ sample.collection_location }}</small>
                         </div>
                         {% endfor %}
+                        {% if order.status == 'COLLECTED' %}
+                        <form method="POST" style="margin-top: 1rem;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="start_processing">
+                            <button type="submit" class="btn-primary" style="background: var(--accent-orange);">
+                                <span class="material-icons-round">biotech</span> Start Processing
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                 </div>
                 {% else %}
                 <form method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="collect_sample">
-                    <div style="display:flex; gap:1rem; align-items:flex-end;">
-                        <div class="form-group" style="flex:1">
-                            <label>Sample Type</label>
-                            <input type="text" name="sample_type" class="form-control"
-                                placeholder="e.g. Whole Blood, Mid-stream Urine" required>
+                    <div style="display:grid; gap:1rem;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div class="form-group">
+                                <label>Sample Type</label>
+                                <input type="text" name="sample_type" class="form-control"
+                                    placeholder="e.g. Whole Blood, Urine" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Collection Location</label>
+                                <input type="text" name="location" class="form-control"
+                                    placeholder="e.g. Room 101, Lab Main" required>
+                            </div>
                         </div>
-                        <button type="submit" class="btn-primary" style="height:48px;">
-                            <span class="material-icons-round">science</span> Confirm Collection
-                        </button>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:flex-end;">
+                            <div class="form-group">
+                                <label>Barcode (Auto-generated if empty)</label>
+                                <input type="text" name="barcode" class="form-control"
+                                    placeholder="Scan or leave blank">
+                            </div>
+                            <button type="submit" class="btn-primary" style="height:48px;">
+                                <span class="material-icons-round">science</span> Confirm Collection
+                            </button>
+                        </div>
                     </div>
                 </form>
                 {% endif %}
@@ -114,13 +166,16 @@
         </div>
 
         <!-- Result Entry -->
-        {% if order.status != 'PENDING' %}
+        {% if order.status != 'PENDING' and order.status != 'COLLECTED' %}
         <div class="card animate-in" style="animation-delay:0.2s">
             <div class="card-header">
-                <h3>Enter Test Results</h3>
+                <h3>
+                    <span class="icon material-icons-round">edit_note</span>
+                    Enter Test Results
+                </h3>
             </div>
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="enter_results">
                     <table class="data-table">
@@ -134,26 +189,72 @@
                         </thead>
                         <tbody>
                             {% for test in tests %}
-                            <tr>
-                                <td><strong>{{ test.name }}</strong></td>
-                                <td><code>{{ test.reference_range }}</code></td>
-                                <td>
-                                    <input type="text" name="result_{{ test.id }}" class="form-control"
-                                        style="width:150px;" placeholder="Value"
-                                        value="{% for r in results %}{% if r.test_id == test.id %}{{ r.value }}{% endif %}{% endfor %}"
-                                        required>
-                                </td>
-                                <td>
-                                    <input type="checkbox" name="abnormal_{{ test.id }}" {% for r in results %}{% if
-                                        r.test_id==test.id and r.is_abnormal %}checked{% endif %}{% endfor %}>
-                                </td>
-                            </tr>
+                            {% if test.parameters.all %}
+                                <tr style="background:rgba(255,255,255,0.02);">
+                                    <td colspan="4"><strong style="color:var(--accent-purple)">{{ test.name }}</strong></td>
+                                </tr>
+                                {% for param in test.parameters.all %}
+                                <tr>
+                                    <td style="padding-left: 2rem;">{{ param.name }}</td>
+                                    <td><code>{{ param.normal_low }} - {{ param.normal_high }} {{ param.unit }}</code></td>
+                                    <td>
+                                        <input type="text" name="result_{{ test.id }}_{{ param.id }}" class="form-control"
+                                            style="width:150px;" placeholder="Value"
+                                            value="{% for r in results %}{% if r.test_id == test.id and r.parameter_id == param.id %}{{ r.value }}{% endif %}{% endfor %}"
+                                            required>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="abnormal_{{ test.id }}_{{ param.id }}" {% for r in results %} {% if r.test_id == test.id and r.parameter_id == param.id and r.is_abnormal %}checked{% endif %}{% endfor %}>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td><strong>{{ test.name }}</strong></td>
+                                    <td><code>{{ test.reference_range }}</code></td>
+                                    <td>
+                                        <input type="text" name="result_{{ test.id }}" class="form-control"
+                                            style="width:150px;" placeholder="Value"
+                                            value="{% for r in results %}{% if r.test_id == test.id %}{{ r.value }}{% endif %}{% endfor %}"
+                                            required>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="abnormal_{{ test.id }}" {% for r in results %} {% if r.test_id == test.id and r.is_abnormal %}checked{% endif %}{% endfor %}>
+                                    </td>
+                                </tr>
+                            {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
-                    <div style="margin-top:2rem; display:flex; justify-content:flex-end;">
-                        <button type="submit" class="btn-primary" style="padding: 1rem 3rem;">Validate & Complete
-                            Results</button>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,82,82,0.06); border-radius: 8px; border: 1px solid rgba(255,82,82,0.15);">
+                        <h4 style="margin-top:0; color:var(--accent-red); display:flex; align-items:center; gap:0.5rem;">
+                            <span class="material-icons-round">picture_as_pdf</span> Report Upload (Optional)
+                        </h4>
+                        <div class="form-group">
+                            <label>Downloadable PDF Report</label>
+                            <input type="file" name="pdf_report" class="form-control" accept=".pdf">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:2rem; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            {% if order.status == 'COMPLETED' or order.status == 'REPORT_UPLOADED' %}
+                                {% if can_approve %}
+                                <form method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve_results">
+                                    <button type="submit" class="btn-primary" style="padding: 1rem 2rem; background: linear-gradient(135deg, #10b981, #059669);">
+                                        <span class="material-icons-round">verified</span> Approve & Verify Results
+                                    </button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        {% if order.status != 'VERIFIED' %}
+                        <button type="submit" class="btn-primary" style="padding: 1rem 3rem;">Validate & Save Results</button>
+                        {% endif %}
                     </div>
                 </form>
             </div>
@@ -163,7 +264,7 @@
             <div class="card-body" style="text-align:center; padding:3rem;">
                 <span class="material-icons-round"
                     style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;">lock</span>
-                <p>Collect samples before entering results.</p>
+                <p>Status: {{ order.get_status_display }}. Complete sample collection and start processing before entering results.</p>
             </div>
         </div>
         {% endif %}

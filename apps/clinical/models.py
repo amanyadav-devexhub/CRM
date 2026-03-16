@@ -60,17 +60,12 @@ class Doctor(models.Model):
 
 
 class DoctorSlot(models.Model):
-    """Available time slots for a doctor. One row per day-of-week."""
-    DAY_CHOICES = [
-        (0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'),
-        (3, 'Thursday'), (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday'),
-    ]
-
+    """Available time slots for a doctor on a specific date."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     doctor = models.ForeignKey(
         Doctor, on_delete=models.CASCADE, related_name="slots"
     )
-    day_of_week = models.IntegerField(choices=DAY_CHOICES)
+    schedule_date = models.DateField(help_text="The specific date for this slot")
     start_time = models.TimeField()
     end_time = models.TimeField()
     slot_duration = models.IntegerField(default=15, help_text="Minutes per slot")
@@ -78,11 +73,11 @@ class DoctorSlot(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['day_of_week', 'start_time']
-        unique_together = ('doctor', 'day_of_week', 'start_time')
+        ordering = ['schedule_date', 'start_time']
+        unique_together = ('doctor', 'schedule_date', 'start_time')
 
     def __str__(self):
-        return f"Dr. {self.doctor.name} — {self.get_day_of_week_display()} {self.start_time}–{self.end_time}"
+        return f"Dr. {self.doctor.name} — {self.schedule_date} {self.start_time}–{self.end_time}"
 
 
 class ClinicalNote(models.Model):
@@ -125,9 +120,15 @@ class Prescription(models.Model):
         'appointments.Appointment', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='prescriptions'
     )
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending POS'),
+        ('DISPENSED', 'Dispensed'),
+    ]
+
     doctor = models.ForeignKey(
         Doctor, on_delete=models.CASCADE, related_name='prescriptions'
     )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', help_text="Prescription status in pharmacy workflow")
     notes = models.TextField(blank=True, help_text="General instructions")
 
     created_at = models.DateTimeField(auto_now_add=True)

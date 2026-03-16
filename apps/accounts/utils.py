@@ -73,3 +73,36 @@ def send_staff_welcome_email(user, raw_password, request):
         html_message=html_message,
         fail_silently=True,  # Set to False in production for debugging
     )
+
+def provision_category_roles(tenant):
+    """
+    Auto-provisions predefined roles based on the tenant's category.
+    Reads from the CategoryRoleTemplate database models to generate
+    custom roles dynamically.
+    """
+    from apps.accounts.models import Role
+    from apps.tenants.models import CategoryRoleTemplate
+    
+    # Get the templates for this tenant's category
+    if not tenant.category_obj:
+        return
+        
+    templates = CategoryRoleTemplate.objects.filter(category=tenant.category_obj)
+    
+    for template in templates:
+        role, created = Role.objects.get_or_create(
+            tenant=tenant,
+            name=template.name,
+            defaults={
+                "is_system_role": True,
+                "source_template": template,
+            }
+        )
+        
+        # If it already existed but had no template link, set it now
+        if not created and not role.source_template:
+            role.source_template = template
+            role.save(update_fields=["source_template"])
+
+        # Map permissions from the template
+        role.permissions.set(template.permissions.all())

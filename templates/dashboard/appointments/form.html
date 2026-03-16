@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<form method="post" class="crud-form" autocomplete="off">
+<form method="post" class="crud-form" autocomplete="off" id="bookingForm">
     {% csrf_token %}
 
     <div class="form-section">
@@ -49,8 +49,11 @@
                 <input type="date" id="appointment_date" name="appointment_date" required>
             </div>
             <div class="form-group">
-                <label for="appointment_time">Time *</label>
-                <input type="time" id="appointment_time" name="appointment_time" required>
+                <label for="appointment_time">Time Slot *</label>
+                <select id="appointment_time" name="appointment_time" required disabled>
+                    <option value="">— Select doctor & date first —</option>
+                </select>
+                <div id="slotStatus" class="slot-status"></div>
             </div>
             <div class="form-group">
                 <label for="fee">Fee (₹)</label>
@@ -65,7 +68,7 @@
 
     <div class="form-actions">
         <a href="/dashboard/appointments/" class="btn-secondary">Cancel</a>
-        <button type="submit" class="btn-primary">
+        <button type="submit" class="btn-primary" id="submitBtn" disabled>
             <span class="material-icons-round">event_available</span> Book Appointment
         </button>
     </div>
@@ -87,7 +90,99 @@
     .form-group textarea { resize: vertical; }
     .form-actions { display: flex; justify-content: flex-end; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; border: none; cursor: pointer; }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
     .btn-secondary { padding: .65rem 1.25rem; border-radius: 10px; background: rgba(255,255,255,.06); color: rgba(241,245,249,.7); font-size: .875rem; text-decoration: none; border: 1px solid rgba(255,255,255,.08); }
+
+    .slot-status { font-size: .75rem; margin-top: .35rem; min-height: 1.2em; }
+    .slot-status.loading { color: #fbbf24; }
+    .slot-status.success { color: #10b981; }
+    .slot-status.error { color: #ef4444; }
+    .slot-status.info { color: #60a5fa; }
+
+    select option:disabled { color: rgba(241,245,249,.3); }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const doctorSelect = document.getElementById('doctor');
+    const dateInput = document.getElementById('appointment_date');
+    const timeSelect = document.getElementById('appointment_time');
+    const slotStatus = document.getElementById('slotStatus');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Block past dates in the calendar
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+
+    function fetchSlots() {
+        const doctorId = doctorSelect.value;
+        const date = dateInput.value;
+
+        // Reset
+        timeSelect.innerHTML = '<option value="">— Select a slot —</option>';
+        timeSelect.disabled = true;
+        submitBtn.disabled = true;
+        slotStatus.textContent = '';
+        slotStatus.className = 'slot-status';
+
+        if (!doctorId || !date) {
+            timeSelect.innerHTML = '<option value="">— Select doctor & date first —</option>';
+            return;
+        }
+
+        slotStatus.textContent = 'Loading available slots...';
+        slotStatus.className = 'slot-status loading';
+
+        fetch(`/dashboard/appointments/slots/?doctor=${doctorId}&date=${date}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    slotStatus.textContent = data.error;
+                    slotStatus.className = 'slot-status error';
+                    return;
+                }
+
+                if (!data.slots || data.slots.length === 0) {
+                    timeSelect.innerHTML = '<option value="">— No slots available —</option>';
+                    slotStatus.textContent = 'No schedule configured for this doctor on this day.';
+                    slotStatus.className = 'slot-status error';
+                    return;
+                }
+
+                timeSelect.innerHTML = '<option value="">— Choose a time slot —</option>';
+                let availableCount = 0;
+
+                data.slots.forEach(slot => {
+                    const opt = document.createElement('option');
+                    opt.value = slot.time;
+                    if (slot.available) {
+                        opt.textContent = `${slot.display} — Available`;
+                        availableCount++;
+                    } else {
+                        opt.textContent = `${slot.display} — Fully Booked`;
+                        opt.disabled = true;
+                        opt.style.color = 'rgba(241,245,249,.3)';
+                    }
+                    timeSelect.appendChild(opt);
+                });
+
+                timeSelect.disabled = false;
+                slotStatus.textContent = `${availableCount} of ${data.slots.length} slots available for Dr. ${data.doctor}`;
+                slotStatus.className = 'slot-status ' + (availableCount > 0 ? 'success' : 'error');
+            })
+            .catch(err => {
+                slotStatus.textContent = 'Failed to load slots. Please try again.';
+                slotStatus.className = 'slot-status error';
+            });
+    }
+
+    doctorSelect.addEventListener('change', fetchSlots);
+    dateInput.addEventListener('change', fetchSlots);
+
+    timeSelect.addEventListener('change', () => {
+        submitBtn.disabled = !timeSelect.value;
+    });
+});
+</script>
 
 {% endblock %}

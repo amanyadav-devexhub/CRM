@@ -91,3 +91,41 @@ class AppointmentConfig(models.Model):
 
     def __str__(self):
         return f"Appointment Config — {self.tenant.name}"
+
+
+class AppointmentActivity(models.Model):
+    """Audit log for appointment lifecycle events."""
+    ACTION_CHOICES = [
+        ('BOOKED', 'Booked'),
+        ('CONFIRMED', 'Confirmed'),
+        ('DECLINED', 'Declined'),
+        ('CHECKED_IN', 'Checked In'),
+        ('CHECKED_OUT', 'Checked Out'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+        ('NO_SHOW', 'No Show'),
+        ('RESCHEDULED', 'Rescheduled'),
+        ('STATUS_CHANGED', 'Status Changed'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    appointment = models.ForeignKey(
+        Appointment, on_delete=models.CASCADE, related_name='activities'
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    performed_by = models.ForeignKey(
+        'accounts.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='appointment_actions',
+    )
+    old_status = models.CharField(max_length=20, blank=True, default='')
+    new_status = models.CharField(max_length=20, blank=True, default='')
+    notes = models.TextField(blank=True, default='')
+    performed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['performed_at']
+        verbose_name_plural = 'Appointment Activities'
+
+    def __str__(self):
+        user = self.performed_by.email if self.performed_by else 'System'
+        return f"{self.get_action_display()} by {user} at {self.performed_at}"

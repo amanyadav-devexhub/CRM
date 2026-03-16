@@ -1,51 +1,8 @@
-{% extends "base.html" %}
-
-{% block brand_gradient %}linear-gradient(135deg, #f59e0b, #ef4444){% endblock %}
-{% block brand_text_gradient %}linear-gradient(135deg, #fbbf24, #f97316){% endblock %}
-{% block nav_active_bg %}rgba(245, 158, 11, 0.12){% endblock %}
-{% block nav_active_color %}var(--accent-orange){% endblock %}
-{% block badge_bg %}var(--accent-orange){% endblock %}
-{% block brand_icon_letter %}P{% endblock %}
-{% block brand_name %}PharmTrack{% endblock %}
-{% block brand_subtitle %}Pharmacy Dashboard{% endblock %}
-{% block user_avatar_gradient %}linear-gradient(135deg, #f59e0b, #ef4444){% endblock %}
+{% extends "categories/base_pharmacy.html" %}
 
 {% block nav_dashboard %}active{% endblock %}
-{% block page_title %}Dashboard <span>/ Pharmacy Overview</span>{% endblock %}
-
-{% block sidebar_nav %}
-<div class="nav-section">
-    <div class="nav-section-title">Operations</div>
-    <a href="{% url 'category-pharmacy' %}" class="nav-item active">
-        <span class="icon material-icons-round">dashboard</span>
-        Dashboard
-    </a>
-    <a href="{% url 'pharmacy-inventory' %}" class="nav-item">
-        <span class="icon material-icons-round">inventory_2</span>
-        Inventory
-    </a>
-    <a href="{% url 'pharmacy-sales' %}" class="nav-item">
-        <span class="icon material-icons-round">shopping_cart</span>
-        Sales & POS
-    </a>
-    <a href="{% url 'pharmacy-prescriptions' %}" class="nav-item">
-        <span class="icon material-icons-round">receipt_long</span>
-        Prescriptions
-    </a>
-</div>
-
-<div class="nav-section">
-    <div class="nav-section-title">Reports</div>
-    <a href="#" class="nav-item">
-        <span class="icon material-icons-round">analytics</span>
-        Sales Report
-    </a>
-    <a href="{% url 'pharmacy-inventory' %}?filter=low-stock" class="nav-item">
-        <span class="icon material-icons-round">warning</span>
-        Expiry Alerts
-    </a>
-</div>
-{% endblock %}
+{% block topbar_title %}Dashboard <span>/ Pharmacy Overview</span>{% endblock %}
+{% block hide_page_header %}style="display:none;"{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -97,11 +54,21 @@
     </div>
     <div class="stat-card blue animate-in">
         <div class="stat-info">
-            <div class="stat-label">Today's Sales</div>
-            <div class="stat-value">₹{{ today_sales }}</div>
-            <div class="stat-sub">Revenue collected</div>
+            <div class="stat-label">Today's Profit</div>
+            <div class="stat-value">₹{{ profit_margin }}%</div>
+            <div class="stat-sub">Margin on sales</div>
         </div>
         <div class="stat-icon blue">
+            <span class="material-icons-round">trending_up</span>
+        </div>
+    </div>
+    <div class="stat-card purple animate-in">
+        <div class="stat-info">
+            <div class="stat-label">Today's Revenue</div>
+            <div class="stat-value">₹{{ today_sales }}</div>
+            <div class="stat-sub">Gross income</div>
+        </div>
+        <div class="stat-icon purple">
             <span class="material-icons-round">payments</span>
         </div>
     </div>
@@ -177,18 +144,14 @@
                         <span class="icon material-icons-round">inventory_2</span>
                         Inventory
                     </a>
+                    <a href="{% url 'pharmacy-purchases' %}" class="action-btn" style="text-decoration: none;">
+                        <span class="icon material-icons-round">local_shipping</span>
+                        Purchases
+                    </a>
                     <a href="{% url 'pharmacy-sales' %}" class="action-btn" style="text-decoration: none;">
                         <span class="icon material-icons-round">point_of_sale</span>
                         Sales & POS
                     </a>
-                    <a href="{% url 'pharmacy-prescriptions' %}" class="action-btn" style="text-decoration: none;">
-                        <span class="icon material-icons-round">receipt_long</span>
-                        Prescriptions
-                    </a>
-                    <button class="action-btn">
-                        <span class="icon material-icons-round">analytics</span>
-                        Reports
-                    </button>
                 </div>
             </div>
         </div>
@@ -238,6 +201,28 @@
                     <p>All stock levels healthy!</p>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Top Selling Medicines -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3>
+                    <span class="icon material-icons-round">star</span>
+                    Top Sellers
+                </h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% for item in top_selling_medicines %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; font-size: 14px; color: white;">{{ item.medicine__name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ item.total_sold }} sold</div>
+                    </div>
+                    {% empty %}
+                    <p style="text-align: center; color: var(--text-muted); font-size: 13px;">No sales data available today.</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

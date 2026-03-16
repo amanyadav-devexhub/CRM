@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load permission_tags %}
 
 {% block nav_patients %}active{% endblock %}
 {% block page_title %}Patient <span>/ {{ patient.first_name }} {{ patient.last_name }}</span>{% endblock %}
@@ -102,8 +103,13 @@
 
 <!-- ─── Medical History ─── -->
 <div class="card" style="margin-bottom:24px;">
-    <div class="card-header">
+    <div class="card-header" style="justify-content:space-between; display:flex;">
         <h3><span class="icon material-icons-round">medical_services</span> Medical History</h3>
+        {% if request.user|has_permission:'patients.edit_medical_history' %}
+        <button type="button" class="action-btn" onclick="openMedicalHistoryModal('add')" style="padding:4px 8px; font-size:12px; background:rgba(59,130,246,.1); color:#3b82f6; border:none; cursor:pointer; border-radius:6px;">
+            <span class="material-icons-round" style="font-size:14px;">add</span> Add
+        </button>
+        {% endif %}
     </div>
     <div class="card-body" style="padding:0;">
         {% if medical_history %}
@@ -114,6 +120,9 @@
                     <th>Status</th>
                     <th>Diagnosed</th>
                     <th>Notes</th>
+                    {% if request.user|has_permission:'patients.edit_medical_history' %}
+                    <th style="width: 80px; text-align: center;">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -121,15 +130,29 @@
                 <tr>
                     <td style="font-weight:500;">{{ mh.condition }}</td>
                     <td>
-                        <span
-                            class="badge-tag {% if mh.status == 'active' %}active{% elif mh.status == 'resolved' %}male{% else %}trial{% endif %}">
+                        <span class="badge-tag {% if mh.status == 'active' %}active{% elif mh.status == 'resolved' %}male{% else %}trial{% endif %}">
                             {{ mh.get_status_display }}
                         </span>
                     </td>
-                    <td>{{ mh.diagnosis_date|date:"d M Y"|default:"—" }}</td>
-                    <td
-                        style="color:var(--text-secondary); max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        {{ mh.notes|default:"—" }}</td>
+                    <td>{% if mh.diagnosis_date %}{{ mh.diagnosis_date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
+                    <td style="color:var(--text-secondary); max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ mh.notes }}">
+                        {{ mh.notes|default:"—" }}
+                    </td>
+                    {% if request.user|has_permission:'patients.edit_medical_history' %}
+                    <td style="text-align: center;">
+                        <div style="display:flex; justify-content:center; gap:8px;">
+                            <button type="button" class="tbl-action" onclick="openMedicalHistoryModal('edit', '{{ mh.id }}', '{{ mh.condition|escapejs }}', '{% if mh.diagnosis_date %}{{ mh.diagnosis_date|date:"Y-m-d" }}{% endif %}', '{{ mh.status }}', '{{ mh.notes|escapejs }}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+                                <span class="material-icons-round" style="font-size:18px;">edit</span>
+                            </button>
+                            <form method="post" action="{% url 'medical-history-delete' patient.id mh.id %}" onsubmit="return confirm('Delete this record?');" style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="tbl-action" style="background:none; border:none; color:var(--accent-red); cursor:pointer;">
+                                    <span class="material-icons-round" style="font-size:18px;">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -236,7 +259,7 @@
             {% if patient.clinical_notes.exists %}
             <div style="display:flex; flex-direction:column;">
                 {% for note in patient.clinical_notes.all|slice:":3" %}
-                <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,.05);">
+                <a href="/dashboard/clinical/notes/{{ note.pk }}/edit/" style="padding:16px; border-bottom:1px solid rgba(255,255,255,.05); display:block; text-decoration:none; color:inherit; transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                         <strong>Dr. {{ note.doctor.name }}</strong>
                         <span style="color:var(--text-muted); font-size:.8rem;">{{ note.created_at|date:"d M Y" }}</span>
@@ -246,7 +269,7 @@
                         <span style="font-weight:600; color:rgba(241,245,249,.8);">A:</span> {{ note.assessment }}
                     </p>
                     {% endif %}
-                </div>
+                </a>
                 {% endfor %}
             </div>
             {% else %}
@@ -273,14 +296,20 @@
                         <th>Date</th>
                         <th>Doctor</th>
                         <th>Medicines</th>
+                        <th>View</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for rx in patient.prescriptions.all|slice:":3" %}
-                    <tr>
+                    {% for rx in patient.prescriptions.all|slice:":5" %}
+                    <tr style="cursor:pointer;" onclick="window.location='/dashboard/clinical/prescriptions/{{ rx.pk }}/'">
                         <td style="white-space:nowrap;">{{ rx.created_at|date:"d M Y" }}</td>
                         <td>Dr. {{ rx.doctor.name }}</td>
                         <td><span class="badge-tag active">{{ rx.items.count }} items</span></td>
+                        <td>
+                            <a href="/dashboard/clinical/prescriptions/{{ rx.pk }}/" class="tbl-action" title="View Prescription" style="text-decoration:none;">
+                                <span class="material-icons-round">visibility</span>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -295,11 +324,75 @@
     </div>
 </div>
 
+<!-- ─── Lab History ─── -->
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header" style="justify-content:space-between; display:flex;">
+        <h3><span class="icon material-icons-round">science</span> Lab History</h3>
+        <a href="{% url 'lab-order-list' %}?search={{ patient.patient_id }}" class="action-btn" style="padding:4px 8px; font-size:12px; background:rgba(99,102,241,.1); color:#6366f1; text-decoration:none; border-radius:6px;">
+            <span class="material-icons-round" style="font-size:14px;">open_in_new</span> Go to Labs
+        </a>
+    </div>
+    <div class="card-body" style="padding:0;">
+        {% if lab_orders %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Order ID</th>
+                    <th>Tests Included</th>
+                    <th>Status</th>
+                    <th>Report</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in lab_orders|slice:":5" %}
+                <tr>
+                    <td>{{ order.ordered_at|date:"d M Y" }}</td>
+                    <td><code style="color:var(--accent-cyan);">{{ order.id|stringformat:".8s"|upper }}</code></td>
+                    <td>
+                        <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                            {% for test in order.tests.all %}
+                            <span style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:11px;">{{ test.code }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge-tag {% if order.status == 'COMPLETED' or order.status == 'REPORT_UPLOADED' or order.status == 'VERIFIED' %}active{% elif order.status == 'PENDING' %}expired{% else %}trial{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if order.status == 'COMPLETED' or order.status == 'REPORT_UPLOADED' or order.status == 'VERIFIED' %}
+                        <a href="{% url 'lab-report' order.id %}" target="_blank" class="tbl-action" title="View Report" style="text-decoration:none; color:var(--accent-green);">
+                            <span class="material-icons-round">description</span>
+                        </a>
+                        {% else %}
+                        <span style="color:var(--text-muted); font-size:12px;">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon material-icons-round">biotech</div>
+            <p>No lab history found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <!-- ─── Documents + Emergency Contacts ─── -->
 <div class="content-grid equal">
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="justify-content:space-between; display:flex;">
             <h3><span class="icon material-icons-round">description</span> Documents</h3>
+            {% if request.user.is_authenticated %}
+            <button type="button" class="action-btn" onclick="openDocumentModal()" style="padding:4px 8px; font-size:12px; background:rgba(59,130,246,.1); color:#3b82f6; border:none; cursor:pointer; border-radius:6px;">
+                <span class="material-icons-round" style="font-size:14px;">upload_file</span> Upload
+            </button>
+            {% endif %}
         </div>
         <div class="card-body" style="padding:0;">
             {% if documents %}
@@ -309,14 +402,35 @@
                         <th>Title</th>
                         <th>Type</th>
                         <th>Uploaded</th>
+                        <th style="width: 80px; text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for doc in documents %}
                     <tr>
-                        <td style="font-weight:500;">{{ doc.title }}</td>
+                        <td style="font-weight:500;">
+                            {{ doc.title }}
+                            {% if doc.description %}
+                            <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">{{ doc.description }}</div>
+                            {% endif %}
+                        </td>
                         <td><span class="badge-tag male">{{ doc.get_document_type_display }}</span></td>
                         <td>{{ doc.created_at|date:"d M Y" }}</td>
+                        <td style="text-align: center;">
+                            <div style="display:flex; justify-content:center; gap:8px;">
+                                {% if doc.file %}
+                                <a href="{{ doc.file.url }}" target="_blank" class="tbl-action" style="text-decoration:none; color:var(--accent-blue);" title="View Document">
+                                    <span class="material-icons-round" style="font-size:18px;">visibility</span>
+                                </a>
+                                {% endif %}
+                                <form method="post" action="{% url 'patient-document-delete' patient.id doc.id %}" onsubmit="return confirm('Delete this document permanently?');" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="tbl-action" style="background:none; border:none; color:var(--accent-red); cursor:pointer;" title="Delete Document">
+                                        <span class="material-icons-round" style="font-size:18px;">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -363,4 +477,139 @@
         </div>
     </div>
 </div>
+
+<!-- ─── Medical History Modal ─── -->
+<div id="medicalHistoryModal" class="modal-backdrop" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div class="modal-card" style="background:var(--card-bg); width:100%; max-width:500px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); overflow:hidden; box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+        <div style="padding:24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+            <h3 id="mhModalTitle" style="margin:0; font-size:18px;">Add Medical History</h3>
+            <button type="button" onclick="closeMedicalHistoryModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <form id="mhForm" method="post" action="{% url 'medical-history-add' patient.id %}">
+            {% csrf_token %}
+            <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">Condition <span style="color:var(--accent-red);">*</span></label>
+                    <input type="text" name="condition" id="mhCondition" required class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;" placeholder="e.g. Hypertension">
+                </div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:13px; color:var(--text-secondary);">Status</label>
+                        <select name="status" id="mhStatus" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;">
+                            <option value="active">Active</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="chronic">Chronic</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:13px; color:var(--text-secondary);">Diagnosis Date</label>
+                        <input type="date" name="diagnosis_date" id="mhDate" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">Notes</label>
+                    <textarea name="notes" id="mhNotes" rows="3" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px; resize:vertical;"></textarea>
+                </div>
+            </div>
+            
+            <div style="padding:16px 24px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:flex-end; gap:12px; background:rgba(0,0,0,0.2);">
+                <button type="button" onclick="closeMedicalHistoryModal()" style="padding:10px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#fff; cursor:pointer;">Cancel</button>
+                <button type="submit" style="padding:10px 16px; border-radius:8px; border:none; background:var(--accent-blue); color:#fff; font-weight:500; cursor:pointer;">Save Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openMedicalHistoryModal(mode, id = '', condition = '', date = '', status = 'active', notes = '') {
+        const modal = document.getElementById('medicalHistoryModal');
+        const form = document.getElementById('mhForm');
+        const title = document.getElementById('mhModalTitle');
+        
+        document.getElementById('mhCondition').value = condition;
+        document.getElementById('mhDate').value = date;
+        document.getElementById('mhStatus').value = status;
+        document.getElementById('mhNotes').value = notes;
+        
+        if (mode === 'edit') {
+            title.textContent = 'Edit Medical History';
+            form.action = `/patients/{{ patient.id }}/medical-history/${id}/edit/`;
+        } else {
+            title.textContent = 'Add Medical History';
+            form.action = `{% url 'medical-history-add' patient.id %}`;
+        }
+        
+        modal.style.display = 'flex';
+    }
+    
+    function closeMedicalHistoryModal() {
+        document.getElementById('medicalHistoryModal').style.display = 'none';
+        document.getElementById('mhForm').reset();
+    }
+</script>
+
+<!-- ─── Document Upload Modal ─── -->
+<div id="documentModal" class="modal-backdrop" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div class="modal-card" style="background:var(--card-bg); width:100%; max-width:500px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); overflow:hidden; box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+        <div style="padding:24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:18px;">Upload Document</h3>
+            <button type="button" onclick="closeDocumentModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <form id="docForm" method="post" action="{% url 'patient-document-upload' patient.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">Title <span style="color:var(--accent-red);">*</span></label>
+                    <input type="text" name="title" required class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;" placeholder="e.g. Lab Report March">
+                </div>
+                
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">Document Type <span style="color:var(--accent-red);">*</span></label>
+                    <select name="document_type" required class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;">
+                        <option value="lab_report">Lab Report</option>
+                        <option value="prescription">Prescription</option>
+                        <option value="scan">Scan / X-Ray</option>
+                        <option value="consent">Consent Form</option>
+                        <option value="insurance">Insurance Document</option>
+                        <option value="other" selected>Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">File <span style="color:var(--accent-red);">*</span></label>
+                    <input type="file" name="file" required class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px;">
+                </div>
+
+                <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-size:13px; color:var(--text-secondary);">Description (Optional)</label>
+                    <textarea name="description" rows="2" class="form-input" style="width:100%; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; padding:12px; border-radius:8px; resize:vertical;"></textarea>
+                </div>
+            </div>
+            
+            <div style="padding:16px 24px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:flex-end; gap:12px; background:rgba(0,0,0,0.2);">
+                <button type="button" onclick="closeDocumentModal()" style="padding:10px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:#fff; cursor:pointer;">Cancel</button>
+                <button type="submit" style="padding:10px 16px; border-radius:8px; border:none; background:var(--accent-blue); color:#fff; font-weight:500; cursor:pointer;">Upload Document</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDocumentModal() {
+        document.getElementById('documentModal').style.display = 'flex';
+    }
+    
+    function closeDocumentModal() {
+        document.getElementById('documentModal').style.display = 'none';
+        document.getElementById('docForm').reset();
+    }
+</script>
+
 {% endblock %}

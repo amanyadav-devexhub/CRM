@@ -3,13 +3,15 @@ Clinical views for patient records (Notes, Prescriptions).
 """
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
+from apps.utils.mixins import HasTenantPermissionMixin
 from apps.clinical.models import ClinicalNote, Prescription, PrescriptionItem
 from apps.patients.models import Patient
 from apps.clinical.models import Doctor
 
 
-class ClinicalNoteListView(View):
+class ClinicalNoteListView(HasTenantPermissionMixin, View):
     """List clinical notes for a patient or overall."""
+    required_permission = "patients.view_records"
     def get(self, request):
         patient_id = request.GET.get("patient")
         notes = ClinicalNote.objects.select_related("patient", "doctor")
@@ -24,8 +26,9 @@ class ClinicalNoteListView(View):
         return render(request, "dashboard/clinical/note_list.html", context)
 
 
-class ClinicalNoteCreateView(View):
+class ClinicalNoteCreateView(HasTenantPermissionMixin, View):
     """Create a new SOAP note."""
+    required_permission = "patients.edit_records"
     def get(self, request):
         patient_id = request.GET.get("patient")
         context = {
@@ -50,8 +53,40 @@ class ClinicalNoteCreateView(View):
         return redirect(f"/patients/{patient.pk}/")
 
 
-class PrescriptionCreateView(View):
+class ClinicalNoteEditView(HasTenantPermissionMixin, View):
+    """Edit an existing SOAP note."""
+    required_permission = "patients.edit_records"
+
+    def get(self, request, pk):
+        note = get_object_or_404(ClinicalNote, pk=pk)
+        context = {
+            "note": note,
+            "patients": Patient.objects.all()[:200],
+            "doctors": Doctor.objects.filter(is_active=True),
+            "editing": True,
+        }
+        return render(request, "dashboard/clinical/note_form.html", context)
+
+    def post(self, request, pk):
+        note = get_object_or_404(ClinicalNote, pk=pk)
+        
+        patient = get_object_or_404(Patient, pk=request.POST.get("patient"))
+        doctor = get_object_or_404(Doctor, pk=request.POST.get("doctor"))
+        
+        note.patient = patient
+        note.doctor = doctor
+        note.subjective = request.POST.get("subjective", "")
+        note.objective = request.POST.get("objective", "")
+        note.assessment = request.POST.get("assessment", "")
+        note.plan = request.POST.get("plan", "")
+        note.save()
+        
+        return redirect(f"/patients/{patient.pk}/")
+
+
+class PrescriptionCreateView(HasTenantPermissionMixin, View):
     """Create a prescription with items."""
+    required_permission = "prescriptions.issue"
     def get(self, request):
         patient_id = request.GET.get("patient")
         context = {
@@ -91,8 +126,27 @@ class PrescriptionCreateView(View):
         return redirect(f"/patients/{patient.pk}/")
 
 
-class PrescriptionListView(View):
+class PrescriptionDetailView(HasTenantPermissionMixin, View):
+    """View a single prescription with all its items."""
+    required_permission = ["patients.view_records", "patients.register", "prescriptions.edit", "prescriptions.issue"]
+
+    def get(self, request, pk):
+        prescription = get_object_or_404(
+            Prescription.objects.select_related("patient", "doctor").prefetch_related("items"),
+            pk=pk
+        )
+        context = {
+            "rx": prescription,
+            "items": prescription.items.all(),
+            "patient": prescription.patient,
+            "doctor": prescription.doctor,
+        }
+        return render(request, "dashboard/clinical/prescription_detail.html", context)
+
+
+class PrescriptionListView(HasTenantPermissionMixin, View):
     """List all prescriptions."""
+    required_permission = "prescriptions.edit"
     def get(self, request):
         patient_id = request.GET.get("patient")
         prescriptions = Prescription.objects.select_related("patient", "doctor").prefetch_related("items")

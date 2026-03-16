@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard <span>/ Lab Processing</span>{% endblock %}
+
+{% block content %}
+<div class="card" style="animation: slideUp 0.3s ease-out;">
+    <div class="card-header">
+        <h3>
+            <span class="icon material-icons-round" style="color:var(--accent-blue)">science</span>
+            Orders in Processing
+            {% if not user.is_superuser %}
+            <span style="font-size: 13px; font-weight: normal; color: var(--text-muted); margin-left: 10px;">(Assigned to you)</span>
+            {% endif %}
+        </h3>
+    </div>
+    <div class="card-body" style="padding:0">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Patient</th>
+                    <th>Required Tests</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr style="{% if order.status == 'PROCESSING' %}background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%); border-left: 3px solid var(--accent-blue);{% endif %}">
+                    <td><code>{{ order.id|stringformat:".8s" }}</code></td>
+                    <td>
+                        <strong>{{ order.patient.full_name }}</strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">ID: {{ order.patient.patient_id }}</div>
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                            {% for test in order.tests.all %}
+                            <span class="badge-tag trial" title="{{ test.name }}">{{ test.code }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if order.priority == 'URGENT' or order.priority == 'STAT' %}
+                        <span style="color:var(--accent-red); font-weight:600;">{{ order.get_priority_display }}</span>
+                        {% else %}
+                        {{ order.get_priority_display }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge-tag {% if order.status == 'COMPLETED' or order.status == 'REPORT_UPLOADED' %}active{% elif order.status == 'PROCESSING' %}trial{% elif order.status == 'COLLECTED' %}suspended{% endif %}"
+                              style="{% if order.status == 'COLLECTED' %}background:rgba(245,158,11,0.1); color:#f59e0b; border-color:rgba(245,158,11,0.3);{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        {% if order.status == 'COLLECTED' %}
+                        <form method="POST" action="{% url 'lab-order-entry' order.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="start_processing">
+                            <button type="submit" class="btn-primary" style="padding: 6px 12px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                <span class="material-icons-round" style="font-size:16px;">play_circle</span> Start
+                            </button>
+                        </form>
+                        {% elif order.status == 'PROCESSING' %}
+                        <a href="{% url 'lab-order-entry' order.id %}" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                            <span class="material-icons-round" style="font-size:16px;">edit_note</span> Enter Results
+                        </a>
+                        {% else %}
+                        <a href="{% url 'lab-order-entry' order.id %}" class="btn-text">
+                            View Data
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:3rem; color:var(--text-muted)">
+                        <span class="material-icons-round" style="font-size:3rem; display:block; margin-bottom:10px; opacity:0.4;">done_all</span>
+                        No active orders to process. Good job!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if success_message %}
+<div class="alert success animate-in"
+    style="position:fixed; bottom:2rem; right:2rem; background:var(--accent-green); color:white; padding:1rem 2rem; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); z-index:1001;">
+    {{ success_message }}
+</div>
+<script>setTimeout(() => document.querySelector('.alert').remove(), 3000);</script>
+{% endif %}
+{% endblock %}

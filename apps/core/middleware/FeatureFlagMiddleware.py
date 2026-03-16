@@ -80,6 +80,6 @@ class FeatureFlagMiddleware:
 
         # 5. Check feature access
         if not tenant.has_feature(feature_code):
-            return render(request, "403.html", status=403)
+            return render(request, "feature_locked.html", status=403)
 
         return None

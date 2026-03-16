@@ -18,25 +18,9 @@
     <style>
         /* Management-specific brand color override */
         :root {
-            --mgmt-primary: {
-                % block mgmt_color %
-            }
-
-            var(--accent-blue) {
-                % endblock %
-            }
-
-            ;
-
-            --mgmt-gradient: {
-                % block mgmt_gradient %
-            }
-
-            var(--gradient-blue) {
-                % endblock %
-            }
-
-            ;
+            --mgmt-primary: {% block mgmt_color %}var(--accent-blue){% endblock %};
+            --mgmt-primary-rgb: {% block mgmt_color_rgb %}59, 130, 246{% endblock %};
+            --mgmt-gradient: {% block mgmt_gradient %}var(--gradient-blue){% endblock %};
         }
 
         .sidebar-brand .brand-icon {
@@ -66,16 +50,17 @@
         <!-- ─── Unified Management Sidebar ─── -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo">
+                <div class="logo" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
                     <div class="logo-icon"
-                        style="background: var(--mgmt-gradient, var(--gradient-blue)); -webkit-background-clip: padding-box; border-radius: 8px; color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                        style="background: var(--mgmt-gradient, var(--gradient-blue)); -webkit-background-clip: padding-box; border-radius: 8px; color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
                         {% block hub_icon %}M{% endblock %}
                     </div>
-                    <div class="logo-text">
+                    <div class="logo-text" style="display: flex; flex-direction: column; justify-content: center;">
                         <h2
                             style="margin: 0; font-size: 18px; font-weight: 700; background: var(--mgmt-gradient, var(--gradient-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                             {% block hub_name %}HealthCRM{% endblock %}
                         </h2>
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 500; line-height: 1.2;">{% block hub_subtitle %}Management{% endblock %}</span>
                     </div>
                 </div>
             </div>
@@ -87,30 +72,46 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <header class="top-bar">
-                <div class="search-box">
-                    <span class="material-icons-round">search</span>
-                    <input type="text" placeholder="{% block search_placeholder %}Search...{% endblock %}">
+            <header class="topbar">
+                <div class="topbar-left" style="display: flex; align-items: center; gap: 16px;">
+                    <button class="menu-toggle" id="menuToggle" style="display: none;">
+                        <span class="material-icons-round">menu</span>
+                    </button>
+                    <h1>{% block topbar_title %}{% endblock %}</h1>
                 </div>
-                <div class="top-bar-actions">
-                    <button class="icon-btn theme-toggle" id="themeToggle" title="Toggle Theme"
-                        style="border: none; background: transparent; cursor: pointer;">
+                <div class="topbar-right">
+                    <div class="search-box">
+                        <span class="material-icons-round">search</span>
+                        <input type="text" placeholder="{% block search_placeholder %}Search...{% endblock %}">
+                    </div>
+                    <button class="topbar-btn theme-toggle" id="themeToggle" title="Toggle Theme" style="border: none; cursor: pointer;">
                         <span class="material-icons-round" id="themeIcon">light_mode</span>
                     </button>
-                    <button class="icon-btn">
+                    <button class="topbar-btn" style="border: none;">
                         <span class="material-icons-round">notifications</span>
                         <span class="notification-dot"></span>
                     </button>
-                    <button class="icon-btn">
+                    <button class="topbar-btn" style="border: none;">
                         <span class="material-icons-round">settings</span>
                     </button>
                 </div>
             </header>
 
-            <div class="page-content">
-                <div class="page-header">
+            <div class="page">
+                <style>
+                    .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+                    .page-header p { color: var(--text-muted); margin-top: 4px; font-size: 14px; }
+                    .page-header-actions { display: flex; gap: 12px; align-items: center; }
+                    .btn-primary { 
+                        display: flex; align-items: center; gap: 8px; background: var(--mgmt-gradient); color: #fff; 
+                        padding: 10px 16px; border-radius: var(--radius-sm); font-weight: 500; font-size: 14px; 
+                        border: none; cursor: pointer; transition: all 0.2s; 
+                    }
+                    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+                </style>
+                <div class="page-header" {% block hide_page_header %}{% endblock %}>
                     <div class="page-header-title">
-                        <h1>{% block page_title %}{% endblock %}</h1>
+                        <h1 style="font-size: 24px; font-weight: 700; margin: 0; color: var(--text-primary);">{% block page_title %}{% endblock %}</h1>
                         <p>{% block page_subtitle %}{% endblock %}</p>
                     </div>
                     <div class="page-header-actions">

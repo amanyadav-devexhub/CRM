@@ -20,8 +20,8 @@ FEATURES = [
     ("sms",             "SMS Reminders",           "Send SMS appointment reminders"),
     ("whatsapp",        "WhatsApp Integration",    "Send messages via WhatsApp"),
     ("ai",              "AI Features",             "AI note generation, no-show prediction"),
-    ("pharmacy_addon",  "Pharmacy Add-on",         "Medicine catalog, inventory, sales"),
-    ("lab_addon",       "Lab Add-on",              "Test catalog, sample tracking, reports"),
+    ("pharmacy",        "Pharmacy",                "Medicine catalog, inventory, sales"),
+    ("lab",             "Lab",                     "Test catalog, sample tracking, reports"),
     ("analytics",       "Analytics Dashboard",     "Advanced analytics and visualizations"),
     ("export",          "Data Export",             "Export data to CSV/Excel"),
     ("communications",  "Communications",          "Message templates and campaigns"),
@@ -91,7 +91,7 @@ PLANS = [
         "features": [
             "patients", "appointments", "billing", "prescriptions",
             "clinical_notes", "staff", "reports_basic", "reports_advanced",
-            "sms", "pharmacy_addon", "lab_addon", "analytics", "export",
+            "sms", "pharmacy", "lab", "analytics", "export",
             "communications", "notifications", "settings",
         ],
     },
@@ -110,7 +110,7 @@ PLANS = [
         "features": [
             "patients", "appointments", "billing", "prescriptions",
             "clinical_notes", "staff", "reports_basic", "reports_advanced",
-            "sms", "whatsapp", "ai", "pharmacy_addon", "lab_addon", "analytics",
+            "sms", "whatsapp", "ai", "pharmacy", "lab", "analytics",
             "export", "communications", "notifications", "settings",
             "api_access", "custom_branding"
         ],
@@ -170,6 +170,9 @@ class Command(BaseCommand):
                         resource=resource_map[r_code],
                         limit_value=limit
                     )
+            
+            # Force save to trigger cache invalidation signals
+            plan.save()
 
             action = "Created" if created else "Updated"
             self.stdout.write(f"  {action} plan: {plan.display_name} ({features.count()} features, {len(resources_data)} limits)")

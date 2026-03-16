@@ -26,7 +26,10 @@ class AdminCategoryListView(View):
 
         cat_data = []
         for cat in categories:
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            from django.db.models import Q
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             cat_data.append({
                 "category": cat,
                 "tenant_count": tenant_count,
@@ -112,7 +115,9 @@ class AdminCategoryListView(View):
             messages.success(request, f"'{cat.name}' deactivated.")
 
         elif action == "delete":
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             if tenant_count > 0:
                 messages.error(request, f"Cannot delete '{cat.name}' — {tenant_count} tenant(s) are using it. Deactivate it instead.")
             else:
@@ -481,6 +486,8 @@ class AdminPlanListView(View):
                         except Feature.DoesNotExist:
                             pass
                     
+                    # Force save again to trigger post_save signal after features/resources are linked
+                    plan.save()
                     messages.success(request, f"Plan '{display_name}' created.")
                 except Exception as e:
                     messages.error(request, f"Error creating plan: {str(e)}")
@@ -496,8 +503,7 @@ class AdminPlanListView(View):
                 plan.billing_cycle = request.POST.get("billing_cycle")
                 # Handle is_active status from checkbox
                 plan.is_active = 'is_active' in request.POST
-                plan.save()
-
+                
                 # Update features
                 PlanFeature.objects.filter(plan=plan).delete()
                 for feat_str in request.POST.getlist("features"):
@@ -520,6 +526,8 @@ class AdminPlanListView(View):
                         except Resource.DoesNotExist:
                             pass
 
+                # Force save to trigger post_save signal after features/resources are modified
+                plan.save()
                 messages.success(request, f"Plan '{plan.display_name}' updated.")
             except Exception as e:
                 messages.error(request, f"Error updating plan: {str(e)}")
@@ -719,4 +727,410 @@ class AdminTenantDetailView(View):
             "tenant": tenant,
             "subscription": subscription,
         })
+
+
+class AdminRolesPermissionsView(View):
+    """SuperAdmin view for managing global permissions and category-scoped roles."""
+    template_name = "dashboard/admin_roles.html"
+
+    def get(self, request):
+        from apps.accounts.models import Permission
+        from apps.tenants.models import CategoryRoleTemplate, Category
+
+        # ── Permissions tab data ──
+        all_permissions = Permission.objects.all().order_by("code")
+        grouped_perms = {}
+        for p in all_permissions:
+            prefix = p.code.split(".")[0]
+            if prefix not in grouped_perms:
+                grouped_perms[prefix] = []
+            grouped_perms[prefix].append(p)
+
+        # ── Roles tab data ──
+        all_categories = Category.objects.all().order_by("name")
+        selected_category_id = request.GET.get("category")
+        selected_category = None
+        roles = []
+        role_data = []
+
+        if selected_category_id:
+            try:
+                selected_category = Category.objects.get(pk=selected_category_id)
+                roles = CategoryRoleTemplate.objects.filter(category=selected_category).order_by("name")
+
+                for role in roles:
+                    role_perm_ids = set(role.permissions.values_list("id", flat=True))
+                    # RoleTemplates don't directly have users. To determine "in use", you'd query tenants using this category and this role.
+                    # For simplicity in this view, we'll just show 0 or handle logic differently.
+                    role_data.append({
+                        "role": role,
+                        "user_count": 0, # Templates don't directly map to users here
+                        "perm_ids": role_perm_ids,
+                    })
+            except Category.DoesNotExist:
+                pass
+
+        # Build category options with selection state
+        category_options = []
+        for c in all_categories:
+            category_options.append({
+                "pk": str(c.pk),
+                "name": c.name,
+                "is_selected": str(c.pk) == str(selected_category_id),
+            })
+
+        active_tab = request.GET.get("tab", "roles") # Default to roles
+
+        return render(request, self.template_name, {
+            "grouped_perms": grouped_perms,
+            "total_permissions": all_permissions.count(),
+            "all_permissions": all_permissions,
+            "category_options": category_options,
+            "selected_category": selected_category,
+            "role_data": role_data,
+            "total_roles": len(role_data),
+            "active_tab": active_tab,
+        })
+
+    def post(self, request):
+        from apps.accounts.models import Permission
+        from apps.tenants.models import CategoryRoleTemplate, Category
+        
+        action = request.POST.get("action")
+        active_tab = request.POST.get("active_tab", "roles")
+        selected_category_id = request.POST.get("selected_category_id", "")
+
+        redirect_url = f"/admin-roles/?tab={active_tab}"
+        if active_tab == "roles" and selected_category_id:
+            redirect_url += f"&category={selected_category_id}"
+
+        # ── Permission CRUD ──
+        if action == "create_permission":
+            code = request.POST.get("code", "").strip().lower()
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            if code and name:
+                if Permission.objects.filter(code=code).exists():
+                    messages.error(request, f"Permission '{code}' already exists.")
+                else:
+                    Permission.objects.create(code=code, name=name, description=description)
+                    messages.success(request, f"Permission '{name}' created.")
+            else:
+                messages.error(request, "Code and name are required.")
+            return redirect(redirect_url)
+
+        elif action == "delete_permission":
+            perm_id = request.POST.get("permission_id")
+            try:
+                perm = Permission.objects.get(pk=perm_id)
+                # Check if any role is using this permission
+                role_count = perm.roles.count()
+                template_count = perm.categoryroletemplate_set.count()
+                if role_count > 0 or template_count > 0:
+                    messages.error(request, f"Cannot delete '{perm.name}' — it's assigned to {role_count} role(s) and {template_count} template(s). Remove it first.")
+                else:
+                    name = perm.name
+                    perm.delete()
+                    messages.success(request, f"Permission '{name}' deleted.")
+            except Permission.DoesNotExist:
+                messages.error(request, "Permission not found.")
+            return redirect(redirect_url)
+            
+        elif action == "update_permission":
+            perm_id = request.POST.get("permission_id")
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            if name:
+                try:
+                    perm = Permission.objects.get(pk=perm_id)
+                    perm.name = name
+                    perm.description = description
+                    perm.save(update_fields=["name", "description"])
+                    messages.success(request, f"Permission '{name}' updated.")
+                except Permission.DoesNotExist:
+                    messages.error(request, "Permission not found.")
+            else:
+                messages.error(request, "Permission name is required.")
+            return redirect(redirect_url)
+
+        # ── Role Template CRUD ──
+        elif action == "create_role":
+            category_id = request.POST.get("category_id")
+            role_name = request.POST.get("role_name", "").strip()
+            role_code = request.POST.get("role_code", "").strip()
+            role_desc = request.POST.get("role_desc", "").strip()
+            is_active = request.POST.get("is_active") == "on"
+            
+            if not category_id or not role_name:
+                messages.error(request, "Category and role name are required.")
+                return redirect(redirect_url)
+            try:
+                category = Category.objects.get(pk=category_id)
+                if CategoryRoleTemplate.objects.filter(category=category, name=role_name).exists():
+                    messages.error(request, f"Role '{role_name}' already exists for {category.name}.")
+                else:
+                    selected_perms = request.POST.getlist("permissions")
+                    role_template = CategoryRoleTemplate.objects.create(
+                        category=category, 
+                        name=role_name, 
+                        code=role_code,
+                        description=role_desc,
+                        is_active=is_active
+                    )
+                    if selected_perms:
+                        role_template.permissions.set(selected_perms)
+
+                    # Propagate: Create this role for all tenants in the category
+                    from apps.accounts.models import Role
+                    from apps.tenants.models import Tenant
+                    tenants = Tenant.objects.filter(category_obj=category)
+                    created_count = 0
+                    for tenant in tenants:
+                        role, created = Role.objects.get_or_create(
+                            tenant=tenant,
+                            name=role_name,
+                            defaults={
+                                "is_system_role": True,
+                                "source_template": role_template,
+                            }
+                        )
+                        if created:
+                            role.permissions.set(role_template.permissions.all())
+                            created_count += 1
+                    
+                    messages.success(request, f"Role '{role_name}' created for {category.name} and provisioned to {created_count} tenant(s).")
+            except Category.DoesNotExist:
+                messages.error(request, "Category not found.")
+            return redirect(redirect_url)
+
+        elif action == "update_role":
+            role_id = request.POST.get("role_id")
+            try:
+                role_template = CategoryRoleTemplate.objects.get(pk=role_id)
+                selected_perms = request.POST.getlist("permissions")
+                role_template.permissions.set(selected_perms)
+
+                new_name = request.POST.get("role_name", "").strip()
+                new_code = request.POST.get("role_code", "").strip()
+                new_desc = request.POST.get("role_desc", "").strip()
+                is_active = request.POST.get("is_active") == "on"
+
+                old_name = role_template.name
+                if new_name:
+                    role_template.name = new_name
+                role_template.code = new_code
+                role_template.description = new_desc
+                role_template.is_active = is_active
+                role_template.save(update_fields=["name", "code", "description", "is_active"])
+
+                # Propagate: Sync permissions to all non-customized tenant roles
+                from apps.accounts.models import Role
+                synced = Role.objects.filter(
+                    source_template=role_template,
+                    is_customized=False
+                )
+                sync_count = synced.count()
+                for role in synced:
+                    role.permissions.set(role_template.permissions.all())
+                    # Also sync name if it changed
+                    if new_name and role.name == old_name:
+                        role.name = new_name
+                        role.save(update_fields=["name"])
+
+                messages.success(request, f"Role '{role_template.name}' updated and synced to {sync_count} tenant(s).")
+            except CategoryRoleTemplate.DoesNotExist:
+                messages.error(request, "Role not found.")
+            return redirect(redirect_url)
+
+        elif action == "delete_role":
+            role_id = request.POST.get("role_id")
+            try:
+                role_template = CategoryRoleTemplate.objects.get(pk=role_id)
+                name = role_template.name
+
+                # Propagate: Remove linked tenant roles that aren't in use
+                from apps.accounts.models import Role
+                linked_roles = Role.objects.filter(source_template=role_template)
+                deleted_count = 0
+                for role in linked_roles:
+                    if not role.users.exists():
+                        role.delete()
+                        deleted_count += 1
+                    else:
+                        # Unlink but keep the role if users are assigned
+                        role.source_template = None
+                        role.is_customized = True
+                        role.save(update_fields=["source_template", "is_customized"])
+
+                role_template.delete()
+                messages.success(request, f"Role '{name}' deleted and removed from {deleted_count} tenant(s).")
+            except CategoryRoleTemplate.DoesNotExist:
+                messages.error(request, "Role not found.")
+            return redirect(redirect_url)
+
+        return redirect(redirect_url)
+
+
+# =====================================================================
+# BROADCAST SYSTEM
+# =====================================================================
+
+class AdminBroadcastView(View):
+    """
+    Manage global broadcast messages. 
+    Allows superadmin to create banners targeting specific tenants or categories.
+    """
+    template_name = "dashboard/admin_broadcast.html"
+    
+    def get(self, request):
+        from apps.tenants.models import BroadcastMessage # local import to avoid circular dependency
+        broadcasts = BroadcastMessage.objects.all().order_by("-created_at")
+        categories = Category.objects.filter(is_active=True)
+        tenants = Tenant.objects.filter(is_active=True)
+        
+        edit_id = request.GET.get("edit")
+        editing = None
+        if edit_id:
+            try:
+                editing = BroadcastMessage.objects.get(id=edit_id)
+            except BroadcastMessage.DoesNotExist:
+                pass
+        
+        return render(request, self.template_name, {
+            "broadcasts": broadcasts,
+            "categories": categories,
+            "tenants": tenants,
+            "editing": editing,
+        })
+        
+    def post(self, request):
+        from apps.tenants.models import BroadcastMessage
+        subject = request.POST.get("subject", "").strip()
+        message = request.POST.get("message", "").strip()
+        target_type = request.POST.get("target_type", "ALL")
+        is_active = request.POST.get("is_active") == "on"
+        broadcast_id = request.POST.get("broadcast_id")
+        
+        target_categories = request.POST.getlist("target_categories")
+        target_tenants = request.POST.getlist("target_tenants")
+        
+        if not subject or not message:
+            messages.error(request, "Subject and message are required.")
+            return redirect("admin-broadcast")
+            
+        if broadcast_id:
+            try:
+                broadcast = BroadcastMessage.objects.get(id=broadcast_id)
+                broadcast.subject = subject
+                broadcast.message = message
+                broadcast.target_type = target_type
+                broadcast.target_categories = target_categories if target_type == "CATEGORY" else []
+                broadcast.is_active = is_active
+                broadcast.save()
+                
+                if target_type == "SPECIFIC":
+                    broadcast.target_tenants.set(Tenant.objects.filter(id__in=target_tenants))
+                else:
+                    broadcast.target_tenants.clear()
+                    
+                messages.success(request, f"Broadcast '{subject}' updated successfully.")
+            except BroadcastMessage.DoesNotExist:
+                messages.error(request, "Broadcast not found.")
+        else:
+            broadcast = BroadcastMessage.objects.create(
+                subject=subject,
+                message=message,
+                target_type=target_type,
+                target_categories=target_categories if target_type == "CATEGORY" else [],
+                is_active=is_active,
+                created_by=request.user
+            )
+            
+            if target_type == "SPECIFIC":
+                broadcast.target_tenants.set(Tenant.objects.filter(id__in=target_tenants))
+                
+            if is_active:
+                messages.success(request, f"Broadcast '{subject}' is now live!")
+            else:
+                messages.success(request, f"Broadcast '{subject}' saved as inactive.")
+            
+        return redirect("admin-broadcast")
+        
+
+class AdminBroadcastToggleView(View):
+    """Toggle the active status of a broadcast message."""
+    
+    def post(self, request, pk):
+        from apps.tenants.models import BroadcastMessage
+        broadcast = get_object_or_404(BroadcastMessage, pk=pk)
+        
+        # We toggle the current state. The model's save() method ensures 
+        # only this one becomes active if we are setting it to True.
+        broadcast.is_active = not broadcast.is_active
+        broadcast.save()
+        
+        state = "activated" if broadcast.is_active else "deactivated"
+        messages.success(request, f"Broadcast '{broadcast.subject}' has been {state}.")
+        
+        return redirect("admin-broadcast")
+
+
+class AdminInventoryTypesView(View):
+    """
+    SuperAdmin view for managing global ItemTypes and ItemCategories.
+    """
+    template_name = "dashboard/admin_inventory_types.html"
+
+    def get(self, request):
+        from apps.inventory.models import ItemType, ItemCategory
+        item_types = ItemType.objects.prefetch_related('categories').all()
+        return render(request, self.template_name, {
+            "item_types": item_types,
+        })
+
+    def post(self, request):
+        from apps.inventory.models import ItemType, ItemCategory
+        action = request.POST.get("action")
+
+        if action == "add_type":
+            name = request.POST.get("type_name", "").strip()
+            code = request.POST.get("type_code", "").strip().upper()
+            icon = request.POST.get("type_icon", "inventory_2").strip()
+            if name and code:
+                ItemType.objects.get_or_create(code=code, defaults={"name": name, "icon": icon})
+                messages.success(request, f"Item Type '{name}' created.")
+            else:
+                messages.error(request, "Name and Code are required.")
+
+        elif action == "add_category":
+            type_id = request.POST.get("category_type")
+            name = request.POST.get("category_name", "").strip()
+            code = request.POST.get("category_code", "").strip().upper()
+            if type_id and name and code:
+                item_type = get_object_or_404(ItemType, id=type_id)
+                ItemCategory.objects.get_or_create(
+                    code=code,
+                    defaults={"item_type": item_type, "name": name}
+                )
+                messages.success(request, f"Category '{name}' added under '{item_type.name}'.")
+            else:
+                messages.error(request, "All fields are required.")
+
+        elif action == "toggle_type":
+            type_id = request.POST.get("type_id")
+            item_type = get_object_or_404(ItemType, id=type_id)
+            item_type.is_active = not item_type.is_active
+            item_type.save()
+            state = "activated" if item_type.is_active else "deactivated"
+            messages.success(request, f"Item Type '{item_type.name}' {state}.")
+
+        elif action == "toggle_category":
+            cat_id = request.POST.get("category_id")
+            category = get_object_or_404(ItemCategory, id=cat_id)
+            category.is_active = not category.is_active
+            category.save()
+            state = "activated" if category.is_active else "deactivated"
+            messages.success(request, f"Category '{category.name}' {state}.")
+
+        return redirect("admin-inventory-types")
 

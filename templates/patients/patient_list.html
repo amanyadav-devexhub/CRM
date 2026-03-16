@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load permission_tags %}
 
 {% block nav_patients %}active{% endblock %}
 {% block page_title %}Patients <span>/ Registry</span>{% endblock %}
@@ -17,15 +18,11 @@
         <span class="icon material-icons-round">person_add</span>
         Add New Patient
     </a>
-    {% elif request.user.role %}
-        {% for perm in request.user.role.permissions.all %}
-            {% if perm.code == 'patient.create' %}
-            <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
-                <span class="icon material-icons-round">person_add</span>
-                Add New Patient
-            </a>
-            {% endif %}
-        {% endfor %}
+    {% elif request.user|has_any_permission:'patients.register,patients.edit_records' %}
+    <a href="/patients/create/" class="action-btn primary" style="text-decoration:none;">
+        <span class="icon material-icons-round">person_add</span>
+        Add New Patient
+    </a>
     {% endif %}
 </div>
 
@@ -127,24 +124,10 @@
                                     <span class="material-icons-round">delete</span>
                                 </button>
                             </form>
-                            {% elif request.user.role %}
-                                {% for perm in request.user.role.permissions.all %}
-                                    {% if perm.code == 'patient.update' %}
-                                    <a href="/patients/{{ p.id }}/edit/" class="tbl-action" title="Edit">
-                                        <span class="material-icons-round">edit</span>
-                                    </a>
-                                    {% endif %}
-                                    
-                                    {% if perm.code == 'patient.delete' %}
-                                    <form method="post" action="/patients/{{ p.id }}/delete/" style="display:inline;"
-                                        onsubmit="return confirm('Delete patient {{ p.first_name }} {{ p.last_name }}?');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="tbl-action danger" title="Delete">
-                                            <span class="material-icons-round">delete</span>
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                {% endfor %}
+                            {% elif request.user|has_permission:'patients.edit_records' %}
+                            <a href="/patients/{{ p.id }}/edit/" class="tbl-action" title="Edit">
+                                <span class="material-icons-round">edit</span>
+                            </a>
                             {% endif %}
                         </div>
                     </td>

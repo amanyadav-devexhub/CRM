@@ -34,6 +34,18 @@ class Role(models.Model):
         blank=True
     )
 
+    source_template = models.ForeignKey(
+        'tenants.CategoryRoleTemplate',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="derived_roles",
+        help_text="Template this role was provisioned from"
+    )
+    is_customized = models.BooleanField(
+        default=False,
+        help_text="True if clinic has locally customized this role's permissions"
+    )
+
     class Meta:
         unique_together = ("tenant", "name")
 

@@ -117,6 +117,31 @@ class Tenant(models.Model):
         return self.name
 
 
+class CategoryRoleTemplate(models.Model):
+    category = models.ForeignKey(
+        'tenants.Category', 
+        on_delete=models.CASCADE, 
+        related_name="role_templates"
+    )
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50, blank=True, default='',
+        help_text="Unique identifier for this role within the category (e.g. doctor, receptionist)")
+    description = models.TextField(blank=True, null=True)
+    permissions = models.ManyToManyField('accounts.Permission', blank=True)
+    is_admin_role = models.BooleanField(
+        default=False, 
+        help_text="Should the onboarding user receive this role?"
+    )
+    is_active = models.BooleanField(default=True, help_text="Is this role currently active?")
+
+    class Meta:
+        unique_together = ('category', 'name')
+        ordering = ['category', '-is_admin_role', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.category.name})"
+
+
 # ================================
 # CLINIC SETTINGS (Org Configuration)
 # ================================
@@ -332,7 +357,10 @@ from django.core.cache import cache
 
 def has_feature(self, feature_code):
     """
-    Central feature checking logic
+    Central feature checking logic.
+    Priority:
+      1. Plan features are the source of truth (controlled by superadmin)
+      2. TenantFeature overrides can explicitly grant/revoke a feature
     """
     cache_key = f"tenant_feature_{self.id}_{feature_code}"
     cached = cache.get(cache_key)
@@ -344,30 +372,83 @@ def has_feature(self, feature_code):
     subscription = getattr(self, "subscription", None)
 
     if not subscription or not subscription.is_active():
+        cache.set(cache_key, False, 300)
         return False
 
     try:
         feature = Feature.objects.get(code=feature_code, is_active=True)
     except Feature.DoesNotExist:
+        cache.set(cache_key, False, 300)
         return False
 
-    # 2️⃣ Tenant override (by feature_name CharField)
+    # 2️⃣ Check plan features (source of truth)
+    in_plan = subscription.plan.features.filter(
+        feature_id=feature.id
+    ).exists()
+
+    # 3️⃣ Check for explicit tenant override (can grant OR revoke)
     override = TenantFeature.objects.filter(
         tenant=self,
         feature_name=feature_code
     ).first()
 
     if override:
-        result = override.is_enabled
+        # Explicit override takes precedence
+        result = override.is_enabled and override.is_time_valid()
     else:
-        # 3️⃣ Plan default
-        # Since 'features' is now the related_name for PlanFeature objects
-        result = subscription.plan.features.filter(
-            feature_id=feature.id
-        ).exists()
+        # Fall back to plan
+        result = in_plan
 
-    cache.set(cache_key, result, 300)  # cache 5 min
+    cache.set(cache_key, result, 300)
     return result
 
 # Attach to Tenant model
 Tenant.has_feature = has_feature
+
+
+# ================================
+# SUPERADMIN BROADCASTS
+# ================================
+
+class BroadcastMessage(models.Model):
+    """
+    Global system broadcast message (e.g., Maintenance alerts).
+    Only one message can be active at a time to show as a banner.
+    """
+    TARGET_CHOICES = [
+        ('ALL', 'All Tenants'),
+        ('CATEGORY', 'Specific Categories'),
+        ('SPECIFIC', 'Specific Tenants'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    subject = models.CharField(max_length=255, help_text="Short title for the banner (e.g. SYSTEM MAINTENANCE)")
+    message = models.TextField(help_text="Detailed message text")
+    target_type = models.CharField(max_length=20, choices=TARGET_CHOICES, default='ALL')
+    
+    # Targeting arrays
+    target_categories = models.JSONField(default=list, blank=True, help_text="List of category codes if TARGET=CATEGORY")
+    target_tenants = models.ManyToManyField(Tenant, blank=True, related_name="broadcasts", help_text="Specific tenants if TARGET=SPECIFIC")
+    
+    is_active = models.BooleanField(default=False, help_text="If True, this banner currently displays. Only one can be active.")
+    
+    created_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="created_broadcasts"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "broadcast_messages"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        status = "🟢 ACTIVE" if self.is_active else "⚫ INACTIVE"
+        return f"[{status}] {self.subject}"
+
+    def save(self, *args, **kwargs):
+        # Enforce single active broadcast rule
+        if self.is_active:
+            BroadcastMessage.objects.exclude(id=self.id).update(is_active=False)
+        super().save(*args, **kwargs)

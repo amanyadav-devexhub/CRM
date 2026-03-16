@@ -93,7 +93,10 @@ class CategoryIndexView(View):
 
         cat_data = []
         for cat in categories:
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            from django.db.models import Q
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             cat_data.append({
                 "category": cat,
                 "tenant_count": tenant_count,
@@ -192,7 +195,10 @@ class CategoryIndexView(View):
             messages.success(request, f"'{cat.name}' deactivated.")
 
         elif action == "delete":
-            tenant_count = Tenant.objects.filter(category=cat.code).count()
+            from django.db.models import Q
+            tenant_count = Tenant.objects.filter(
+                Q(category=cat.code) | Q(category_obj=cat)
+            ).distinct().count()
             if tenant_count > 0:
                 messages.error(request, f"Cannot delete '{cat.name}' — {tenant_count} tenant(s) are using it. Deactivate it instead.")
             else:
@@ -424,9 +430,20 @@ class ClinicPatientsView(View):
 
     def get(self, request):
         from apps.patients.models import Patient
+        from apps.clinical.models import Doctor
         from django.db.models import Q
 
-        patients = Patient.objects.all()
+        try:
+            if request.user.doctor_profile:
+                patients = Patient.objects.filter(assigned_doctor=request.user.doctor_profile)
+            else:
+                patients = Patient.objects.all()
+        except getattr(request.user, 'DoesNotExist', Exception):
+            patients = Patient.objects.all()
+        except Exception:
+            patients = Patient.objects.all()
+
+        doctors = Doctor.objects.filter(is_active=True)
 
         search = request.GET.get('search', '').strip()
         gender = request.GET.get('gender', '').strip()
@@ -448,6 +465,7 @@ class ClinicPatientsView(View):
         context = {
             "patients": patients,
             "blood_groups": self.BLOOD_GROUPS,
+            "doctors": doctors,
             "search_query": search,
             "gender_filter": gender,
             "blood_filter": blood,
@@ -475,6 +493,7 @@ class ClinicPatientsView(View):
                 phone=request.POST.get('phone', '').strip(),
                 email=request.POST.get('email', '').strip(),
                 notes=request.POST.get('notes', '').strip(),
+                assigned_doctor_id=request.POST.get('assigned_doctor') or None,
             )
             print(f"✅ Patient created: {patient.full_name} (ID: {patient.patient_id})")
             msg = f"Successfully registered {patient.full_name} ({patient.patient_id})"
@@ -484,10 +503,23 @@ class ClinicPatientsView(View):
             import traceback
             traceback.print_exc()
             from apps.patients.models import Patient as P
-            patients = P.objects.all()
+            from apps.clinical.models import Doctor
+
+            try:
+                if request.user.doctor_profile:
+                    patients = P.objects.filter(assigned_doctor=request.user.doctor_profile)
+                else:
+                    patients = P.objects.all()
+            except getattr(request.user, 'DoesNotExist', Exception):
+                patients = P.objects.all()
+            except Exception:
+                patients = P.objects.all()
+
+            doctors = Doctor.objects.filter(is_active=True)
             return render(request, self.template_name, {
                 "patients": patients,
                 "blood_groups": self.BLOOD_GROUPS,
+                "doctors": doctors,
                 "error_message": str(e),
             })
 
@@ -500,13 +532,14 @@ class CategoryPharmacyView(View):
     def get(self, request):
 
         from apps.pharmacy.models import Medicine, Sale
+        from django.db.models import Sum
 
         today = timezone.now().date()
         thirty_days = today + timezone.timedelta(days=30)
 
         medicines = Medicine.objects.all()
         total_skus = medicines.count()
-        low_stock_count = medicines.filter(status='LOW_STOCK').count()
+        low_stock_count = medicines.filter(status__in=['LOW_STOCK', 'OUT_OF_STOCK']).count()
         expired_count = medicines.filter(status='EXPIRED').count()
         expiring_soon_count = medicines.filter(
             expiry_date__lte=thirty_days,
@@ -514,12 +547,30 @@ class CategoryPharmacyView(View):
         ).count()
 
         # Today's sales
-        today_sales = Sale.objects.filter(
+        today_sales_agg = Sale.objects.filter(
             created_at__date=today
-        ).aggregate(total=Sum('grand_total'))['total'] or 0
+        ).aggregate(total=Sum('grand_total'))
+        today_sales = today_sales_agg['total'] or 0.00
 
-        # Inventory highlights (top 4 medicines)
-        inventory_highlights = medicines[:4]
+        # Profit Margin (Estimated from today's sales)
+        # For simplicity, we'll calculate (Total Selling - Total Purchase) for items sold today
+        from apps.pharmacy.models import SaleItem
+        sold_items = SaleItem.objects.filter(sale__created_at__date=today)
+        total_cost = 0
+        for item in sold_items:
+            total_cost += item.medicine.purchase_price * item.quantity
+        
+        profit = float(today_sales) - float(total_cost)
+        profit_margin = (profit / float(today_sales) * 100) if today_sales > 0 else 0
+
+        # Top Selling Medicines
+        from django.db.models import Count
+        top_selling = SaleItem.objects.values('medicine__name').annotate(
+            total_sold=Sum('quantity')
+        ).order_by('-total_sold')[:5]
+
+        # Inventory highlights (prioritize low stock and expiring items)
+        inventory_highlights = medicines.order_by('stock')[:6]
 
         context = {
             "total_skus": total_skus,
@@ -527,6 +578,8 @@ class CategoryPharmacyView(View):
             "expired_count": expired_count,
             "expiring_soon_count": expiring_soon_count,
             "today_sales": today_sales,
+            "profit_margin": round(profit_margin, 1),
+            "top_selling_medicines": top_selling,
             "inventory_highlights": inventory_highlights,
         }
         return render(request, "categories/pharmacy.html", context)
@@ -554,13 +607,72 @@ class CategoryHospitalsView(View):
 class CategoryLabsView(View):
     """Labs management panel with real stats."""
     def get(self, request):
+        from apps.labs.models import LabOrder, LabSample, LabResult, LabTest
+        from apps.billing.models import InvoiceItem
+        import re
+        from datetime import timedelta
+        
+        today = timezone.now().date()
+        
+        pending_orders = LabOrder.objects.filter(status='PENDING').count()
+        samples_today = LabSample.objects.filter(collected_at__date=today).count()
+        
+        # Revenue from lab tests today
+        revenue_agg = InvoiceItem.objects.filter(
+            invoice__created_at__date=today,
+            description__icontains='Lab Test'
+        ).aggregate(total=Sum('total'))
+        revenue_today = revenue_agg['total'] or 0
+        
+        # TAT Score: % of completed orders finished within turnaround time
+        tat_score = "—"
+        done_statuses = ['COMPLETED', 'REPORT_UPLOADED']
+        completed_orders = LabOrder.objects.filter(
+            status__in=done_statuses
+        ).prefetch_related('tests')
+        
+        if completed_orders.exists():
+            on_time = 0
+            total_evaluated = 0
+            for order in completed_orders:
+                # Parse average turnaround_time from the order's tests
+                tat_hours_list = []
+                for test in order.tests.all():
+                    if test.turnaround_time:
+                        nums = re.findall(r'\d+', test.turnaround_time)
+                        if nums:
+                            tat_hours_list.append(int(nums[0]))
+                if not tat_hours_list:
+                    continue
+                avg_tat = sum(tat_hours_list) / len(tat_hours_list)
+                actual_hours = (order.updated_at - order.ordered_at).total_seconds() / 3600
+                total_evaluated += 1
+                if actual_hours <= avg_tat:
+                    on_time += 1
+            if total_evaluated > 0:
+                pct = int((on_time / total_evaluated) * 100)
+                tat_score = f"{pct}%"
+        
+        # New Dashboard Stats
+        processing_count = LabOrder.objects.filter(status='PROCESSING').count()
+        critical_reports = LabResult.objects.filter(is_abnormal=True, order__status__in=['COMPLETED', 'REPORT_UPLOADED', 'VERIFIED']).count()
+        
+        # Tests by department
+        from django.db.models import Count
+        dept_stats = LabTest.objects.filter(orders__status__in=['COMPLETED', 'REPORT_UPLOADED', 'VERIFIED']).values('category').annotate(count=Count('category')).order_by('-count')[:5]
+
+        # Recent activity
+        recent_requests = LabOrder.objects.select_related('patient', 'doctor').all().order_by('-ordered_at')[:10]
 
         context = {
-            "pending_tests": 0,
-            "samples_received": 0,
-            "tat_score": "—",
-            "revenue_today": "₹0",
-            "test_requests": [],
+            "pending_tests": pending_orders,
+            "processing_count": processing_count,
+            "samples_received": samples_today,
+            "critical_reports": critical_reports,
+            "tat_score": tat_score,
+            "revenue_today": f"₹{revenue_today:,.0f}",
+            "department_stats": dept_stats,
+            "test_requests": recent_requests,
         }
         return render(request, "categories/labs.html", context)
 
@@ -608,7 +720,10 @@ class CategoryListView(View):
                 "tenants": [],
             })
 
-        tenants_query = Tenant.objects.filter(category=cat.code).order_by("-created_at")
+        from django.db.models import Q
+        tenants_query = Tenant.objects.filter(
+            Q(category=cat.code) | Q(category_obj=cat)
+        ).distinct().order_by("-created_at")
         
         # Pagination setup (10 tenants per page)
         paginator = Paginator(tenants_query, 10)
@@ -663,15 +778,25 @@ class PharmacyInventoryView(View):
         batch = request.POST.get('batch_number', '').strip()
         qty = request.POST.get('quantity', '0')
         price = request.POST.get('price', '0')
+        mrp = request.POST.get('mrp', '0')
+        tax_rate = request.POST.get('tax_rate', '0')
+        barcode = request.POST.get('barcode', '').strip()
+        min_stock = request.POST.get('min_stock_level', '10')
         category = request.POST.get('category', 'General')
         expiry = request.POST.get('expiry_date', '')
 
         try:
             qty = int(qty)
             price = float(price)
+            mrp = float(mrp)
+            tax_rate = float(tax_rate)
+            min_stock = int(min_stock)
         except (ValueError, TypeError):
             qty = 0
             price = 0.0
+            mrp = 0.0
+            tax_rate = 0.0
+            min_stock = 10
 
         if not expiry:
             expiry = (timezone.now() + timezone.timedelta(days=365)).date()
@@ -689,6 +814,10 @@ class PharmacyInventoryView(View):
                 category=category,
                 batch_number=batch,
                 price=price,
+                mrp=mrp,
+                tax_rate=tax_rate,
+                barcode=barcode if barcode else None,
+                min_stock_level=min_stock,
                 stock=qty,
                 expiry_date=expiry,
             )
@@ -706,26 +835,196 @@ class PharmacyInventoryView(View):
             })
 
 
+class PharmacyPurchasesView(View):
+    """Pharmacy purchases and supplier management."""
+    template_name = "categories/pharmacy_purchases.html"
+
+    def get(self, request):
+        from apps.pharmacy.models import Supplier, PurchaseOrder, Medicine
+        suppliers = Supplier.objects.all()
+        purchase_orders = PurchaseOrder.objects.all()
+        medicines = Medicine.objects.all()
+        context = {
+            "suppliers": suppliers,
+            "purchase_orders": purchase_orders,
+            "medicines": medicines,
+            "success_message": request.GET.get('success', ''),
+            "error_message": request.GET.get('error', ''),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        from apps.pharmacy.models import Supplier, PurchaseOrder, PurchaseOrderItem, PurchaseInvoice, Medicine
+        from django.shortcuts import redirect
+        import uuid
+        
+        action = request.POST.get('action')
+        
+        if action == 'add_supplier':
+            name = request.POST.get('name')
+            email = request.POST.get('email', '')
+            phone = request.POST.get('phone', '')
+            Supplier.objects.create(name=name, email=email, phone=phone)
+            return redirect(f"{request.path}?success=Supplier added successfully")
+            
+        elif action == 'create_po':
+            supplier_id = request.POST.get('supplier_id')
+            medicine_id = request.POST.get('medicine_id')
+            try:
+                qty = int(request.POST.get('quantity', 0))
+                price = float(request.POST.get('unit_price', 0))
+            except ValueError:
+                return redirect(f"{request.path}?error=Invalid quantity or price")
+                
+            sup = Supplier.objects.get(id=supplier_id)
+            med = Medicine.objects.get(id=medicine_id)
+            total = qty * price
+            
+            # Create PO
+            po = PurchaseOrder.objects.create(
+                order_number=f"PO-{uuid.uuid4().hex[:6].upper()}",
+                supplier=sup,
+                status='RECEIVED',
+                total_amount=total
+            )
+            
+            # Create PO Item
+            PurchaseOrderItem.objects.create(
+                purchase_order=po,
+                medicine=med,
+                quantity=qty,
+                received_quantity=qty,
+                unit_price=price,
+                total=total
+            )
+            
+            # Create Invoice
+            PurchaseInvoice.objects.create(
+                purchase_order=po,
+                supplier=sup,
+                invoice_number=f"INV-{uuid.uuid4().hex[:6].upper()}",
+                total_amount=total,
+                payment_status='PAID'
+            )
+            
+            # Update Medicine Stock
+            med.stock += qty
+            med.purchase_price = price
+            med.save()
+            
+            return redirect(f"{request.path}?success=Order received. Stock updated for {med.name}.")
+            
+        return redirect(request.path)
+
+
 class PharmacySalesView(View):
     """Pharmacy sales/POS view with real sale data."""
     template_name = "categories/pharmacy_sales.html"
 
     def get(self, request):
-        from apps.pharmacy.models import Sale
+        from apps.pharmacy.models import Sale, Medicine
         recent_sales = Sale.objects.all()[:10]
+        medicines = Medicine.objects.filter(stock__gt=0)
+        
+        rx_items_json = "[]"
+        rx_id = request.GET.get('rx_id')
+        if rx_id:
+            try:
+                from apps.clinical.models import Prescription
+                import json
+                rx = Prescription.objects.get(id=rx_id)
+                items_data = []
+                for item in rx.items.all():
+                    # Attempt to find medicine with similar name in pharmacy inventory
+                    med = medicines.filter(name__icontains=item.medicine_name).first()
+                    if med:
+                        items_data.append({
+                            "id": str(med.id),
+                            "name": med.name,
+                            "price": float(med.mrp),
+                            "qty": 1,
+                            "tax_rate": float(med.tax_rate)
+                        })
+                rx_items_json = json.dumps(items_data)
+            except Exception as e:
+                print(f"Error loading prescription: {e}")
+
         context = {
             "recent_sales": recent_sales,
+            "medicines": medicines,
+            "preload_cart": rx_items_json,
+            "rx_id": rx_id,
+            "success_message": request.GET.get('success', ''),
+            "error_message": request.GET.get('error', ''),
         }
         return render(request, self.template_name, context)
 
+    def post(self, request):
+        from apps.pharmacy.models import Sale, SaleItem, Medicine
+        import uuid, json
+        
+        try:
+            cart_data = json.loads(request.POST.get('cart_data', '[]'))
+            if not cart_data:
+                return redirect(f"{request.path}?error=Cart is empty")
+                
+            subtotal = float(request.POST.get('subtotal', 0))
+            tax = float(request.POST.get('tax', 0))
+            discount = float(request.POST.get('discount', 0))
+            grand_total = float(request.POST.get('grand_total', 0))
+            payment_mode = request.POST.get('payment_mode', 'CASH')
+            
+            # Create Sale
+            sale = Sale.objects.create(
+                invoice_number=f"INV-{uuid.uuid4().hex[:8].upper()}",
+                subtotal=subtotal,
+                tax=tax,
+                discount=discount,
+                grand_total=grand_total,
+                payment_mode=payment_mode
+            )
+            
+            # Create Items and Update Stock
+            for item in cart_data:
+                med = Medicine.objects.get(id=item['id'])
+                qty = int(item['qty'])
+                price = float(item['price'])
+                
+                SaleItem.objects.create(
+                    sale=sale,
+                    medicine=med,
+                    quantity=qty,
+                    unit_price=price,
+                    total=qty * price
+                )
+                
+                # Deduct stock
+                med.stock = max(0, med.stock - qty)
+                med.save()
+                
+            rx_id = request.POST.get('rx_id')
+            if rx_id:
+                from apps.clinical.models import Prescription
+                rx = Prescription.objects.filter(id=rx_id).first()
+                if rx and rx.status == 'PENDING':
+                    rx.status = 'DISPENSED'
+                    rx.save(update_fields=['status'])
+                
+            return redirect(f"{request.path}?success=Checkout completed. Invoice {sale.invoice_number} generated.")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return redirect(f"{request.path}?error=Failed to process checkout: {str(e)}")
+
 
 class PharmacyPrescriptionsView(View):
-    """Pharmacy prescriptions view with real data."""
+    """Pharmacy prescriptions view with real data fetching from Clinical module."""
     template_name = "categories/pharmacy_prescriptions.html"
 
     def get(self, request):
-        from apps.pharmacy.models import Prescription
-        prescriptions = Prescription.objects.all()
+        from apps.clinical.models import Prescription
+        # Fetch prescriptions directly from clinical workflow
+        prescriptions = Prescription.objects.all().select_related('patient', 'doctor').order_by('-created_at')[:50]
         context = {
             "prescriptions": prescriptions,
         }

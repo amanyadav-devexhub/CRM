@@ -5,6 +5,7 @@ Multi-step wizard: Org Details → Plan Selection → Review & Submit.
 import logging
 from django.shortcuts import render, redirect
 from django.views import View
+from django.db import transaction
 from django.utils.text import slugify
 from django.utils import timezone
 from datetime import timedelta
@@ -25,9 +26,11 @@ class OnboardingStep1View(View):
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect("/login/")
+        from apps.tenants.models import Category
+        categories = Category.objects.filter(is_active=True).order_by('sort_order', 'name')
         # Pre-fill from session if returning
         data = request.session.get("onboarding_org", {})
-        return render(request, self.template_name, {"data": data})
+        return render(request, self.template_name, {"data": data, "categories": categories})
 
     def post(self, request):
         if not request.user.is_authenticated:
@@ -120,8 +123,10 @@ class OnboardingStep1View(View):
                 "date_format": request.POST.get("date_format", "DD/MM/YYYY"),
             }
             data.update(setup_answers)
+            from apps.tenants.models import Category
+            categories = Category.objects.filter(is_active=True).order_by('sort_order', 'name')
             return render(request, self.template_name, {
-                "errors": errors, "data": data,
+                "errors": errors, "data": data, "categories": categories,
             })
 
         # Save to session — use logged-in user's email as org email
@@ -242,6 +247,7 @@ class OnboardingStep3View(View):
             return redirect("/onboarding/")
 
         try:
+          with transaction.atomic():
             # 1. Create Client (schema-per-tenant) — auto_create_schema=True
             trial_end = timezone.now() + timedelta(days=14)
             client = Client.objects.create(
@@ -269,9 +275,12 @@ class OnboardingStep3View(View):
             )
 
             # 3. Create Tenant record (app-level) and link to Client
+            from apps.tenants.models import Category as TenantCategory
+            category_obj = TenantCategory.objects.filter(code=org_data["category"]).first()
             tenant = Tenant.objects.create(
                 name=org_data["org_name"],
                 category=org_data["category"],
+                category_obj=category_obj,
                 subdomain=org_data["subdomain"],
                 email=org_data["org_email"],
                 phone="",
@@ -289,19 +298,27 @@ class OnboardingStep3View(View):
                 trial=True,
             )
 
-            # 4b. Auto-provision features from plan
-            from apps.tenants.models import TenantFeature
-            for feature in plan.features.all():
-                TenantFeature.objects.get_or_create(
-                    tenant=tenant,
-                    feature_name=feature.code,
-                    defaults={"is_enabled": True},
-                )
+            # 4b. Features are now derived from the plan directly.
+            # TenantFeature records are only created for explicit per-tenant overrides.
+                
+            # 4c. Auto-provision category-based roles
+            from apps.accounts.utils import provision_category_roles
+            from apps.accounts.models import Role, Permission
+            provision_category_roles(tenant)
 
-            # 5. Assign user to tenant
+            # 5. Assign user to tenant and 'Admin' role (with ALL permissions)
             user = request.user
             user.tenant = tenant
-            user.save(update_fields=["tenant"])
+            admin_role, _ = Role.objects.get_or_create(
+                tenant=tenant,
+                name="Admin",
+                defaults={"is_system_role": True},
+            )
+            # Admin gets every permission
+            admin_role.permissions.set(Permission.objects.all())
+
+            user.role = admin_role
+            user.save(update_fields=["tenant", "role"])
 
             # 6. Seed default data in the new tenant schema
             from django_tenants.utils import schema_context

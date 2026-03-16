@@ -21,7 +21,14 @@ class HasTenantPermissionMixin(AccessMixin):
             return redirect("/login/")
             
         if self.required_permission:
-            if not request.user.has_permission(self.required_permission):
+            # required_permission can be a single string or a list/tuple of strings
+            perms_to_check = self.required_permission
+            if isinstance(perms_to_check, str):
+                perms_to_check = [perms_to_check]
+                
+            has_access = any(request.user.has_permission(p) for p in perms_to_check)
+            
+            if not has_access:
                 return self.handle_no_permission()
                 
         return super().dispatch(request, *args, **kwargs)
