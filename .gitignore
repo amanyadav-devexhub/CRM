@@ -27,3 +27,7 @@ fix_links.py
 remove_local_sidebars.py
 debug_urls.py
 all_matches.txt
+
+
+.env
+.env*

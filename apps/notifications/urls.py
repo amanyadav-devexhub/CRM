@@ -1,17 +1,15 @@
-from django.urls import path
-from .views import (
-    NotificationListAPIView,
-    NotificationMarkReadAPIView,
-    NotificationMarkAllReadAPIView,
-    NotificationPreferenceAPIView,
-)
+# apps/notifications/urls.py
 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import NotificationViewSet, NotificationPreferenceViewSet
+
+# Create a router and register our viewsets
+router = DefaultRouter()
+router.register(r'', NotificationViewSet, basename='notification')
+router.register(r'preferences', NotificationPreferenceViewSet, basename='preference')
+
+# The API URLs are determined automatically by the router
 urlpatterns = [
-    # Notifications
-    path("", NotificationListAPIView.as_view(), name="notification-list"),
-    path("<uuid:pk>/read/", NotificationMarkReadAPIView.as_view(), name="notification-mark-read"),
-    path("mark-all-read/", NotificationMarkAllReadAPIView.as_view(), name="notification-mark-all-read"),
-
-    # Preferences
-    path("preferences/", NotificationPreferenceAPIView.as_view(), name="notification-preferences"),
+    path('', include(router.urls)),
 ]

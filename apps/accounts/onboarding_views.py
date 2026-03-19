@@ -15,6 +15,13 @@ from apps.tenants.models import (
 )
 from django.contrib.auth import get_user_model
 
+def sanitize_schema_name(subdomain):
+    """
+    Convert subdomain to valid PostgreSQL schema name.
+    Domains allow hyphens, but PostgreSQL schemas do not.
+    """
+    return subdomain.replace('-', '_')
+
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
@@ -251,10 +258,10 @@ class OnboardingStep3View(View):
             # 1. Create Client (schema-per-tenant) — auto_create_schema=True
             trial_end = timezone.now() + timedelta(days=14)
             client = Client.objects.create(
-                name=org_data["org_name"],
-                schema_name=org_data["subdomain"],
-                paid_until=trial_end.date(),
-                on_trial=True,
+            name=org_data["org_name"],
+            schema_name=sanitize_schema_name(org_data["subdomain"]), 
+            paid_until=trial_end.date(),
+            on_trial=True,
             )
 
             # 2. Create Domain for subdomain routing

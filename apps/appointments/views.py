@@ -12,6 +12,11 @@ from django.db import transaction
 from apps.appointments.models import Appointment, AppointmentConfig, AppointmentActivity
 from apps.clinical.models import Doctor, DoctorSlot
 from apps.patients.models import Patient
+from apps.notifications.triggers import (
+    notify_appointment_confirmation,
+    notify_appointment_rescheduled,
+    notify_appointment_cancelled,
+)
 
 
 def log_activity(appointment, action, user=None, notes='', old_status='', new_status=''):
@@ -180,11 +185,14 @@ class AppointmentCreateView(View):
 
     def post(self, request):
         from django.contrib import messages as django_messages
+        import logging
+        logger = logging.getLogger(__name__)
 
         tenant = getattr(request.user, "tenant", None)
         if not tenant:
             return redirect("/dashboard/")
 
+        # Get form data
         patient_id = request.POST.get("patient")
         doctor_id = request.POST.get("doctor")
         apt_date = request.POST.get("appointment_date")
@@ -193,11 +201,21 @@ class AppointmentCreateView(View):
         notes = request.POST.get("notes", "").strip()
         fee = request.POST.get("fee", 0)
 
+        # Get doctor (required)
         doctor = get_object_or_404(Doctor, pk=doctor_id)
+
+        # Initialize patient and patient_name
         patient = None
         patient_name = ""
+
+        # Get patient if patient_id provided
         if patient_id:
-            patient = Patient.objects.filter(pk=patient_id).first()
+            try:
+                patient = Patient.objects.get(pk=patient_id)
+            except Patient.DoesNotExist:
+                patient = None
+
+        # If no patient, use patient_name for walk-ins
         if not patient:
             patient_name = request.POST.get("patient_name", "Walk-in")
 
@@ -250,6 +268,7 @@ class AppointmentCreateView(View):
                 )
                 return redirect("/dashboard/appointments/book/")
 
+            # Create appointment
             appointment = Appointment.objects.create(
                 patient=patient,
                 patient_name=patient_name,
@@ -262,6 +281,29 @@ class AppointmentCreateView(View):
                 status="SCHEDULED",
             )
 
+        logger.info(f"🔍 Appointment created: ID={appointment.id}")
+        logger.info(f"🔍 Patient: {patient}")
+        logger.info(f"🔍 Patient name: {patient_name}")
+        logger.info(f"🔍 Doctor: {doctor}")
+
+        # ✅ SEND NOTIFICATION (only if patient has user account)
+        # try:
+        #     from apps.notifications.triggers import notify_appointment_confirmation
+        #     notify_appointment_confirmation(appointment)
+        # except Exception as e:
+        #     # Log error but don't fail appointment creation
+        #     import logging
+        #     logger = logging.getLogger(__name__)
+        #     logger.error(f"Failed to send notification: {e}")
+        try:
+            from apps.notifications.triggers import notify_appointment_confirmation
+            logger.info(f"🔍 Calling notify_appointment_confirmation...")
+            notify_appointment_confirmation(appointment)
+            logger.info(f"✅ Notification sent successfully")
+        except Exception as e:
+            logger.error(f"❌ Notification failed: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
         # Log: Booking created
         log_activity(
             appointment, 'BOOKED', user=request.user,
@@ -269,29 +311,11 @@ class AppointmentCreateView(View):
             notes=f"Appointment booked with Dr. {doctor.name}",
         )
 
-        django_messages.success(request, "Appointment booked successfully! Awaiting doctor confirmation.")
+        django_messages.success(request, "Appointment booked successfully!")
         return redirect("/dashboard/appointments/")
 
 
 class AppointmentDetailView(View):
-    """View/manage a single appointment."""
-
-    def get(self, request, pk):
-        appointment = get_object_or_404(Appointment, pk=pk)
-        activities = appointment.activities.select_related('performed_by').all()
-
-        # Determine if the current user is the assigned doctor
-        is_assigned_doctor = False
-        if hasattr(request.user, 'doctor_profile') and request.user.doctor_profile:
-            is_assigned_doctor = (request.user.doctor_profile.pk == appointment.doctor.pk)
-
-        return render(request, "dashboard/appointments/detail.html", {
-            "apt": appointment,
-            "status_choices": Appointment.STATUS_CHOICES,
-            "activities": activities,
-            "is_assigned_doctor": is_assigned_doctor,
-        })
-
     def post(self, request, pk):
         from django.contrib import messages as django_messages
 
@@ -308,15 +332,17 @@ class AppointmentDetailView(View):
                 notes="Doctor accepted the appointment",
             )
 
-        elif action == "decline":
+        elif action in ["decline", "cancel"]:
             reason = request.POST.get("reason", "").strip()
             appointment.status = "CANCELLED"
             appointment.cancellation_reason = reason
             appointment.save()
+            notify_appointment_cancelled(appointment, reason)
             log_activity(
-                appointment, 'DECLINED', user=request.user,
+                appointment, 'CANCELLED' if action == "cancel" else 'DECLINED',
+                user=request.user,
                 old_status=old_status, new_status='CANCELLED',
-                notes=reason or "Doctor declined the appointment",
+                notes=reason or "Appointment cancelled by doctor" if action=="decline" else "Appointment cancelled",
             )
 
         elif action == "check_in":
@@ -339,17 +365,6 @@ class AppointmentDetailView(View):
                 notes=f"Patient checked out at {appointment.check_out_time.strftime('%I:%M %p')}",
             )
 
-        elif action == "cancel":
-            reason = request.POST.get("reason", "").strip()
-            appointment.status = "CANCELLED"
-            appointment.cancellation_reason = reason
-            appointment.save()
-            log_activity(
-                appointment, 'CANCELLED', user=request.user,
-                old_status=old_status, new_status='CANCELLED',
-                notes=reason or "Appointment cancelled",
-            )
-
         elif action == "update_status":
             new_status = request.POST.get("status", appointment.status)
             appointment.status = new_status
@@ -364,3 +379,32 @@ class AppointmentDetailView(View):
 
         return redirect(f"/dashboard/appointments/{pk}/")
 
+
+class AppointmentRescheduleView(View):
+    def post(self, request, pk):
+        appointment = get_object_or_404(Appointment, pk=pk)
+
+        old_date = appointment.appointment_date
+        old_time = appointment.appointment_time
+
+        # Parse new date/time
+        new_date_str = request.POST.get('new_date')
+        new_time_str = request.POST.get('new_time')
+        try:
+            appointment.appointment_date = datetime.strptime(new_date_str, "%Y-%m-%d").date()
+            appointment.appointment_time = datetime.strptime(new_time_str, "%H:%M").time()
+        except (ValueError, TypeError):
+            from django.contrib import messages as django_messages
+            django_messages.error(request, "Invalid date or time for rescheduling.")
+            return redirect(f"/dashboard/appointments/{pk}/")
+
+        appointment.save()
+        notify_appointment_rescheduled(appointment, old_date, old_time)
+
+        log_activity(
+            appointment, 'RESCHEDULED', user=request.user,
+            old_status=f"{old_date} {old_time}", new_status=f"{appointment.appointment_date} {appointment.appointment_time}",
+            notes=f"Appointment rescheduled from {old_date} {old_time.strftime('%I:%M %p')} to {appointment.appointment_date} {appointment.appointment_time.strftime('%I:%M %p')}"
+        )
+
+        return redirect(f"/dashboard/appointments/{pk}/")

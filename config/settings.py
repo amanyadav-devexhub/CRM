@@ -29,8 +29,7 @@ SECRET_KEY = "django-insecure-_p$0=*+0phpnc96i7v$)k#92exek3qi&gyb01l)y#ub4xusz!o
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 # Application definition
 
@@ -46,7 +45,7 @@ SHARED_APPS = [
 
     "rest_framework",
     "rest_framework_simplejwt",
-
+    "apps.notifications",
     "apps.tenants",
     "apps.accounts",
     "apps.core",
@@ -68,7 +67,7 @@ TENANT_APPS = [
     "apps.pharmacy",
     "apps.analytics",
     "apps.ai",
-    "apps.notifications",
+    
     "apps.utils",
     "apps.hospitals",
     "apps.inventory",
@@ -299,3 +298,67 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "saniyatanyal1@gmail.com"
 EMAIL_HOST_PASSWORD = "yibiguqicxrtuwxv"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+
+
+# ─── 2. ASGI application ──────────────────────────────────────────────────────
+# Replace WSGI_APPLICATION with ASGI_APPLICATION
+# (or keep both — Django handles this automatically in newer versions)
+
+ASGI_APPLICATION = "CRM.asgi.application"   # ← change "crm" to your project folder name
+
+
+# ─── 3. Channel Layer (Redis) ─────────────────────────────────────────────────
+# Redis is required for WebSocket to work across multiple workers/processes.
+# Install:  pip install channels-redis
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],   # ← change if Redis is on a different host
+            # For production with Redis URL:
+            # "hosts": [os.environ.get("REDIS_URL", "redis://127.0.0.1:6379")],
+        },
+    },
+}
+
+
+
+# ALLOWED_HOSTS = [
+#     "localhost",
+#     "127.0.0.1",
+#     "your-production-domain.com",   # ← add your real domain
+# ]
+
+
+# ══════════════════════════════════════════════════════════════════
+# CELERY CONFIGURATION (FOR NOTIFICATIONS)
+# ══════════════════════════════════════════════════════════════════
+
+from celery.schedules import crontab
+
+# Celery Beat Schedule - Runs periodic tasks
+CELERY_BEAT_SCHEDULE = {
+    'send-appointment-reminders': {
+        'task': 'apps.notifications.tasks.send_appointment_reminders',
+        'schedule': crontab(hour=9, minute=0),
+    },
+}
+
+CELERY_BEAT_SCHEDULE = {
+    'check-appointment-noshows': {
+        'task': 'apps.notifications.tasks.check_appointment_noshows',
+        'schedule': crontab(minute='*/15'),
+    },
+}
+
+
+# Celery Broker & Backend Configuration
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Asia/Kolkata"
