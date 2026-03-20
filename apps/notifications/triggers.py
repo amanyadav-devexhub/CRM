@@ -10,36 +10,61 @@ Based on your notification flow table, these functions should be called from:
 """
 from apps.notifications.managers import NotificationManager
 from typing import Optional
+import logging
 
-
+logger = logging.getLogger(__name__)
 # ═══════════════════════════════════════════════════════════════════════════════
 # APPOINTMENTS MODULE
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def notify_appointment_confirmation(appointment):
-    """Trigger: Appointment booking confirmed"""
+    """
+    Trigger: Send notification to DOCTOR when appointment is booked
+    (Not patient - most patients don't have user accounts)
+    """
+    logger.info(f"🔔 notify_appointment_confirmation called for appointment {appointment.id}")
+    logger.info(f"   Patient: {appointment.patient_name}")
+    logger.info(f"   Doctor: {appointment.doctor.name}")
     
-    # Check if patient has a user account (not a walk-in)
-    if not appointment.patient or not hasattr(appointment.patient, 'user') or not appointment.patient.user:
-        logger.info(f"Skipping notification for walk-in patient: {appointment.patient_name}")
-        return  # Skip notification for walk-in patients
+    # Send to DOCTOR (not patient!)
+    if not appointment.doctor:
+        logger.warning(f"⚠️ No doctor assigned")
+        return
     
-    NotificationManager.send(
-        user=appointment.patient.user,
-        notification_type="appointment_confirmation",
-        title="Appointment Confirmed",
-        body=f"Your appointment with Dr. {appointment.doctor.name} is confirmed for {appointment.appointment_date} at {appointment.appointment_time}",
-        channels=["inapp", "email", "sms", "whatsapp"],
-        priority="high",
-        action_url=f"/appointments/{appointment.id}/",
-        action_text="View Appointment",
-        metadata={
-            "appointment_id": str(appointment.id),
-            "doctor_id": str(appointment.doctor.id),
-            "date": str(appointment.appointment_date),
-        }
-    )
+    if not hasattr(appointment.doctor, 'user'):
+        logger.warning(f"⚠️ Doctor has no 'user' attribute")
+        return
+    
+    if not appointment.doctor.user:
+        logger.warning(f"⚠️ Doctor {appointment.doctor.name} has no user account")
+        return
+    
+    doctor_user = appointment.doctor.user
+    logger.info(f"✅ Sending notification to doctor: {doctor_user.email}")
+    
+    try:
+        NotificationManager.send(
+            user=doctor_user,
+            notification_type="new_appointment_booking",
+            title="📅 New Appointment Booked",
+            body=f"New appointment: {appointment.patient_name or appointment.patient.full_name} on {appointment.appointment_date.strftime('%b %d, %Y')} at {appointment.appointment_time.strftime('%I:%M %p')}",
+            channels=["inapp"],
+            priority="medium",
+            action_url=f"/dashboard/appointments/{appointment.id}/",
+            action_text="View Appointment",
+            metadata={
+                "appointment_id": str(appointment.id),
+                "patient_name": appointment.patient_name or str(appointment.patient),
+            }
+        )
+        logger.info(f"✅✅✅ SUCCESS: Notification created for {doctor_user.email}")
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to create notification: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
+        
 def notify_appointment_reminder(appointment):
     """Trigger: 24 hours before appointment"""
     NotificationManager.send(

@@ -45,8 +45,10 @@ SHARED_APPS = [
 
     "rest_framework",
     "rest_framework_simplejwt",
-    "apps.notifications",
+    
     "apps.tenants",
+
+    
     "apps.accounts",
     "apps.core",
     "apps.inventory",
@@ -71,10 +73,12 @@ TENANT_APPS = [
     "apps.utils",
     "apps.hospitals",
     "apps.inventory",
+    'apps.notifications',
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
     app for app in TENANT_APPS if app not in SHARED_APPS
+    
 ]
 
 MIDDLEWARE = [
@@ -306,7 +310,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # Replace WSGI_APPLICATION with ASGI_APPLICATION
 # (or keep both — Django handles this automatically in newer versions)
 
-ASGI_APPLICATION = "CRM.asgi.application"   # ← change "crm" to your project folder name
+ASGI_APPLICATION = "config.asgi.application"  # ← change "crm" to your project folder name
 
 
 # ─── 3. Channel Layer (Redis) ─────────────────────────────────────────────────

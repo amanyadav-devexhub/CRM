@@ -435,9 +435,24 @@
 <div class="notif-list">
     {% for notif in notifications %}
     <div class="notif-item {% if notif.is_read %}read{% else %}unread{% endif %}" 
-         onclick="handleNotificationClick('{{ notif.id }}', '{{ notif.action_url }}', {{ notif.is_read|yesno:'true,false' }})">
-        
-        <!-- Icon -->
+                onclick="handleNotificationClick('{{ notif.id }}', '{{ notif.action_url }}', {{ notif.is_read|yesno:'true,false' }})">
+                        <!-- function handleNotificationClick(notificationId, actionUrl, isRead) {
+                    // Mark as read if unread
+                    if (!isRead) {
+                        fetch(`/api/notifications/${notificationId}/mark-read/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        }).catch(error => console.error('Failed to mark as read:', error));
+                    }
+                    
+                    // Navigate to action URL
+                    if (actionUrl) {
+                        window.location.href = actionUrl;
+                    }
+                } -->
+                <!-- Icon -->
         <div class="notif-icon-wrap icon-{{ notif.type }}">
             <span class="material-icons-round">
                 {% if "appointment" in notif.type %}

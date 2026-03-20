@@ -44,6 +44,100 @@
             font-size: .82rem;
             pointer-events: none;
         }
+
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* SIDEBAR NAVIGATION FIX */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(241, 245, 249, 0.35);
+            padding: 0.5rem 1.25rem;
+            margin-bottom: 0.35rem;
+            margin-top: 0.5rem;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* NOTIFICATION BELL STYLES */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .notification-bell-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        .notification-dropdown-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-dropdown-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .notification-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-dropdown-item.unread {
+            background: rgba(59, 130, 246, 0.08);
+            border-left: 3px solid #3b82f6;
+        }
+
+        .notification-dropdown-item .notif-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text, #fff);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .notification-dropdown-item .notif-body {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notification-dropdown-item .notif-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 6px;
+        }
+
+        #notification-dropdown-list {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+
+        #notification-dropdown-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #notification-dropdown-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #notification-dropdown-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+
+        #notification-dropdown-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -179,79 +273,71 @@
                         </span>
                         {% endif %}
                     {% endif %}
+                </div>
 
-                    {% if "pharmacy" in enabled_features %}
-                        {% if request.user|has_any_permission:'pharmacy.manage_inventory,pharmacy.dispense,pharmacy.update_stock,dashboard.pharmacy' %}
+                {% if "pharmacy" in enabled_features %}
+                    {% if request.user|has_any_permission:'pharmacy.manage_inventory,pharmacy.dispense,pharmacy.update_stock,dashboard.pharmacy' %}
+                <div class="nav-section">
+                    <div class="nav-section-title">Pharmacy</div>
+                    <a href="{% url 'inventory:inventory-dashboard' %}?type_code=MEDICINE" class="nav-item {% block nav_pharmacy_inv %}{% endblock %}">
+                        <span class="icon material-icons-round">inventory_2</span>
+                        Inventory
+                    </a>
+                    <a href="{% url 'inventory:inventory-suppliers' %}?type_code=MEDICINE" class="nav-item {% block nav_pharmacy_pur %}{% endblock %}">
+                        <span class="icon material-icons-round">local_shipping</span>
+                        Purchases
+                    </a>
+                    <a href="{% url 'pharmacy-sales' %}" class="nav-item {% block nav_pharmacy_sales %}{% endblock %}">
+                        <span class="icon material-icons-round">shopping_cart</span>
+                        Sales & POS
+                    </a>
+                </div>
+                    {% endif %}
+                {% else %}
+                    {% if request.user|has_permission:'clinics.manage' %}
                     <div class="nav-section">
                         <div class="nav-section-title">Pharmacy</div>
-                        <a href="{% url 'inventory:inventory-dashboard' %}?type_code=MEDICINE" class="nav-item {% block nav_pharmacy_inv %}{% endblock %}">
-                            <span class="icon material-icons-round">inventory_2</span>
-                            Inventory
-                        </a>
-                        <a href="{% url 'inventory:inventory-suppliers' %}?type_code=MEDICINE" class="nav-item {% block nav_pharmacy_pur %}{% endblock %}">
-                            <span class="icon material-icons-round">local_shipping</span>
-                            Purchases
-                        </a>
-                        <a href="{% url 'pharmacy-sales' %}" class="nav-item {% block nav_pharmacy_sales %}{% endblock %}">
-                            <span class="icon material-icons-round">shopping_cart</span>
-                            Sales & POS
-                        </a>
+                        <span class="nav-item locked" title="Upgrade your plan to unlock">
+                            <span class="icon material-icons-round">lock</span> Pharmacy 🔒
+                        </span>
                     </div>
-                        {% endif %}
-                    {% else %}
-                        {% if request.user|has_permission:'clinics.manage' %}
-                        <div class="nav-section">
-                            <div class="nav-section-title">Pharmacy</div>
-                            <span class="nav-item locked" title="Upgrade your plan to unlock">
-                                <span class="icon material-icons-round">lock</span> Pharmacy 🔒
-                            </span>
-                        </div>
-                        {% endif %}
                     {% endif %}
+                {% endif %}
 
-                    {% if "lab" in enabled_features %}
-                        {% if request.user|has_any_permission:'lab.manage_inventory,lab.upload_results,lab.schedule_tests,lab.view_results,dashboard.lab' %}
+                {% if "lab" in enabled_features %}
+                    {% if request.user|has_any_permission:'lab.manage_inventory,lab.upload_results,lab.schedule_tests,lab.view_results,dashboard.lab' %}
+                <div class="nav-section">
+                    <div class="nav-section-title">Laboratory</div>
+                    {% if request.user|has_any_permission:'lab.manage_inventory,dashboard.lab' %}
+                    <a href="{% url 'inventory:inventory-dashboard' %}?type_code=LAB_REAGENT" class="nav-item {% block nav_lab_inv %}{% endblock %}">
+                        <span class="icon material-icons-round">inventory_2</span>
+                        Inventory
+                    </a>
+                    {% endif %}
+                    {% if request.user|has_any_permission:'lab.upload_results,lab.schedule_tests,dashboard.lab' %}
+                    <a href="{% url 'lab-sample-collection' %}" class="nav-item {% block nav_lab_samples %}{% endblock %}">
+                        <span class="icon material-icons-round">vaccines</span>
+                        Samples
+                    </a>
+                    {% endif %}
+                    {% if request.user|has_any_permission:'lab.view_results,lab.upload_results,dashboard.lab' %}
+                    <a href="{% url 'lab-order-list' %}?status=COMPLETED" class="nav-item {% block nav_lab_reports %}{% endblock %}">
+                        <span class="icon material-icons-round">description</span>
+                        Reports
+                    </a>
+                    {% endif %}
+                </div>
+                    {% endif %}
+                {% else %}
+                    {% if request.user|has_permission:'clinics.manage' %}
                     <div class="nav-section">
                         <div class="nav-section-title">Laboratory</div>
-                        {% if request.user|has_any_permission:'lab.manage_inventory,dashboard.lab' %}
-                        <a href="{% url 'inventory:inventory-dashboard' %}?type_code=LAB_REAGENT" class="nav-item {% block nav_lab_inv %}{% endblock %}">
-                            <span class="icon material-icons-round">inventory_2</span>
-                            Inventory
-                        </a>
-                        {% endif %}
-                        {% if request.user|has_any_permission:'lab.upload_results,lab.schedule_tests,dashboard.lab' %}
-                        <a href="{% url 'lab-sample-collection' %}" class="nav-item {% block nav_lab_samples %}{% endblock %}">
-                            <span class="icon material-icons-round">vaccines</span>
-                            Samples
-                        </a>
-                        {% endif %}
-                        {% if request.user|has_any_permission:'lab.view_results,lab.upload_results,dashboard.lab' %}
-                        <a href="{% url 'lab-order-list' %}?status=COMPLETED" class="nav-item {% block nav_lab_reports %}{% endblock %}">
-                            <span class="icon material-icons-round">description</span>
-                            Reports
-                        </a>
-                        {% endif %}
+                        <span class="nav-item locked" title="Upgrade your plan to unlock">
+                            <span class="icon material-icons-round">lock</span> Lab 🔒
+                        </span>
                     </div>
-                        {% endif %}
-                    {% else %}
-                        {% if request.user|has_permission:'clinics.manage' %}
-                        <div class="nav-section">
-                            <div class="nav-section-title">Laboratory</div>
-                            <span class="nav-item locked" title="Upgrade your plan to unlock">
-                                <span class="icon material-icons-round">lock</span> Lab 🔒
-                            </span>
-                        </div>
-                        {% endif %}
                     {% endif %}
-
-                    {% comment %} <div class="nav-section">
-                        <div class="nav-section-title">Operations</div>
-                        <a href="{% url 'inventory:inventory-dashboard' %}" class="nav-item {% block nav_inventory %}{% endblock %}">
-                            <span class="icon material-icons-round">inventory_2</span>
-                            Global Inventory
-                        </a>
-                    </div> {% endcomment %}
-                </div>
+                {% endif %}
 
                 <div class="nav-section">
                     <div class="nav-section-title">Insights</div>
@@ -307,6 +393,7 @@
                     {% endif %}
                 </div>
                 {% endblock %}
+            </nav>
         </aside>
 
         <!-- ─── Main ─── -->
@@ -331,9 +418,89 @@
                     <button class="topbar-btn theme-toggle" id="themeToggle" title="Toggle Theme" style="border: none;">
                         <span class="material-icons-round" id="themeIcon">light_mode</span>
                     </button>
-                    <a href="/notifications/" class="topbar-btn" title="Notifications" style="text-decoration:none;">
-                        <span class="material-icons-round">notifications</span>
-                    </a>
+                    
+                    <!-- ═══════════════════════════════════════════════════════════════ -->
+                    <!-- NOTIFICATION BELL WITH LIVE COUNTER & DROPDOWN -->
+                    <!-- ═══════════════════════════════════════════════════════════════ -->
+                    <div class="notification-bell-wrapper">
+                        <button class="topbar-btn" id="notification-bell" onclick="toggleNotificationDropdown()" title="Notifications" style="position: relative;">
+                            <span class="material-icons-round">notifications</span>
+                            <!-- Unread Count Badge -->
+                            <span id="notification-count" style="
+                                position: absolute;
+                                top: 4px;
+                                right: 4px;
+                                background: #ef4444;
+                                color: white;
+                                border-radius: 50%;
+                                min-width: 18px;
+                                height: 18px;
+                                font-size: 10px;
+                                font-weight: 700;
+                                display: none;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 0 5px;
+                                box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+                            ">0</span>
+                        </button>
+                        
+                        <!-- Dropdown Preview Panel -->
+                        <div id="notification-dropdown" style="
+                            display: none;
+                            position: absolute;
+                            right: 0;
+                            top: 55px;
+                            width: 380px;
+                            max-height: 480px;
+                            background: var(--card, #1e2530);
+                            border: 1px solid rgba(255,255,255,0.1);
+                            border-radius: 12px;
+                            box-shadow: 0 12px 48px rgba(0,0,0,0.4);
+                            z-index: 10000;
+                            overflow: hidden;
+                        ">
+                            <!-- Dropdown Header -->
+                            <div style="
+                                padding: 18px 22px;
+                                border-bottom: 1px solid rgba(255,255,255,0.1);
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                background: rgba(255,255,255,0.02);
+                            ">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="material-icons-round" style="color: #60a5fa; font-size: 20px;">notifications_active</span>
+                                    <span style="font-weight: 600; color: var(--text, #fff); font-size: 15px;">Notifications</span>
+                                </div>
+                                <a href="/notifications/" style="
+                                    color: #60a5fa;
+                                    font-size: 13px;
+                                    text-decoration: none;
+                                    font-weight: 500;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 4px;
+                                ">
+                                    View All
+                                    <span class="material-icons-round" style="font-size: 14px;">arrow_forward</span>
+                                </a>
+                            </div>
+                            
+                            <!-- Notification List Container -->
+                            <div id="notification-dropdown-list" style="
+                                max-height: 420px;
+                                overflow-y: auto;
+                            ">
+                                <!-- Loading State -->
+                                <div style="padding: 40px 20px; text-align: center; color: rgba(255,255,255,0.4);">
+                                    <span class="material-icons-round" style="font-size: 36px; opacity: 0.3; animation: pulse 2s infinite;">notifications_none</span>
+                                    <p style="margin: 12px 0 0 0; font-size: 14px; font-weight: 500;">Loading notifications...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="user-pill">
                         <div class="user-avatar"
                             style="background: {% block user_avatar_gradient %}var(--gradient-green){% endblock %};">{% firstof request.user.email.0 'S' %}</div>
@@ -411,6 +578,10 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
         .toast { transition: opacity 0.3s ease; }
     </style>
 
@@ -447,6 +618,195 @@
             }
         });
     </script>
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- NOTIFICATION BELL JAVASCRIPT - FIXED VERSION -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <script>
+        let notificationDropdownOpen = false;
+
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notification-dropdown');
+            notificationDropdownOpen = !notificationDropdownOpen;
+            dropdown.style.display = notificationDropdownOpen ? 'block' : 'none';
+            
+            if (notificationDropdownOpen) {
+                loadNotificationPreview();
+            }
+        }
+
+        function loadNotificationPreview() {
+            const listDiv = document.getElementById('notification-dropdown-list');
+            
+            fetch('/api/notifications/?limit=5')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        listDiv.innerHTML = '';
+                        
+                        data.results.forEach(notif => {
+                            const div = document.createElement('div');
+                            div.className = 'notification-dropdown-item' + (notif.is_read ? '' : ' unread');
+                            
+                            div.innerHTML = `
+                                <div class="notif-title">${escapeHtml(notif.title)}</div>
+                                <div class="notif-body">${escapeHtml(notif.body)}</div>
+                                <div class="notif-time">
+                                    <span class="material-icons-round" style="font-size: 11px; vertical-align: middle; opacity: 0.6;">schedule</span>
+                                    ${formatNotificationTime(notif.created_at)}
+                                </div>
+                            `;
+                            
+                            // ✅ FIXED: Mark as read when clicked
+                            div.onclick = () => {
+                                // Close dropdown
+                                document.getElementById('notification-dropdown').style.display = 'none';
+                                notificationDropdownOpen = false;
+                                
+                                // Mark as read if unread (THIS WAS MISSING!)
+                                if (!notif.is_read) {
+                                    fetch(`/api/notifications/${notif.id}/mark-read/`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': getCookie('csrftoken'),
+                                            'Content-Type': 'application/json'
+                                        }
+                                    }).then(response => {
+                                        if (response.ok) {
+                                            // ✅ Update count IMMEDIATELY after marking as read
+                                            updateNotificationCount();
+                                        }
+                                    }).catch(error => {
+                                        console.error('Error marking as read:', error);
+                                    });
+                                }
+                                
+                                // Navigate to action URL
+                                if (notif.action_url) {
+                                    window.location.href = notif.action_url;
+                                }
+                            };
+                            
+                            listDiv.appendChild(div);
+                        });
+                    } else {
+                        listDiv.innerHTML = `
+                            <div style="padding: 50px 20px; text-align: center; color: rgba(255,255,255,0.4);">
+                                <span class="material-icons-round" style="font-size: 48px; opacity: 0.2;">notifications_off</span>
+                                <p style="margin: 15px 0 0 0; font-size: 14px; font-weight: 500;">No notifications yet</p>
+                                <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.7;">You're all caught up!</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    listDiv.innerHTML = `
+                        <div style="padding: 40px 20px; text-align: center; color: rgba(255,255,255,0.4);">
+                            <span class="material-icons-round" style="font-size: 36px; color: #ef4444; opacity: 0.5;">error_outline</span>
+                            <p style="margin: 12px 0 0 0; font-size: 14px;">Failed to load</p>
+                            <button onclick="loadNotificationPreview()" style="
+                                margin-top: 12px; padding: 8px 16px;
+                                background: rgba(59, 130, 246, 0.2); color: #60a5fa;
+                                border: 1px solid rgba(59, 130, 246, 0.3);
+                                border-radius: 6px; cursor: pointer; font-size: 13px;
+                            ">Retry</button>
+                        </div>
+                    `;
+                });
+        }
+
+        function updateNotificationCount() {
+            fetch('/api/notifications/?is_read=false')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(data => {
+                    const count = data.count || 0;
+                    const badge = document.getElementById('notification-count');
+                    
+                    if (badge) {
+                        if (count > 0) {
+                            badge.textContent = count > 99 ? '99+' : count;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                    
+                    console.log('📊 Notification count updated:', count);
+                })
+                .catch(error => {
+                    console.error('Error updating count:', error);
+                });
+        }
+
+        function formatNotificationTime(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+            if (diffMins < 10080) return `${Math.floor(diffMins / 1440)}d ago`;
+            
+            const options = { month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial count
+            updateNotificationCount();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(updateNotificationCount, 30000);
+            
+            console.log('✅ Notification system initialized');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const wrapper = document.querySelector('.notification-bell-wrapper');
+            const dropdown = document.getElementById('notification-dropdown');
+            
+            if (wrapper && dropdown && !wrapper.contains(event.target) && notificationDropdownOpen) {
+                dropdown.style.display = 'none';
+                notificationDropdownOpen = false;
+            }
+        });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 

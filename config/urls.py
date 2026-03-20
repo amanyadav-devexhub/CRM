@@ -77,6 +77,12 @@ from apps.analytics.views import (
     AppointmentAnalyticsView, DoctorAnalyticsView,
 )
 
+
+# from apps.notifications.admin_views import (
+#     AdminNotificationSettingsView,
+#     AdminNotificationBulkView,
+# )
+
 urlpatterns = [
     path("admin/", admin.site.urls),
 
@@ -250,4 +256,6 @@ urlpatterns = [
 
     # ── Notifications HTML pages ──
     path("notifications/", NotificationCenterView.as_view(), name="notification-center"),
+    
+
 ]

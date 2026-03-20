@@ -9,6 +9,7 @@ from django.views import View
 from django.http import JsonResponse
 from django.utils.timezone import now
 from django.db import transaction
+
 from apps.appointments.models import Appointment, AppointmentConfig, AppointmentActivity
 from apps.clinical.models import Doctor, DoctorSlot
 from apps.patients.models import Patient
@@ -20,7 +21,6 @@ from apps.notifications.triggers import (
 
 
 def log_activity(appointment, action, user=None, notes='', old_status='', new_status=''):
-    """Helper to create an activity log entry."""
     AppointmentActivity.objects.create(
         appointment=appointment,
         action=action,
@@ -32,11 +32,6 @@ def log_activity(appointment, action, user=None, notes='', old_status='', new_st
 
 
 def get_available_slots(doctor, date):
-    """
-    Compute available time slots for a doctor on a given date.
-    Returns list of dicts: [{"time": "09:00", "display": "09:00 AM", "available": True/False}, ...]
-    Skips past time slots when the date is today.
-    """
     doctor_slots = DoctorSlot.objects.filter(
         doctor=doctor, schedule_date=date, is_active=True
     ).order_by("start_time")
@@ -44,7 +39,6 @@ def get_available_slots(doctor, date):
     if not doctor_slots.exists():
         return []
 
-    # Get existing bookings for this doctor on this date (non-cancelled)
     booked = Appointment.objects.filter(
         doctor=doctor,
         appointment_date=date,
@@ -54,7 +48,6 @@ def get_available_slots(doctor, date):
 
     booked_times = set(str(t.strftime("%H:%M")) for t in booked)
 
-    # If booking for today, skip slots that are already in the past
     is_today = (date == datetime.now().date())
     current_time = datetime.now().time() if is_today else None
 
@@ -65,7 +58,6 @@ def get_available_slots(doctor, date):
         duration = timedelta(minutes=slot.slot_duration)
 
         while current + duration <= end:
-            # Skip past slots if booking for today
             if is_today and current.time() <= current_time:
                 current += duration
                 continue
@@ -73,7 +65,6 @@ def get_available_slots(doctor, date):
             time_str = current.strftime("%H:%M")
             display_str = current.strftime("%I:%M %p")
 
-            # Count how many bookings exist at this exact time
             count_at_time = Appointment.objects.filter(
                 doctor=doctor,
                 appointment_date=date,
@@ -95,8 +86,6 @@ def get_available_slots(doctor, date):
 
 
 class AvailableSlotsAPIView(View):
-    """AJAX endpoint returning available slots as JSON."""
-
     def get(self, request):
         doctor_id = request.GET.get("doctor")
         date_str = request.GET.get("date")
@@ -115,8 +104,6 @@ class AvailableSlotsAPIView(View):
 
 
 class AppointmentListView(View):
-    """List appointments with filter support and pagination."""
-
     def get(self, request):
         from django.core.paginator import Paginator
 
@@ -128,7 +115,6 @@ class AppointmentListView(View):
             '-appointment_date', '-appointment_time'
         )
 
-        # Filters
         status = request.GET.get("status")
         if status:
             qs = qs.filter(status=status)
@@ -143,12 +129,10 @@ class AppointmentListView(View):
 
         total = qs.count()
 
-        # Pagination — 15 per page
         paginator = Paginator(qs, 15)
         page_number = request.GET.get("page", 1)
         page_obj = paginator.get_page(page_number)
 
-        # Build query string without 'page' for pagination links
         query_params = request.GET.copy()
         if 'page' in query_params:
             del query_params['page']
@@ -169,8 +153,6 @@ class AppointmentListView(View):
 
 
 class AppointmentCreateView(View):
-    """Book a new appointment with slot validation."""
-
     def get(self, request):
         tenant = getattr(request.user, "tenant", None)
         if not tenant:
@@ -186,13 +168,13 @@ class AppointmentCreateView(View):
     def post(self, request):
         from django.contrib import messages as django_messages
         import logging
+
         logger = logging.getLogger(__name__)
 
         tenant = getattr(request.user, "tenant", None)
         if not tenant:
             return redirect("/dashboard/")
 
-        # Get form data
         patient_id = request.POST.get("patient")
         doctor_id = request.POST.get("doctor")
         apt_date = request.POST.get("appointment_date")
@@ -201,25 +183,20 @@ class AppointmentCreateView(View):
         notes = request.POST.get("notes", "").strip()
         fee = request.POST.get("fee", 0)
 
-        # Get doctor (required)
         doctor = get_object_or_404(Doctor, pk=doctor_id)
 
-        # Initialize patient and patient_name
         patient = None
         patient_name = ""
 
-        # Get patient if patient_id provided
         if patient_id:
             try:
                 patient = Patient.objects.get(pk=patient_id)
             except Patient.DoesNotExist:
                 patient = None
 
-        # If no patient, use patient_name for walk-ins
         if not patient:
             patient_name = request.POST.get("patient_name", "Walk-in")
 
-        # Parse date and time
         try:
             booking_date = datetime.strptime(apt_date, "%Y-%m-%d").date()
             booking_time = datetime.strptime(apt_time, "%H:%M").time()
@@ -231,7 +208,6 @@ class AppointmentCreateView(View):
             django_messages.error(request, "Cannot book appointments for past dates.")
             return redirect("/dashboard/appointments/book/")
 
-        # ── Slot Validation ──
         matching_slot = DoctorSlot.objects.filter(
             doctor=doctor,
             schedule_date=booking_date,
@@ -247,7 +223,6 @@ class AppointmentCreateView(View):
             )
             return redirect("/dashboard/appointments/book/")
 
-        # ── Double-Booking Prevention (with row-level lock) ──
         with transaction.atomic():
             existing_count = (
                 Appointment.objects
@@ -268,7 +243,6 @@ class AppointmentCreateView(View):
                 )
                 return redirect("/dashboard/appointments/book/")
 
-            # Create appointment
             appointment = Appointment.objects.create(
                 patient=patient,
                 patient_name=patient_name,
@@ -281,41 +255,57 @@ class AppointmentCreateView(View):
                 status="SCHEDULED",
             )
 
-        logger.info(f"🔍 Appointment created: ID={appointment.id}")
-        logger.info(f"🔍 Patient: {patient}")
-        logger.info(f"🔍 Patient name: {patient_name}")
-        logger.info(f"🔍 Doctor: {doctor}")
+            logger.info("=" * 80)
+            logger.info(f"APPOINTMENT CREATED: ID={appointment.id}")
+            logger.info(f"Patient: {appointment.patient_name}")
+            logger.info(f"Doctor: {appointment.doctor.name}")
 
-        # ✅ SEND NOTIFICATION (only if patient has user account)
-        # try:
-        #     from apps.notifications.triggers import notify_appointment_confirmation
-        #     notify_appointment_confirmation(appointment)
-        # except Exception as e:
-        #     # Log error but don't fail appointment creation
-        #     import logging
-        #     logger = logging.getLogger(__name__)
-        #     logger.error(f"Failed to send notification: {e}")
-        try:
-            from apps.notifications.triggers import notify_appointment_confirmation
-            logger.info(f"🔍 Calling notify_appointment_confirmation...")
-            notify_appointment_confirmation(appointment)
-            logger.info(f"✅ Notification sent successfully")
-        except Exception as e:
-            logger.error(f"❌ Notification failed: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-        # Log: Booking created
-        log_activity(
-            appointment, 'BOOKED', user=request.user,
-            new_status='SCHEDULED',
-            notes=f"Appointment booked with Dr. {doctor.name}",
-        )
+            try:
+                from apps.notifications.models import Notification
 
-        django_messages.success(request, "Appointment booked successfully!")
-        return redirect("/dashboard/appointments/")
+                if doctor.user:
+                    Notification.objects.create(
+                        user=doctor.user,
+                        tenant=request.user.tenant,
+                        type='appointment',
+                        title='New Appointment Booked',
+                        body=f'New appointment: {patient_name or patient.full_name} on {booking_date.strftime("%b %d, %Y")} at {booking_time.strftime("%I:%M %p")}',
+                        priority='medium',
+                        action_url=f'/dashboard/appointments/{appointment.id}/',
+                    )
+            except Exception as e:
+                logger.error(f"Notification failed: {e}")
+
+            log_activity(
+                appointment,
+                'BOOKED',
+                user=request.user,
+                new_status='SCHEDULED',
+                notes=f"Appointment booked with Dr. {doctor.name}",
+            )
+
+            django_messages.success(request, "Appointment booked successfully!")
+            return redirect("/dashboard/appointments/")
 
 
 class AppointmentDetailView(View):
+    def get(self, request, pk):
+        appointment = get_object_or_404(Appointment, pk=pk)
+        activities = appointment.activities.select_related('performed_by').all()
+
+        is_assigned_doctor = False
+        if hasattr(request.user, 'doctor_profile') and request.user.doctor_profile:
+            is_assigned_doctor = (request.user.doctor_profile.pk == appointment.doctor.pk)
+
+        context = {
+            "apt": appointment,
+            "status_choices": Appointment.STATUS_CHOICES,
+            "activities": activities,
+            "is_assigned_doctor": is_assigned_doctor,
+        }
+
+        return render(request, "dashboard/appointments/detail.html", context)
+
     def post(self, request, pk):
         from django.contrib import messages as django_messages
 
@@ -326,9 +316,35 @@ class AppointmentDetailView(View):
         if action == "confirm":
             appointment.status = "CONFIRMED"
             appointment.save()
+
+            try:
+                from apps.notifications.models import Notification
+                from apps.accounts.models import User
+
+                staff_users = User.objects.filter(
+                    tenant=request.user.tenant,
+                    role__name__in=['Admin', 'Receptionist']
+                )
+
+                for staff_user in staff_users:
+                    Notification.objects.create(
+                        user=staff_user,
+                        tenant=request.user.tenant,
+                        type='appointment',
+                        title='Appointment Confirmed',
+                        body=f'Dr. {appointment.doctor.name} confirmed appointment with {appointment.patient_name or appointment.patient.full_name}',
+                        priority='medium',
+                        action_url=f'/dashboard/appointments/{appointment.id}/',
+                    )
+            except Exception as e:
+                print(f"Notification failed: {e}")
+
             log_activity(
-                appointment, 'CONFIRMED', user=request.user,
-                old_status=old_status, new_status='CONFIRMED',
+                appointment,
+                'CONFIRMED',
+                user=request.user,
+                old_status=old_status,
+                new_status='CONFIRMED',
                 notes="Doctor accepted the appointment",
             )
 
@@ -337,45 +353,35 @@ class AppointmentDetailView(View):
             appointment.status = "CANCELLED"
             appointment.cancellation_reason = reason
             appointment.save()
-            notify_appointment_cancelled(appointment, reason)
+
+            try:
+                notify_appointment_cancelled(appointment, reason)
+            except:
+                pass
+
             log_activity(
-                appointment, 'CANCELLED' if action == "cancel" else 'DECLINED',
+                appointment,
+                'CANCELLED' if action == "cancel" else 'DECLINED',
                 user=request.user,
-                old_status=old_status, new_status='CANCELLED',
-                notes=reason or "Appointment cancelled by doctor" if action=="decline" else "Appointment cancelled",
+                old_status=old_status,
+                new_status='CANCELLED',
+                notes=reason or "Cancelled",
             )
 
         elif action == "check_in":
             appointment.check_in_time = now().time()
             appointment.status = "IN_PROGRESS"
             appointment.save()
-            log_activity(
-                appointment, 'CHECKED_IN', user=request.user,
-                old_status=old_status, new_status='IN_PROGRESS',
-                notes=f"Patient checked in at {appointment.check_in_time.strftime('%I:%M %p')}",
-            )
 
         elif action == "check_out":
             appointment.check_out_time = now().time()
             appointment.status = "COMPLETED"
             appointment.save()
-            log_activity(
-                appointment, 'CHECKED_OUT', user=request.user,
-                old_status=old_status, new_status='COMPLETED',
-                notes=f"Patient checked out at {appointment.check_out_time.strftime('%I:%M %p')}",
-            )
 
         elif action == "update_status":
             new_status = request.POST.get("status", appointment.status)
             appointment.status = new_status
-            if new_status == "NO_SHOW":
-                appointment.no_show = True
             appointment.save()
-            log_activity(
-                appointment, 'STATUS_CHANGED', user=request.user,
-                old_status=old_status, new_status=new_status,
-                notes=f"Status changed from {old_status} to {new_status}",
-            )
 
         return redirect(f"/dashboard/appointments/{pk}/")
 
@@ -387,24 +393,26 @@ class AppointmentRescheduleView(View):
         old_date = appointment.appointment_date
         old_time = appointment.appointment_time
 
-        # Parse new date/time
         new_date_str = request.POST.get('new_date')
         new_time_str = request.POST.get('new_time')
+
         try:
             appointment.appointment_date = datetime.strptime(new_date_str, "%Y-%m-%d").date()
             appointment.appointment_time = datetime.strptime(new_time_str, "%H:%M").time()
         except (ValueError, TypeError):
             from django.contrib import messages as django_messages
-            django_messages.error(request, "Invalid date or time for rescheduling.")
+            django_messages.error(request, "Invalid date or time.")
             return redirect(f"/dashboard/appointments/{pk}/")
 
         appointment.save()
         notify_appointment_rescheduled(appointment, old_date, old_time)
 
         log_activity(
-            appointment, 'RESCHEDULED', user=request.user,
-            old_status=f"{old_date} {old_time}", new_status=f"{appointment.appointment_date} {appointment.appointment_time}",
-            notes=f"Appointment rescheduled from {old_date} {old_time.strftime('%I:%M %p')} to {appointment.appointment_date} {appointment.appointment_time.strftime('%I:%M %p')}"
+            appointment,
+            'RESCHEDULED',
+            user=request.user,
+            old_status=f"{old_date} {old_time}",
+            new_status=f"{appointment.appointment_date} {appointment.appointment_time}",
         )
 
         return redirect(f"/dashboard/appointments/{pk}/")

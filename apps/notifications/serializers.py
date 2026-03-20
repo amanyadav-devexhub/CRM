@@ -1,58 +1,67 @@
 from rest_framework import serializers
-from .models import Notification, NotificationPreference
+from apps.notifications.models import Notification
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-    sender_name  = serializers.SerializerMethodField()
-    time_ago     = serializers.SerializerMethodField()
-    type_display = serializers.SerializerMethodField()
-    type_icon    = serializers.SerializerMethodField()
-
+    """
+    Serializer for Notification model.
+    Returns notification data for API responses.
+    """
+    
+    # Optional: Add readable type display
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    
     class Meta:
-        model  = Notification
+        model = Notification
         fields = [
-            "id", "title", "message",
-            "notification_type", "type_display", "type_icon",
-            "priority", "action_url", "action_id", "extra_data",
-            "is_read", "read_at", "created_at",
-            "sender_name", "time_ago",
+            'id',
+            'type',
+            'type_display',
+            'title',
+            'body',
+            'is_read',
+            'is_archived',
+            'priority',
+            'action_url',
+            'action_text',
+            'image_url',
+            'metadata',
+            'created_at',
+            'updated_at',
         ]
-        read_only_fields = fields
-
-    def get_sender_name(self, obj) -> str:
-        if obj.sender:
-            return obj.sender.get_full_name() or obj.sender.username
-        return "System"
-
-    def get_time_ago(self, obj) -> str:
-        from django.utils import timezone
-        from django.utils.timesince import timesince
-        return timesince(obj.created_at, timezone.now())
-
-    def get_type_display(self, obj) -> str:
-        return obj.get_notification_type_display()
-
-    def get_type_icon(self, obj) -> str:
-        return {
-            "appointment":  "calendar",
-            "billing":      "credit-card",
-            "lab_result":   "flask",
-            "prescription": "pill",
-            "emergency":    "alert-triangle",
-            "general":      "bell",
-        }.get(obj.notification_type, "bell")
-
-
-class NotificationPreferenceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model  = NotificationPreference
-        fields = [
-            "appointment_enabled", "billing_enabled", "lab_result_enabled",
-            "prescription_enabled", "emergency_enabled", "general_enabled",
-            "in_app_enabled", "email_enabled", "sms_enabled",
+        read_only_fields = [
+            'id',
+            'created_at',
+            'updated_at',
+            'type_display',
         ]
 
 
-class NotificationCountSerializer(serializers.Serializer):
-    unread_count = serializers.IntegerField()
-    total_count  = serializers.IntegerField()
+class NotificationListSerializer(serializers.ModelSerializer):
+    """
+    Lightweight serializer for list views (excludes metadata).
+    """
+    
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    
+    class Meta:
+        model = Notification
+        fields = [
+            'id',
+            'type',
+            'type_display',
+            'title',
+            'body',
+            'is_read',
+            'priority',
+            'action_url',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'type_display']
+
+
+class NotificationMarkReadSerializer(serializers.Serializer):
+    """
+    Serializer for marking notifications as read.
+    """
+    is_read = serializers.BooleanField(default=True)

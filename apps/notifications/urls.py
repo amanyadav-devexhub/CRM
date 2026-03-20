@@ -1,15 +1,30 @@
 # apps/notifications/urls.py
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import NotificationViewSet, NotificationPreferenceViewSet
+from django.urls import path
+from apps.notifications import api_views
 
-# Create a router and register our viewsets
-router = DefaultRouter()
-router.register(r'', NotificationViewSet, basename='notification')
-router.register(r'preferences', NotificationPreferenceViewSet, basename='preference')
+app_name = 'notifications'
 
-# The API URLs are determined automatically by the router
 urlpatterns = [
-    path('', include(router.urls)),
+    # ═══════════════════════════════════════════════════════════════
+    # NOTIFICATION API ENDPOINTS
+    # ═══════════════════════════════════════════════════════════════
+    
+    # List notifications (with count)
+    # GET /api/notifications/
+    # GET /api/notifications/?is_read=false  (filter unread)
+    # GET /api/notifications/?limit=5  (limit results)
+    path('', api_views.NotificationListView.as_view(), name='notification-list'),
+    
+    # Mark single notification as read
+    # POST /api/notifications/{uuid}/mark-read/
+    path('<uuid:pk>/mark-read/', api_views.MarkAsReadView.as_view(), name='mark-read'),
+    
+    # Mark all notifications as read
+    # POST /api/notifications/mark-all-read/
+    path('mark-all-read/', api_views.MarkAllAsReadView.as_view(), name='mark-all-read'),
+    
+    # Get single notification detail
+    # GET /api/notifications/{uuid}/
+    path('<uuid:pk>/', api_views.NotificationDetailView.as_view(), name='notification-detail'),
 ]
