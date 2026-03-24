@@ -19,23 +19,23 @@
     <style>
         /* Tenant brand color — overridden per category */
         .sidebar-brand .brand-icon {
-            background: {% block brand_gradient %}linear-gradient(135deg, #10b981, #059669){% endblock %};
+            background: {% block brand_gradient %}var(--gradient-blue){% endblock %};
         }
 
         .sidebar-brand h2 {
-            background: {% block brand_text_gradient %}linear-gradient(135deg, #34d399, #6ee7b7){% endblock %};
+            background: {% block brand_text_gradient %}var(--gradient-blue){% endblock %};
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .nav-item.active {
-            background: {% block nav_active_bg %}rgba(16, 185, 129, 0.12){% endblock %};
-            color: {% block nav_active_color %}var(--accent-green){% endblock %};
+            background: {% block nav_active_bg %}var(--navy-e){% endblock %};
+            color: {% block nav_active_color %}var(--navy){% endblock %};
         }
 
         .nav-item .badge {
-            background: {% block badge_bg %}var(--accent-green){% endblock %};
+            background: {% block badge_bg %}var(--navy){% endblock %};
         }
 
         .nav-item.locked {
@@ -70,34 +70,34 @@
                         Dashboard
                     </a>
                     {% if "patients" in enabled_features %}
-                        {% if request.user|has_permission:'patients.view_records' %}
-                        <a href="/patients/" class="nav-item {% block nav_patients %}{% endblock %}">
-                            <span class="icon material-icons-round">people</span>
-                            Patients
-                            {% if patient_count %}<span class="badge">{{ patient_count }}</span>{% endif %}
-                        </a>
-                        {% endif %}
+                    {% if request.user|has_permission:'patients.view_records' %}
+                    <a href="/patients/" class="nav-item {% block nav_patients %}{% endblock %}">
+                        <span class="icon material-icons-round">people</span>
+                        Patients
+                        {% if patient_count %}<span class="badge">{{ patient_count }}</span>{% endif %}
+                    </a>
+                    {% endif %}
                     {% else %}
-                        {% if request.user.is_superuser or request.user|has_permission:'clinics.manage' %}
-                        <span class="nav-item locked" title="Upgrade your plan to unlock">
-                            <span class="icon material-icons-round">lock</span> Patients 🔒
-                        </span>
-                        {% endif %}
+                    {% if request.user.is_superuser or request.user|has_permission:'clinics.manage' %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Patients 🔒
+                    </span>
+                    {% endif %}
                     {% endif %}
 
                     {% if "staff" in enabled_features %}
-                        {% if request.user|has_permission:'users.manage' %}
-                        <a href="/dashboard/staff/" class="nav-item {% block nav_staff %}{% endblock %}">
-                            <span class="icon material-icons-round">badge</span>
-                            Staff
-                        </a>
-                        {% endif %}
+                    {% if request.user|has_permission:'users.manage' %}
+                    <a href="/dashboard/staff/" class="nav-item {% block nav_staff %}{% endblock %}">
+                        <span class="icon material-icons-round">badge</span>
+                        Staff
+                    </a>
+                    {% endif %}
                     {% else %}
-                        {% if request.user|has_permission:'clinics.manage' %}
-                        <span class="nav-item locked" title="Upgrade your plan to unlock">
-                            <span class="icon material-icons-round">lock</span> Staff 🔒
-                        </span>
-                        {% endif %}
+                    {% if request.user|has_permission:'clinics.manage' %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Staff 🔒
+                    </span>
+                    {% endif %}
                     {% endif %}
 
                     {% if request.user|has_permission:'clinics.manage' %}
@@ -118,7 +118,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Operations</div>
                     {% if "appointments" in enabled_features %}
-                        {% if request.user|has_any_permission:'appointments.moderate,appointments.schedule' %}
+                        {% if request.user|has_feature_access:"appointments" %}
                         <a href="/dashboard/appointments/" class="nav-item {% block nav_appointments %}{% endblock %}">
                             <span class="icon material-icons-round">calendar_month</span>
                             Appointments
@@ -133,7 +133,7 @@
                     {% endif %}
 
                     {% if "billing" in enabled_features %}
-                        {% if request.user|has_permission:'billing.access' %}
+                        {% if request.user|has_feature_access:"billing" %}
                         <a href="/dashboard/billing/" class="nav-item {% block nav_billing %}{% endblock %}">
                             <span class="icon material-icons-round">receipt_long</span>
                             Billing
@@ -148,7 +148,7 @@
                     {% endif %}
 
                     {% if "prescriptions" in enabled_features %}
-                        {% if request.user|has_any_permission:'prescriptions.issue,prescriptions.view_records' %}
+                        {% if request.user|has_feature_access:"prescriptions" %}
                         <a href="/dashboard/clinical/prescriptions/" class="nav-item {% block nav_prescriptions %}{% endblock %}">
                             <span class="icon material-icons-round">description</span>
                             Prescriptions
@@ -166,7 +166,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Clinical</div>
                     {% if "clinical_notes" in enabled_features %}
-                        {% if request.user|has_any_permission:'patients.view_records,patients.edit_records' %}
+                        {% if request.user|has_feature_access:"clinical" %}
                         <a href="/dashboard/clinical/notes/" class="nav-item {% block nav_clinical %}{% endblock %}">
                             <span class="icon material-icons-round">medical_services</span>
                             Clinical Notes
@@ -181,22 +181,22 @@
                     {% endif %}
 
                     {% if "pharmacy" in enabled_features %}
-                        {% if request.user|has_any_permission:'pharmacy.manage_inventory,pharmacy.dispense,pharmacy.update_stock,dashboard.pharmacy' %}
-                    <div class="nav-section">
-                        <div class="nav-section-title">Pharmacy</div>
-                        <a href="{% url 'pharmacy-inventory' %}" class="nav-item {% block nav_pharmacy_inv %}{% endblock %}">
-                            <span class="icon material-icons-round">inventory_2</span>
-                            Inventory
-                        </a>
-                        <a href="{% url 'pharmacy-purchases' %}" class="nav-item {% block nav_pharmacy_pur %}{% endblock %}">
-                            <span class="icon material-icons-round">local_shipping</span>
-                            Purchases
-                        </a>
-                        <a href="{% url 'pharmacy-sales' %}" class="nav-item {% block nav_pharmacy_sales %}{% endblock %}">
-                            <span class="icon material-icons-round">shopping_cart</span>
-                            Sales & POS
-                        </a>
-                    </div>
+                        {% if request.user|has_feature_access:"pharmacy" %}
+                        <div class="nav-section">
+                            <div class="nav-section-title">Pharmacy</div>
+                            <a href="{% url 'pharmacy-inventory' %}" class="nav-item {% block nav_pharmacy_inv %}{% endblock %}">
+                                <span class="icon material-icons-round">inventory_2</span>
+                                Inventory
+                            </a>
+                            <a href="{% url 'pharmacy-purchases' %}" class="nav-item {% block nav_pharmacy_pur %}{% endblock %}">
+                                <span class="icon material-icons-round">local_shipping</span>
+                                Purchases
+                            </a>
+                            <a href="{% url 'pharmacy-sales' %}" class="nav-item {% block nav_pharmacy_sales %}{% endblock %}">
+                                <span class="icon material-icons-round">shopping_cart</span>
+                                Sales & POS
+                            </a>
+                        </div>
                         {% endif %}
                     {% else %}
                         {% if request.user|has_permission:'clinics.manage' %}
@@ -210,28 +210,28 @@
                     {% endif %}
 
                     {% if "lab" in enabled_features %}
-                        {% if request.user|has_any_permission:'lab.manage_inventory,lab.upload_results,lab.schedule_tests,lab.view_results,dashboard.lab' %}
-                    <div class="nav-section">
-                        <div class="nav-section-title">Laboratory</div>
-                        {% if request.user|has_any_permission:'lab.manage_inventory,dashboard.lab' %}
-                        <a href="{% url 'lab-inventory' %}" class="nav-item {% block nav_lab_inv %}{% endblock %}">
-                            <span class="icon material-icons-round">inventory_2</span>
-                            Inventory
-                        </a>
-                        {% endif %}
-                        {% if request.user|has_any_permission:'lab.upload_results,lab.schedule_tests,dashboard.lab' %}
-                        <a href="{% url 'lab-sample-collection' %}" class="nav-item {% block nav_lab_samples %}{% endblock %}">
-                            <span class="icon material-icons-round">vaccines</span>
-                            Samples
-                        </a>
-                        {% endif %}
-                        {% if request.user|has_any_permission:'lab.view_results,lab.upload_results,dashboard.lab' %}
-                        <a href="{% url 'lab-order-list' %}?status=COMPLETED" class="nav-item {% block nav_lab_reports %}{% endblock %}">
-                            <span class="icon material-icons-round">description</span>
-                            Reports
-                        </a>
-                        {% endif %}
-                    </div>
+                        {% if request.user|has_feature_access:"lab" %}
+                        <div class="nav-section">
+                            <div class="nav-section-title">Laboratory</div>
+                            {% if request.user|has_any_permission:'lab.manage_inventory,dashboard.lab' %}
+                            <a href="{% url 'lab-inventory' %}" class="nav-item {% block nav_lab_inv %}{% endblock %}">
+                                <span class="icon material-icons-round">inventory_2</span>
+                                Inventory
+                            </a>
+                            {% endif %}
+                            {% if request.user|has_any_permission:'lab.upload_results,lab.schedule_tests,dashboard.lab' %}
+                            <a href="{% url 'lab-sample-collection' %}" class="nav-item {% block nav_lab_samples %}{% endblock %}">
+                                <span class="icon material-icons-round">vaccines</span>
+                                Samples
+                            </a>
+                            {% endif %}
+                            {% if request.user|has_any_permission:'lab.view_results,lab.upload_results,dashboard.lab' %}
+                            <a href="{% url 'lab-order-list' %}?status=COMPLETED" class="nav-item {% block nav_lab_reports %}{% endblock %}">
+                                <span class="icon material-icons-round">description</span>
+                                Reports
+                            </a>
+                            {% endif %}
+                        </div>
                         {% endif %}
                     {% else %}
                         {% if request.user|has_permission:'clinics.manage' %}
@@ -246,7 +246,8 @@
 
                     <div class="nav-section">
                         <div class="nav-section-title">Operations</div>
-                        <a href="{% url 'inventory-dashboard' %}" class="nav-item {% block nav_inventory %}{% endblock %}">
+                        <a href="{% url 'inventory-dashboard' %}"
+                            class="nav-item {% block nav_inventory %}{% endblock %}">
                             <span class="icon material-icons-round">inventory_2</span>
                             Global Inventory
                         </a>
@@ -256,49 +257,49 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Insights</div>
                     {% if "analytics" in enabled_features %}
-                        {% if request.user|has_permission:'reports.view' %}
-                        <a href="/dashboard/analytics/" class="nav-item {% block nav_analytics %}{% endblock %}">
-                            <span class="icon material-icons-round">bar_chart</span>
-                            Analytics
-                        </a>
-                        {% endif %}
-                    {% else %}
-                        {% if request.user|has_permission:'clinics.manage' %}
-                        <span class="nav-item locked" title="Upgrade your plan to unlock">
-                            <span class="icon material-icons-round">lock</span> Analytics 🔒
-                        </span>
-                        {% endif %}
+                    {% if request.user|has_permission:'reports.view' %}
+                    <a href="/dashboard/analytics/" class="nav-item {% block nav_analytics %}{% endblock %}">
+                        <span class="icon material-icons-round">bar_chart</span>
+                        Analytics
+                    </a>
                     {% endif %}
-                    
+                    {% else %}
+                    {% if request.user|has_permission:'clinics.manage' %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Analytics 🔒
+                    </span>
+                    {% endif %}
+                    {% endif %}
+
                     {% if "communications" in enabled_features %}
-                        {% if request.user|has_permission:'notifications.send' %}
-                        <a href="/communications/" class="nav-item {% block nav_communications %}{% endblock %}">
-                            <span class="icon material-icons-round">chat</span>
-                            Communications
-                        </a>
-                        {% endif %}
-                    {% else %}
-                        {% if request.user|has_permission:'clinics.manage' %}
-                        <span class="nav-item locked" title="Upgrade your plan to unlock">
-                            <span class="icon material-icons-round">lock</span> Communications 🔒
-                        </span>
-                        {% endif %}
+                    {% if request.user|has_permission:'notifications.send' %}
+                    <a href="/communications/" class="nav-item {% block nav_communications %}{% endblock %}">
+                        <span class="icon material-icons-round">chat</span>
+                        Communications
+                    </a>
                     {% endif %}
-                    
+                    {% else %}
+                    {% if request.user|has_permission:'clinics.manage' %}
+                    <span class="nav-item locked" title="Upgrade your plan to unlock">
+                        <span class="icon material-icons-round">lock</span> Communications 🔒
+                    </span>
+                    {% endif %}
+                    {% endif %}
+
                     {% if "notifications" in enabled_features %}
                     <a href="/notifications/" class="nav-item {% block nav_notifications %}{% endblock %}">
                         <span class="icon material-icons-round">notifications</span>
                         Notifications
                     </a>
                     {% endif %}
-                    
+
                     {% if request.user|has_permission:'clinics.manage' %}
                     <a href="/dashboard/settings/" class="nav-item {% block nav_settings %}{% endblock %}">
                         <span class="icon material-icons-round">settings</span>
                         Clinic Settings
                     </a>
                     {% endif %}
-                    
+
                     {% if request.user|has_permission:'roles.manage' %}
                     <a href="/dashboard/settings/roles/" class="nav-item {% block nav_roles %}{% endblock %}">
                         <span class="icon material-icons-round">security</span>
@@ -332,11 +333,13 @@
                         <span class="material-icons-round">notifications</span>
                     </a>
                     <div class="user-pill">
-                        <div class="user-avatar"
-                            style="background: {% block user_avatar_gradient %}var(--gradient-green){% endblock %};">{% firstof request.user.email.0 'S' %}</div>
+                        <div class="user-avatar" style="background: {% block user_avatar_gradient %}var(--gradient-purple){% endblock %};">
+                            {% firstof request.user.email.0 'S' %}
+                        </div>
                         <div class="user-info">
-                            <div class="name">{{ request.user.email|default:'Staff' }}</div>
-                            <div class="role">{% if request.user.is_superuser %}Admin View{% elif request.user.employee_profile %}{{ request.user.employee_profile.get_employee_type_display }}{% elif request.user.role %}{{ request.user.role.name }}{% else %}Sub Admin{% endif %}
+                            <div class="name">{% firstof request.user.get_full_name request.user.username request.user.email 'Staff' %}</div>
+                            <div class="role">
+                                {% if request.user.is_superuser %}Admin View{% elif request.user.employee_profile %}{{ request.user.employee_profile.get_employee_type_display }}{% elif request.user.role %}{{ request.user.role.name }}{% else %}Sub Admin{% endif %}
                             </div>
                         </div>
                     </div>
@@ -349,31 +352,40 @@
             <!-- Active Broadcast Banner -->
             {% if active_broadcast %}
             <style>
-            @keyframes marqueeLeftToRight {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100vw); }
-            }
-            .broadcast-wrapper {
-                flex-grow: 1;
-                overflow: hidden;
-                margin: 0 16px;
-                display: flex;
-            }
-            .broadcast-ticker {
-                white-space: nowrap;
-                animation: marqueeLeftToRight 20s linear infinite;
-                font-size: 14px;
-                font-weight: 500;
-            }
+                @keyframes marqueeLeftToRight {
+                    0% {
+                        transform: translateX(-100%);
+                    }
+
+                    100% {
+                        transform: translateX(100vw);
+                    }
+                }
+
+                .broadcast-wrapper {
+                    flex-grow: 1;
+                    overflow: hidden;
+                    margin: 0 16px;
+                    display: flex;
+                }
+
+                .broadcast-ticker {
+                    white-space: nowrap;
+                    animation: marqueeLeftToRight 20s linear infinite;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
             </style>
-            <div style="background: var(--gradient-blue); color: #ffffff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <div
+                style="background: linear-gradient(135deg, var(--navy), var(--teal-b)); color: #ffffff; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); position: sticky; top: var(--topbar-height); z-index: 85;">
                 <span class="material-icons-round" style="font-size: 20px; flex-shrink: 0;">campaign</span>
                 <div class="broadcast-wrapper">
                     <div class="broadcast-ticker">
                         <span><strong>{{ active_broadcast.subject }}:</strong> {{ active_broadcast.message }}</span>
                     </div>
                 </div>
-                <button type="button" onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: #ffffff; opacity: 0.8; cursor: pointer; display: flex; align-items: center; padding: 4px; flex-shrink: 0;">
+                <button type="button" onclick="this.parentElement.style.display='none'"
+                    style="background: none; border: none; color: #ffffff; opacity: 0.8; cursor: pointer; display: flex; align-items: center; padding: 4px; flex-shrink: 0;">
                     <span class="material-icons-round" style="font-size: 18px;">close</span>
                 </button>
             </div>
@@ -391,7 +403,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = document.getElementById('themeIcon');
-            
+
             if (themeToggle && themeIcon) {
                 // Update icon to match initial theme
                 if (document.documentElement.getAttribute('data-theme') === 'light') {

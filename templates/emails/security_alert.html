@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, helvetica, arial, sans-serif; background-color: #f1efe8; -webkit-font-smoothing: antialiased; }
+.email-shell { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #d3d1c7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.email-header { background-color: #7a4a00; padding: 32px 40px; position: relative; color: #ffffff; }
+.eh-brand { display: flex; align-items: center; margin-bottom: 24px; }
+.eh-mark { width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); text-align: center; line-height: 30px; margin-right: 10px; }
+.eh-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.03em; }
+.eh-title { font-size: 1.5rem; font-weight: 700; line-height: 1.25; margin: 0; }
+.eh-sub { font-size: 0.825rem; color: rgba(255,255,255,0.5); margin-top: 7px; font-weight: 300; }
+.email-body { padding: 36px 40px; }
+.greeting { font-size: 1rem; font-weight: 500; color: #1a1a18; margin-bottom: 16px; }
+p { font-size: 0.9rem; color: #3d3d3a; line-height: 1.78; font-weight: 300; margin-bottom: 16px; }
+.info-card { background-color: #f1efe8; border-radius: 12px; padding: 18px 20px; margin: 20px 0; }
+.info-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #d3d1c7; gap: 12px; }
+.info-row:last-child { border-bottom: none; }
+.ir-label { font-size: 0.8rem; color: #888780; font-weight: 300; }
+.ir-value { font-size: 0.8rem; color: #1a1a18; font-weight: 500; }
+.status-row-wrap { display: flex; gap: 10px; margin: 24px 0; }
+.status-row { flex: 1; background: #E1F5EE; border-radius: 12px; padding: 14px 16px; text-align: center; border: 1px solid rgba(29,158,117,0.15); }
+.status-row.danger { background: #FCEBEB; border-color: rgba(226,75,74,0.15); }
+.status-text h4 { font-size: 0.9rem; font-weight: 600; color: #0F6E56; margin-bottom: 2px; margin: 0; }
+.status-text.danger h4 { color: #E24B4A; }
+.status-text p { font-size: 0.75rem; color: #0F6E56; opacity: 0.7; margin: 0; margin-top: 4px; }
+.status-text.danger p { color: #E24B4A; }
+.cta-wrap { text-align: center; margin: 28px 0; }
+.cta-btn { display: inline-block; background-color: #EF9F27; color: #ffffff; padding: 13px 32px; border-radius: 10px; font-size: 0.875rem; font-weight: 500; text-decoration: none; box-shadow: 0 4px 16px rgba(239,159,39,0.2); }
+.email-sig { padding: 0 40px 32px; }
+.sig-name { font-size: 0.875rem; font-weight: 500; color: #1a1a18; margin-bottom: 2px; }
+.sig-role { font-size: 0.78rem; color: #b4b2a9; font-weight: 300; }
+.email-footer { background-color: #f1efe8; padding: 20px 40px; text-align: center; border-top: 1px solid #d3d1c7; }
+.footer-p { font-size: 0.7rem; color: #b4b2a9; line-height: 1.6; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="email-shell">
+  <div class="email-header">
+    <div class="eh-brand">
+      <div class="eh-mark" style="color:#ffffff;">+</div>
+      <span class="eh-name">Arogya</span>
+    </div>
+    <h1 class="eh-title">New sign-in <em>detected</em></h1>
+    <div class="eh-sub">Someone just signed into your account. Was it you?</div>
+  </div>
+  <div class="email-body">
+    <p class="greeting">Hi {{ user_name }},</p>
+    <p>We noticed a new sign-in to your Arogya account. If this was you, no action is needed. If you don't recognise this activity, please secure your account immediately.</p>
+    <div class="info-card">
+      <div class="info-row"><span class="ir-label">Date & time</span><span class="ir-value">{{ login_datetime_full }}</span></div>
+      <div class="info-row"><span class="ir-label">Device</span><span class="ir-value">{{ device_info }}</span></div>
+      <div class="info-row"><span class="ir-label">Location</span><span class="ir-value">{{ location_name }}</span></div>
+    </div>
+    <div class="status-row-wrap">
+      <div class="status-row">
+        <div class="status-text"><h4>This was me</h4><p>No action needed</p></div>
+      </div>
+      <div class="status-row danger">
+        <div class="status-text danger"><h4>Not me</h4><p>Follow secure path</p></div>
+      </div>
+    </div>
+    <div class="cta-wrap">
+      <a href="{{ secure_url }}" class="cta-btn">Secure my account →</a>
+    </div>
+    <p>If you believe your account is compromised, contact our security team at <a href="mailto:security@arogya.in" style="color:#0C447C;font-weight:500">security@arogya.in</a> immediately.</p>
+  </div>
+  <div class="email-sig">
+    <div class="sig-name">Arogya Security Team</div>
+    <div class="sig-role">Automated security alert</div>
+  </div>
+  <div class="email-footer">
+    <div class="footer-p">
+      © 2025 Arogya Healthcare CRM. All rights reserved.<br>
+      Arogya Technologies Pvt. Ltd., Mumbai, Maharashtra, India.
+    </div>
+  </div>
+</div>
+</body>
+</html>

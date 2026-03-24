@@ -84,10 +84,10 @@ def provision_category_roles(tenant):
     from apps.tenants.models import CategoryRoleTemplate
     
     # Get the templates for this tenant's category
-    if not tenant.category_obj:
+    if not tenant.category:
         return
         
-    templates = CategoryRoleTemplate.objects.filter(category=tenant.category_obj)
+    templates = CategoryRoleTemplate.objects.filter(category=tenant.category)
     
     for template in templates:
         role, created = Role.objects.get_or_create(

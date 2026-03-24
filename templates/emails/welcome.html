@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, helvetica, arial, sans-serif; background-color: #f1efe8; -webkit-font-smoothing: antialiased; }
+.email-shell { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #d3d1c7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.email-header { background-color: #0F6E56; padding: 32px 40px; position: relative; color: #ffffff; }
+.eh-brand { display: flex; align-items: center; margin-bottom: 24px; }
+.eh-mark { width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); text-align: center; line-height: 30px; margin-right: 10px; }
+.eh-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.03em; }
+.eh-title { font-size: 1.5rem; font-weight: 700; line-height: 1.25; margin: 0; }
+.eh-sub { font-size: 0.825rem; color: rgba(255,255,255,0.5); margin-top: 7px; font-weight: 300; }
+.email-body { padding: 36px 40px; }
+.greeting { font-size: 1rem; font-weight: 500; color: #1a1a18; margin-bottom: 16px; }
+p { font-size: 0.9rem; color: #3d3d3a; line-height: 1.78; font-weight: 300; margin-bottom: 16px; }
+.feature-list { list-style: none; padding: 0; margin: 20px 0; }
+.fl-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: #888780; line-height: 1.55; font-weight: 300; margin-bottom: 12px; }
+.fl-check { width: 18px; height: 18px; border-radius: 50%; background-color: #E1F5EE; color: #0F6E56; text-align: center; line-height: 18px; font-size: 10px; margin-right: 10px; flex-shrink: 0; }
+.cta-wrap { text-align: center; margin: 28px 0; }
+.cta-btn { display: inline-block; background-color: #0F6E56; color: #ffffff; padding: 13px 32px; border-radius: 10px; font-size: 0.875rem; font-weight: 500; text-decoration: none; box-shadow: 0 4px 16px rgba(15,110,86,0.2); }
+.info-card { background-color: #f1efe8; border-radius: 12px; padding: 18px 20px; margin: 20px 0; }
+.info-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #d3d1c7; gap: 12px; }
+.info-row:last-child { border-bottom: none; }
+.ir-label { font-size: 0.8rem; color: #888780; font-weight: 300; }
+.ir-value { font-size: 0.8rem; color: #1a1a18; font-weight: 500; }
+.email-sig { padding: 0 40px 32px; }
+.sig-name { font-size: 0.875rem; font-weight: 500; color: #1a1a18; margin-bottom: 2px; }
+.sig-role { font-size: 0.78rem; color: #b4b2a9; font-weight: 300; }
+.email-footer { background-color: #f1efe8; padding: 20px 40px; text-align: center; border-top: 1px solid #d3d1c7; }
+.footer-p { font-size: 0.7rem; color: #b4b2a9; line-height: 1.6; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="email-shell">
+  <div class="email-header">
+    <div class="eh-brand">
+      <div class="eh-mark" style="color:#ffffff;">+</div>
+      <span class="eh-name">Arogya</span>
+    </div>
+    <h1 class="eh-title">Welcome aboard,<br><em>{{ user_name }}</em></h1>
+    <div class="eh-sub">Your Arogya workspace is set up and ready to use.</div>
+  </div>
+  <div class="email-body">
+    <p class="greeting">Hi {{ user_name }} 👋</p>
+    <p>You've successfully created your Arogya account for <strong>{{ organization_name }}</strong>. We're so glad to have you on board.</p>
+    <p>Here's everything you can do right now:</p>
+    <div class="feature-list">
+      <div class="fl-item">
+        <div class="fl-check">✓</div>
+        <span><strong>Add patients</strong> — import or manually add patient records to your EMR system</span>
+      </div>
+      <div class="fl-item">
+        <div class="fl-check">✓</div>
+        <span><strong>Book appointments</strong> — schedule and manage your clinic calendar</span>
+      </div>
+      <div class="fl-item">
+        <div class="fl-check">✓</div>
+        <span><strong>Set up billing</strong> — create invoices and track payments automatically</span>
+      </div>
+    </div>
+    <div class="cta-wrap">
+      <a href="{{ dashboard_url }}" class="cta-btn">Go to your dashboard →</a>
+    </div>
+    <div class="info-card">
+      <div class="info-row"><span class="ir-label">Email</span><span class="ir-value">{{ user_email }}</span></div>
+      <div class="info-row"><span class="ir-label">Workspace</span><span class="ir-value">{{ organization_name }}</span></div>
+      <div class="info-row"><span class="ir-label">Role</span><span class="ir-value">{{ user_role }}</span></div>
+    </div>
+  </div>
+  <div class="email-sig">
+    <div class="sig-name">The Arogya Team</div>
+    <div class="sig-role">Healthcare CRM Platform</div>
+  </div>
+  <div class="email-footer">
+    <div class="footer-p">
+      © 2025 Arogya Healthcare CRM. All rights reserved.<br>
+      Arogya Technologies Pvt. Ltd., Mumbai, Maharashtra, India.
+    </div>
+  </div>
+</div>
+</body>
+</html>

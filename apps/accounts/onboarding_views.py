@@ -13,6 +13,7 @@ from datetime import timedelta
 from apps.tenants.models import (
     Tenant, Client, Domain, SubscriptionPlan, TenantSubscription,
 )
+from apps.core.models import Country, Currency, Language, Timezone, DateFormat
 from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
@@ -28,9 +29,23 @@ class OnboardingStep1View(View):
             return redirect("/login/")
         from apps.tenants.models import Category
         categories = Category.objects.filter(is_active=True).order_by('sort_order', 'name')
+        countries = Country.objects.filter(status=True).order_by('name')
+        currencies = Currency.objects.filter(status=True).order_by('code')
+        languages = Language.objects.filter(status=True).order_by('name')
+        timezones = Timezone.objects.filter(status=True).order_by('name')
+        date_formats = DateFormat.objects.filter(status=True).order_by('label')
+
         # Pre-fill from session if returning
         data = request.session.get("onboarding_org", {})
-        return render(request, self.template_name, {"data": data, "categories": categories})
+        return render(request, self.template_name, {
+            "data": data,
+            "categories": categories,
+            "countries": countries,
+            "currencies": currencies,
+            "languages": languages,
+            "timezones": timezones,
+            "date_formats": date_formats
+        })
 
     def post(self, request):
         if not request.user.is_authenticated:
@@ -38,10 +53,18 @@ class OnboardingStep1View(View):
 
         org_name = request.POST.get("org_name", "").strip()
         category = request.POST.get("category", "CLINIC")
+        country_id = request.POST.get("country_id")
 
         errors = []
         if not org_name:
             errors.append("Organization name is required.")
+        contact_phone = request.POST.get("contact_phone", "").strip()
+        if not contact_phone:
+            errors.append("Contact phone is required.")
+        elif not contact_phone.isdigit() or len(contact_phone) != 10:
+            errors.append("Phone number must be exactly 10 digits.")
+        if not country_id:
+            errors.append("Country is required.")
 
         # Check subdomain availability
         subdomain = slugify(org_name)
@@ -50,70 +73,11 @@ class OnboardingStep1View(View):
         elif Tenant.objects.filter(subdomain=subdomain).exists():
             errors.append(f"Subdomain '{subdomain}' is already taken. Try a different name.")
 
-        # Collect all dynamic question answers
-        setup_answers = {}
-        if category == "HOSPITAL":
-            setup_answers = {
-                "h_branches": request.POST.get("h_branches", "1"),
-                "h_doctors": request.POST.get("h_doctors", "10"),
-                "h_departments": request.POST.get("h_departments", "5"),
-                "h_icu": "h_icu" in request.POST,
-                "h_ipd": "h_ipd" in request.POST,
-                "h_emr": "h_emr" in request.POST,
-                "h_ot": "h_ot" in request.POST,
-                "h_beds": "h_beds" in request.POST,
-                "h_lab": "h_lab" in request.POST,
-                "h_pharmacy": "h_pharmacy" in request.POST,
-                "h_insurance": "h_insurance" in request.POST,
-                "h_multi_billing": "h_multi_billing" in request.POST,
-                "h_pkg_billing": "h_pkg_billing" in request.POST,
-                "h_ai_notes": "h_ai_notes" in request.POST,
-                "h_ai_risk": "h_ai_risk" in request.POST,
-                "h_volume": request.POST.get("h_volume", "500"),
-            }
-        elif category == "CLINIC":
-            setup_answers = {
-                "c_type": request.POST.get("c_type", "single"),
-                "c_doctors": request.POST.get("c_doctors", "1"),
-                "c_specialization": request.POST.get("c_specialization", "general"),
-                "c_appointments": "c_appointments" in request.POST,
-                "c_walkin": "c_walkin" in request.POST,
-                "c_emr": "c_emr" in request.POST,
-                "c_insurance": "c_insurance" in request.POST,
-                "c_online_pay": "c_online_pay" in request.POST,
-                "c_pharmacy": "c_pharmacy" in request.POST,
-                "c_lab": "c_lab" in request.POST,
-            }
-        elif category == "LAB":
-            setup_answers = {
-                "l_type": request.POST.get("l_type", "diagnostic"),
-                "l_inhouse": "l_inhouse" in request.POST,
-                "l_home": "l_home" in request.POST,
-                "l_hospital_int": "l_hospital_int" in request.POST,
-                "l_auto_report": "l_auto_report" in request.POST,
-                "l_patient_portal": "l_patient_portal" in request.POST,
-                "l_ai_abnormal": "l_ai_abnormal" in request.POST,
-                "l_pkg_billing": "l_pkg_billing" in request.POST,
-                "l_insurance": "l_insurance" in request.POST,
-            }
-        elif category == "PHARMACY":
-            setup_answers = {
-                "p_type": request.POST.get("p_type", "standalone"),
-                "p_inventory": "p_inventory" in request.POST,
-                "p_expiry": "p_expiry" in request.POST,
-                "p_batch": "p_batch" in request.POST,
-                "p_gst": "p_gst" in request.POST,
-                "p_online_pay": "p_online_pay" in request.POST,
-                "p_supplier": "p_supplier" in request.POST,
-                "p_rx_int": "p_rx_int" in request.POST,
-                "p_auto_deduct": "p_auto_deduct" in request.POST,
-            }
-
         if errors:
             data = {
                 "org_name": org_name, "category": category,
                 "contact_phone": request.POST.get("contact_phone", "").strip(),
-                "contact_email": request.POST.get("contact_email", "").strip(),
+                "country_id": country_id,
                 "gst_number": request.POST.get("gst_number", "").strip(),
                 "registration_number": request.POST.get("registration_number", "").strip(),
                 "address": request.POST.get("address", "").strip(),
@@ -122,28 +86,27 @@ class OnboardingStep1View(View):
                 "language": request.POST.get("language", "en"),
                 "date_format": request.POST.get("date_format", "DD/MM/YYYY"),
             }
-            data.update(setup_answers)
             from apps.tenants.models import Category
             categories = Category.objects.filter(is_active=True).order_by('sort_order', 'name')
+            countries = Country.objects.filter(status=True).order_by('name')
             return render(request, self.template_name, {
-                "errors": errors, "data": data, "categories": categories,
+                "errors": errors, "data": data, "categories": categories, "countries": countries
             })
 
-        # Save to session — use logged-in user's email as org email
+        # Save to session
         session_data = {
             "org_name": org_name,
             "category": category,
-            "org_email": request.POST.get("contact_email", request.user.email).strip(),
+            "country_id": country_id,
             "contact_phone": request.POST.get("contact_phone", "").strip(),
             "gst_number": request.POST.get("gst_number", "").strip(),
             "registration_number": request.POST.get("registration_number", "").strip(),
             "address": request.POST.get("address", "").strip(),
-            "timezone": request.POST.get("timezone", "Asia/Kolkata"),
-            "currency": request.POST.get("currency", "INR"),
-            "language": request.POST.get("language", "en"),
-            "date_format": request.POST.get("date_format", "DD/MM/YYYY"),
+            "timezone_id": request.POST.get("timezone_id"),
+            "currency_id": request.POST.get("currency_id"),
+            "language_id": request.POST.get("language_id"),
+            "date_format_id": request.POST.get("date_format_id"),
             "subdomain": subdomain,
-            "setup": setup_answers,
         }
         request.session["onboarding_org"] = session_data
 
@@ -173,13 +136,40 @@ class OnboardingStep2View(View):
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect("/login/")
-        if "onboarding_org" not in request.session:
+        org_data = request.session.get("onboarding_org")
+        if not org_data:
             return redirect("/onboarding/")
 
-        plans = SubscriptionPlan.objects.all()
+        category_code = org_data.get("category")
+        from apps.tenants.models import SubscriptionPlan, Feature, PlanFeature, PlanResourceLimit
+        
+        plans_qs = SubscriptionPlan.objects.filter(is_active=True).order_by('order', 'price')
+        if category_code:
+            plans_qs = plans_qs.filter(category__code=category_code)
+
+        all_features = Feature.objects.filter(is_active=True).order_by('name')
+        enriched_plans = []
+        for p in plans_qs:
+            assigned_feat_codes = set(PlanFeature.objects.filter(plan=p).values_list('feature__code', flat=True))
+            res_limits = PlanResourceLimit.objects.filter(plan=p, resource__is_active=True).select_related('resource')
+            
+            plan_features = []
+            for f in all_features:
+                is_assigned = f.code in assigned_feat_codes
+                plan_features.append({
+                    "name": f.name,
+                    "is_assigned": is_assigned,
+                })
+            
+            enriched_plans.append({
+                "plan": p,
+                "features": plan_features,
+                "resources": res_limits,
+            })
+
         selected = request.session.get("onboarding_plan", {})
         return render(request, self.template_name, {
-            "plans": plans,
+            "plans": enriched_plans,
             "selected": selected,
         })
 
@@ -231,9 +221,21 @@ class OnboardingStep3View(View):
         if not plan_data:
             return redirect("/onboarding/plan/")
 
+        # Resolve Localization Objects for Summary
+        country_obj = Country.objects.filter(pk=org_data.get("country_id")).first()
+        currency_obj = Currency.objects.filter(pk=org_data.get("currency_id")).first() or (country_obj.primary_currency if country_obj else None)
+        language_obj = Language.objects.filter(pk=org_data.get("language_id")).first() or (country_obj.primary_language if country_obj else None)
+        timezone_obj = Timezone.objects.filter(pk=org_data.get("timezone_id")).first() or (country_obj.primary_timezone if country_obj else None)
+        date_format_obj = DateFormat.objects.filter(pk=org_data.get("date_format_id")).first() or DateFormat.objects.filter(format_code="DD/MM/YYYY").first()
+
         return render(request, self.template_name, {
             "org": org_data,
             "plan": plan_data,
+            "country": country_obj,
+            "currency": currency_obj,
+            "language": language_obj,
+            "timezone": timezone_obj,
+            "date_format": date_format_obj,
         })
 
     def post(self, request):
@@ -260,12 +262,17 @@ class OnboardingStep3View(View):
             # 2. Create Domain for subdomain routing
             request_host = request.get_host()
             base_host = request_host.split(":")[0]
-            # If request_host already has the subdomain (eg test.localhost), extract the root
+            
+            # Extract root domain from subdomain (e.g., test.localhost → localhost)
             parts = base_host.split(".")
-            if len(parts) > 1 and parts[0] != "127" and parts[0] != "localhost":
+            if len(parts) > 1 and parts[0] not in ("127", "localhost", "0"):
                 root_host = ".".join(parts[1:])
             else:
                 root_host = base_host
+            
+            # Can't have subdomains on IP addresses — use localhost instead
+            if root_host in ("127.0.0.1", "0.0.0.0"):
+                root_host = "localhost"
                 
             tenant_domain = f"{org_data['subdomain']}.{root_host}"
             Domain.objects.create(
@@ -276,15 +283,46 @@ class OnboardingStep3View(View):
 
             # 3. Create Tenant record (app-level) and link to Client
             from apps.tenants.models import Category as TenantCategory
+            from apps.core.models import Country, DateFormat
             category_obj = TenantCategory.objects.filter(code=org_data["category"]).first()
+            country_obj = None
+            if org_data.get("country_id"):
+                try:
+                    country_obj = Country.objects.get(pk=org_data["country_id"])
+                except Country.DoesNotExist:
+                    pass
+
+            # Defaults for regional settings (use session choice or country primary)
+            currency_obj = Currency.objects.filter(pk=org_data.get("currency_id")).first() or (country_obj.primary_currency if country_obj else None)
+            language_obj = Language.objects.filter(pk=org_data.get("language_id")).first() or (country_obj.primary_language if country_obj else None)
+            timezone_obj = Timezone.objects.filter(pk=org_data.get("timezone_id")).first() or (country_obj.primary_timezone if country_obj else None)
+            
+            # Date Format: use session choice or default to 'DD/MM/YYYY'
+            date_format_obj = DateFormat.objects.filter(pk=org_data.get("date_format_id")).first() or DateFormat.objects.filter(format_code="DD/MM/YYYY").first()
+
             tenant = Tenant.objects.create(
                 name=org_data["org_name"],
-                category=org_data["category"],
-                category_obj=category_obj,
+                category=category_obj,
                 subdomain=org_data["subdomain"],
-                email=org_data["org_email"],
-                phone="",
+                phone=org_data.get("contact_phone", ""),
+                country=country_obj,
                 client=client,
+                # New Consolidated Fields
+                address=org_data.get("address", ""),
+                gst_number=org_data.get("gst_number", ""),
+                registration_number=org_data.get("registration_number", ""),
+                timezone=timezone_obj,
+                currency=currency_obj,
+                language=language_obj,
+                date_format=date_format_obj,
+                working_hours={
+                    "mon": {"open": "09:00", "close": "18:00"},
+                    "tue": {"open": "09:00", "close": "18:00"},
+                    "wed": {"open": "09:00", "close": "18:00"},
+                    "thu": {"open": "09:00", "close": "18:00"},
+                    "fri": {"open": "09:00", "close": "18:00"},
+                    "sat": {"open": "09:00", "close": "14:00"},
+                },
             )
 
             # 4. Create subscription
@@ -306,52 +344,58 @@ class OnboardingStep3View(View):
             from apps.accounts.models import Role, Permission
             provision_category_roles(tenant)
 
-            # 5. Assign user to tenant and 'Admin' role (with ALL permissions)
+            # 5. Assign user to tenant and 'Owner' role (now implicit via is_owner)
             user = request.user
             user.tenant = tenant
+            user.is_owner = True  # Primary account holder is always the owner
+            
             admin_role, _ = Role.objects.get_or_create(
                 tenant=tenant,
                 name="Admin",
                 defaults={"is_system_role": True},
             )
-            # Admin gets every permission
+            # Admin gets every permission (still good to have for staff, owner has them implicitly)
             admin_role.permissions.set(Permission.objects.all())
 
             user.role = admin_role
-            user.save(update_fields=["tenant", "role"])
+            user.save(update_fields=["tenant", "role", "is_owner"])
 
-            # 6. Seed default data in the new tenant schema
-            from django_tenants.utils import schema_context
-            from apps.tenants.models import ClinicSettings
+            # 6. Send Welcome Email
+            from django.core.mail import send_mail
+            from django.conf import settings
+            from django.template.loader import render_to_string
 
-            with schema_context(client.schema_name):
-                ClinicSettings.objects.create(
-                    tenant=tenant,
-                    clinic_name=org_data["org_name"],
-                    contact_email=org_data.get("org_email", ""),
-                    contact_phone=org_data.get("contact_phone", ""),
-                    gst_number=org_data.get("gst_number", ""),
-                    registration_number=org_data.get("registration_number", ""),
-                    address=org_data.get("address", ""),
-                    timezone=org_data.get("timezone", "Asia/Kolkata"),
-                    currency=org_data.get("currency", "INR"),
-                    language=org_data.get("language", "en"),
-                    date_format=org_data.get("date_format", "DD/MM/YYYY"),
-                    working_hours={
-                        "mon": {"open": "09:00", "close": "18:00"},
-                        "tue": {"open": "09:00", "close": "18:00"},
-                        "wed": {"open": "09:00", "close": "18:00"},
-                        "thu": {"open": "09:00", "close": "18:00"},
-                        "fri": {"open": "09:00", "close": "18:00"},
-                        "sat": {"open": "09:00", "close": "14:00"},
-                    },
+            context = {
+                "user_name": user.get_full_name() or user.username,
+                "user_email": user.email,
+                "organization_name": tenant.name,
+                "user_role": "Owner",  # Inform them they are the owner
+                "dashboard_url": f"{request.scheme}://{tenant_domain}/dashboard/",
+            }
+            html_message = render_to_string("emails/welcome.html", context)
+
+            try:
+                send_mail(
+                    subject=f"Welcome to Arogya — {tenant.name} is ready!",
+                    message=f"Welcome aboard! Your workspace is ready.",
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@arogya.com"),
+                    recipient_list=[user.email],
+                    html_message=html_message,
                 )
+            except Exception as e:
+                logger.error(f"Failed to send welcome email to {user.email}: {e}")
 
-            # 7. Clean up session
+            # 7. Seed default data is no longer needed in ClinicSettings
+            # as it is all in Tenant model now.
+            # Keeping schema_context for potential future tenant-specific seeds.
+            # with schema_context(client.schema_name):
+            #     pass
+
+            # 8. Clean up session
             for key in ["onboarding_org", "onboarding_plan"]:
                 request.session.pop(key, None)
 
-            # 8. Redirect to tenant subdomain via auth bridge
+            # 9. Redirect to tenant subdomain via auth bridge
             from django.core import signing
             token = signing.dumps({"user_id": user.pk}, salt="auth-bridge")
             scheme = "https" if request.is_secure() else "http"

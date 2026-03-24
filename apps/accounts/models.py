@@ -75,6 +75,14 @@ class RolePermission(models.Model):
 # Custom User Model
 # ---------------------------
 class User(AbstractUser):
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Designates whether this user has verified their identity via OTP."
+    )
+    is_owner = models.BooleanField(
+        default=False,
+        help_text="Designates whether this user is the primary organization owner (Admin)."
+    )
     tenant = models.ForeignKey(
         Tenant,
         on_delete=models.CASCADE,
@@ -91,6 +99,9 @@ class User(AbstractUser):
     )
 
     def has_permission(self, permission_code):
+        if self.is_owner:
+            return True
+            
         if not self.role:
             return False
 

@@ -3,6 +3,80 @@ from django.db import models
 from django.utils import timezone
 
 
+class Currency(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=50)
+    symbol = models.CharField(max_length=10)
+    status = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Currencies"
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class Language(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=50)
+    native_name = models.CharField(max_length=50, blank=True)
+    status = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class Timezone(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    offset_label = models.CharField(max_length=20, help_text="e.g. GMT+5:30")
+    status = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.offset_label})"
+
+
+class DateFormat(models.Model):
+    format_code = models.CharField(max_length=50, unique=True)
+    label = models.CharField(max_length=100, help_text="e.g. DD/MM/YYYY")
+    status = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.label
+
+
+class Country(models.Model):
+    """Global reference for countries, dial codes, and flags."""
+    name = models.CharField(max_length=100, unique=True)
+    dial_code = models.CharField(max_length=10, help_text="e.g. +91")
+    iso_code = models.CharField(max_length=5, help_text="e.g. IN, US", unique=True)
+    flag_logo = models.ImageField(upload_to='countries/flags/', null=True, blank=True)
+    flag_url = models.CharField(max_length=255, blank=True, null=True, help_text="URL for the country flag (e.g. from FlagCDN)")
+    
+    # Defaults for regional settings
+    primary_currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, blank=True)
+    primary_language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True, blank=True)
+    primary_timezone = models.ForeignKey(Timezone, on_delete=models.SET_NULL, null=True, blank=True)
+
+    status = models.BooleanField(default=True, help_text="Is this country active for selection?")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Countries"
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.dial_code})"
+
+
 class AuditMixin(models.Model):
     """
     Abstract mixin that adds automatic created_at / updated_at timestamps.
@@ -59,6 +133,7 @@ class SoftDeleteMixin(models.Model):
         self.is_deleted = False
         self.deleted_at = None
         self.save(update_fields=["is_deleted", "deleted_at"])
+
 from django.conf import settings
 
 class FeatureAuditLog(models.Model):

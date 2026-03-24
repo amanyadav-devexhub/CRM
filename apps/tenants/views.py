@@ -6,9 +6,11 @@ from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect
 from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .serializers import TenantCreateSerializer
-from .models import Client, Domain, Tenant, SubscriptionPlan, TenantSubscription, Feature, ClinicSettings, TenantFeature
+from .models import Client, Domain, Tenant, SubscriptionPlan, TenantSubscription, Feature, TenantFeature
+from apps.core.models import Country, Currency, Language, Timezone, DateFormat
 
 User = get_user_model()
 
@@ -334,121 +336,104 @@ class SubAdminDashboardView(View):
 # ──────────────────────────────────────────────
 # Settings — Organization Profile & Preferences
 # ──────────────────────────────────────────────
-class ClinicSettingsView(View):
+class ClinicSettingsView(LoginRequiredMixin, View):
     """
-    CRUD for ClinicSettings. Displays Basic Info, Localization, Working Hours.
+    CRUD for Organization Settings (Branding, Localization, Working Hours).
+    Operates directly on the Tenant model.
     """
-    def get(self, request):
-        tenant = getattr(request.user, "tenant", None)
-        if not tenant:
-            return redirect("/dashboard/")
-
-        # Attempt to get or create settings
-        settings_obj, created = ClinicSettings.objects.get_or_create(tenant=tenant)
-
-        context = {
-            "settings": settings_obj,
-            "tenant": tenant,
-        }
-        return render(request, "dashboard/settings.html", context)
-
-    def post(self, request):
-        tenant = getattr(request.user, "tenant", None)
-        if not tenant:
-            return redirect("/dashboard/")
-
-        settings_obj, created = ClinicSettings.objects.get_or_create(tenant=tenant)
-
-        # 1. Basic Info
-        settings_obj.clinic_name = request.POST.get("clinic_name", settings_obj.clinic_name)
-        settings_obj.address = request.POST.get("address", settings_obj.address)
-        settings_obj.contact_phone = request.POST.get("contact_phone", settings_obj.contact_phone)
-        settings_obj.contact_email = request.POST.get("contact_email", settings_obj.contact_email)
-        settings_obj.registration_number = request.POST.get("registration_number", settings_obj.registration_number)
-        settings_obj.gst_number = request.POST.get("gst_number", settings_obj.gst_number)
-
-        # 2. Localization
-        settings_obj.timezone = request.POST.get("timezone", settings_obj.timezone)
-        settings_obj.currency = request.POST.get("currency", settings_obj.currency)
-        settings_obj.language = request.POST.get("language", settings_obj.language)
-        settings_obj.date_format = request.POST.get("date_format", settings_obj.date_format)
-
-        # 3. Working Hours (Construct JSON from form arrays)
-        days = request.POST.getlist("day")
-        start_times = request.POST.getlist("start_time")
-        end_times = request.POST.getlist("end_time")
-
-        working_hours = {}
-        for d, st, et in zip(days, start_times, end_times):
-            working_hours[d] = {"start": st, "end": et}
-        
-        settings_obj.working_hours = working_hours
-        settings_obj.emergency_available = request.POST.get("emergency_available") == "on"
-
-        settings_obj.save()
-
-        # Update actual tenant name too if clinic name changed
-        if "clinic_name" in request.POST:
-            tenant.name = request.POST.get("clinic_name")
-            tenant.save()
-
-        return redirect("/dashboard/settings/")
-
-
-class ClinicSettingsView(View):
-    """GET/POST clinic settings (org setup, localization, working hours)."""
     template_name = "dashboard/settings.html"
 
     def get(self, request):
         tenant = getattr(request.user, "tenant", None)
         if not tenant:
             return redirect("/dashboard/")
-        settings_obj, _ = ClinicSettings.objects.get_or_create(tenant=tenant)
-        return render(request, self.template_name, {"settings": settings_obj, "saved": False})
+        
+        countries = Country.objects.filter(status=True).order_by('name')
+        currencies = Currency.objects.filter(status=True).order_by('code')
+        languages = Language.objects.filter(status=True).order_by('name')
+        timezones = Timezone.objects.filter(status=True).order_by('name')
+        date_formats = DateFormat.objects.filter(status=True).order_by('label')
+
+        return render(request, self.template_name, {
+            "tenant": tenant, 
+            "countries": countries,
+            "currencies": currencies,
+            "languages": languages,
+            "timezones": timezones,
+            "date_formats": date_formats,
+            "saved": False
+        })
 
     def post(self, request):
         import json
         tenant = getattr(request.user, "tenant", None)
         if not tenant:
             return redirect("/dashboard/")
-        settings_obj, _ = ClinicSettings.objects.get_or_create(tenant=tenant)
 
         # ── Basic Info ──
-        settings_obj.clinic_name = request.POST.get("clinic_name", "").strip()
-        settings_obj.address = request.POST.get("address", "").strip()
-        settings_obj.gst_number = request.POST.get("gst_number", "").strip()
-        settings_obj.registration_number = request.POST.get("registration_number", "").strip()
-        settings_obj.contact_phone = request.POST.get("contact_phone", "").strip()
-        settings_obj.contact_email = request.POST.get("contact_email", "").strip()
+        tenant.name = request.POST.get("clinic_name", tenant.name).strip()
+        tenant.address = request.POST.get("address", tenant.address).strip()
+        tenant.gst_number = request.POST.get("gst_number", tenant.gst_number).strip()
+        tenant.registration_number = request.POST.get("registration_number", tenant.registration_number).strip()
+        tenant.phone = request.POST.get("contact_phone", tenant.phone).strip()
+        
+        country_id = request.POST.get("country_id")
+        if country_id:
+            try:
+                tenant.country = Country.objects.get(pk=country_id)
+            except Country.DoesNotExist:
+                pass
 
         # ── Logo ──
         if "logo" in request.FILES:
-            settings_obj.logo = request.FILES["logo"]
+            tenant.logo = request.FILES["logo"]
 
         # ── Localization ──
-        settings_obj.timezone = request.POST.get("timezone", "Asia/Kolkata")
-        settings_obj.currency = request.POST.get("currency", "INR")
-        settings_obj.language = request.POST.get("language", "en")
-        settings_obj.date_format = request.POST.get("date_format", "DD/MM/YYYY")
+        tz_id = request.POST.get("timezone_id")
+        cur_id = request.POST.get("currency_id")
+        lang_id = request.POST.get("language_id")
+        df_id = request.POST.get("date_format_id")
 
-        # ── Working Hours (parse JSON from hidden field) ──
-        wh_raw = request.POST.get("working_hours", "{}")
-        try:
-            settings_obj.working_hours = json.loads(wh_raw) if wh_raw else {}
-        except json.JSONDecodeError:
-            settings_obj.working_hours = {}
+        if tz_id:
+            tenant.timezone = Timezone.objects.filter(pk=tz_id).first()
+        if cur_id:
+            tenant.currency = Currency.objects.filter(pk=cur_id).first()
+        if lang_id:
+            tenant.language = Language.objects.filter(pk=lang_id).first()
+        if df_id:
+            tenant.date_format = DateFormat.objects.filter(pk=df_id).first()
+
+        # ── Working Hours (parse JSON from hidden field or construct from arrays) ──
+        # The template seems to use a hidden field 'working_hours' for JSON
+        wh_raw = request.POST.get("working_hours")
+        if wh_raw:
+            try:
+                tenant.working_hours = json.loads(wh_raw)
+            except json.JSONDecodeError:
+                pass
+        else:
+            # Fallback for manual array inputs if used
+            days = request.POST.getlist("day")
+            start_times = request.POST.getlist("start_time")
+            end_times = request.POST.getlist("end_time")
+            if days:
+                working_hours = {}
+                for d, st, et in zip(days, start_times, end_times):
+                    working_hours[d] = {"start": st, "end": et}
+                tenant.working_hours = working_hours
 
         # ── Holidays ──
-        holidays_raw = request.POST.get("holidays", "[]")
-        try:
-            settings_obj.holidays = json.loads(holidays_raw) if holidays_raw else []
-        except json.JSONDecodeError:
-            settings_obj.holidays = []
+        holidays_raw = request.POST.get("holidays")
+        if holidays_raw:
+            try:
+                tenant.holidays = json.loads(holidays_raw)
+            except json.JSONDecodeError:
+                pass
 
-        settings_obj.emergency_available = request.POST.get("emergency_available") == "on"
+        tenant.emergency_available = request.POST.get("emergency_available") == "on"
 
-        settings_obj.save()
-        return render(request, self.template_name, {"settings": settings_obj, "saved": True})
+        tenant.save()
+        return render(request, self.template_name, {"tenant": tenant, "saved": True})
 
 
 # ==========================================

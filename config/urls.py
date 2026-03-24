@@ -4,6 +4,7 @@ URL configuration for config project.
 
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
 from apps.tenants.views import (
     AdminDashboardView, SubAdminDashboardView, ClinicSettingsView,
@@ -44,6 +45,7 @@ from apps.accounts.public_views import LandingPageView
 from apps.accounts.auth_views import (
     RegisterView, OTPVerifyView, ResendOTPView,
     LoginView, LogoutView, AuthBridgeView,
+    PasswordResetOTPRequestView, PasswordResetOTPVerifyView, PasswordResetOTPConfirmView,
 )
 from apps.accounts.jwt_views import (
     JWTTokenObtainView, JWTTokenRefreshView, JWTTokenVerifyView,
@@ -89,23 +91,11 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("auth-bridge/", AuthBridgeView.as_view(), name="auth-bridge"),
 
-    # ── Password Reset ──
-    path("password-reset/", auth_views.PasswordResetView.as_view(
-        template_name="accounts/password_reset.html",
-        email_template_name="accounts/password_reset_email.html",
-        subject_template_name="accounts/password_reset_subject.txt",
-        success_url="/password-reset/done/",
-    ), name="password_reset"),
-    path("password-reset/done/", auth_views.PasswordResetDoneView.as_view(
-        template_name="accounts/password_reset_done.html",
-    ), name="password_reset_done"),
-    path("password-reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
-        template_name="accounts/password_reset_confirm.html",
-        success_url="/password-reset/complete/",
-    ), name="password_reset_confirm"),
-    path("password-reset/complete/", auth_views.PasswordResetCompleteView.as_view(
-        template_name="accounts/password_reset_complete.html",
-    ), name="password_reset_complete"),
+    # ── Password Reset (OTP based) ──
+    path("password-reset/", TemplateView.as_view(template_name="accounts/password_reset.html"), name="password_reset"),
+    path("api/password-reset/request/", PasswordResetOTPRequestView.as_view(), name="api-password-reset-request"),
+    path("api/password-reset/verify/", PasswordResetOTPVerifyView.as_view(), name="api-password-reset-verify"),
+    path("api/password-reset/confirm/", PasswordResetOTPConfirmView.as_view(), name="api-password-reset-confirm"),
 
     # ── Onboarding Wizard ──
     path("onboarding/", OnboardingStep1View.as_view(), name="onboarding-step1"),

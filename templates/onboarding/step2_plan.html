@@ -3,398 +3,761 @@
 <html lang="en">
 
 <head>
-    <script>
-        // Apply theme early to prevent flash
-        const savedTheme = localStorage.getItem("theme") || "dark";
-        document.documentElement.setAttribute("data-theme", savedTheme);
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choose Your Plan — Arogya</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose Your Plan — HealthCRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <style>
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-        :root {
-            --bg: #0a0e17;
-            --card: #111827;
-            --border: rgba(255, 255, 255, .06);
-            --text: #f1f5f9;
-            --muted: rgba(241, 245, 249, .5);
-            --accent: #3b82f6;
-            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            --green: #10b981;
-            --error: #ef4444;
-        }
+    html,
+    body {
+      height: 100%;
+      -webkit-font-smoothing: antialiased
+    }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      overflow: hidden
+    }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: -30%;
-            left: -20%;
-            width: 60vw;
-            height: 60vh;
-            background: radial-gradient(ellipse, rgba(139, 92, 246, .05) 0%, transparent 70%);
-            pointer-events: none;
-        }
+    :root {
+      --navy: #0C447C;
+      --navy-b: #185FA5;
+      --navy-c: #378ADD;
+      --navy-d: #B5D4F4;
+      --navy-e: #E6F1FB;
+      --teal: #1D9E75;
+      --teal-b: #0F6E56;
+      --teal-c: #5DCAA5;
+      --teal-d: #E1F5EE;
+      --ink: #1a1a18;
+      --ink-b: #3d3d3a;
+      --ink-c: #888780;
+      --ink-d: #b4b2a9;
+      --ink-e: #d3d1c7;
+      --ink-f: #f1efe8;
+      --bg: #f8f7f4;
+      --white: #fff;
+      --amber: #EF9F27;
+      --amber-d: #FAEEDA;
+      --purple: #534AB7;
+      --purple-d: #EEEDFE;
+      --red: #E24B4A;
+      --red-d: #FCEBEB;
+    }
 
-        .wizard-container {
-            width: 100%;
-            max-width: 700px;
-            position: relative;
-            z-index: 1;
-        }
+    :root[data-theme="dark"] {
+      --bg: #0a0d14;
+      --white: #141720;
+      --ink: #f1efe8;
+      --ink-b: #d3d1c7;
+      --ink-c: #b4b2a9;
+      --ink-d: #888780;
+      --ink-e: #3d3d3a;
+      --ink-f: #1c1f26;
+      --navy-e: rgba(181, 212, 244, 0.1);
+      --teal-d: rgba(93, 202, 165, 0.1);
+      --amber-d: rgba(239, 159, 39, 0.1);
+      --red-d: rgba(226, 75, 74, 0.1);
+    }
+  </style>
 
-        .steps {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 2rem;
-            gap: .5rem;
-        }
+  <!-- ── THEME EARLY LOAD ── -->
+  <script>
+    (function () {
+      const saved = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
 
-        .step {
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-            font-size: .8rem;
-            font-weight: 500;
-            color: var(--muted);
-        }
+  <style>
+    /* ── SHELL ── */
+    .shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden
+    }
 
-        .step.active {
-            color: var(--accent);
-        }
+    /* ── LEFT PANEL ── */
+    .left {
+      width: 42%;
+      flex-shrink: 0;
+      background: var(--navy);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 36px 48px 40px;
+    }
 
-        .step.done {
-            color: var(--green);
-        }
+    .lmesh {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 600px 500px at 110% 5%, rgba(55, 138, 221, 0.38) 0%, transparent 60%),
+        radial-gradient(ellipse 500px 600px at -10% 92%, rgba(29, 158, 117, 0.22) 0%, transparent 55%),
+        radial-gradient(ellipse 350px 350px at 55% 50%, rgba(93, 202, 165, 0.08) 0%, transparent 50%);
+    }
 
-        .step .num {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .75rem;
-            font-weight: 700;
-            border: 2px solid rgba(255, 255, 255, .12);
-        }
+    .lgrain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px
+    }
 
-        .step.active .num {
-            border-color: var(--accent);
-            background: rgba(59, 130, 246, .15);
-            color: var(--accent);
-        }
+    /* brand */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 52px;
+      position: relative;
+      z-index: 1
+    }
 
-        .step.done .num {
-            border-color: var(--green);
-            background: rgba(16, 185, 129, .15);
-            color: var(--green);
-        }
+    .bmark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
 
-        .step-line {
-            width: 40px;
-            height: 2px;
-            background: rgba(255, 255, 255, .08);
-        }
+    .bname {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.03em
+    }
 
-        .wizard-card {
-            background: var(--card);
-            border-radius: 20px;
-            padding: 2.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
-        }
+    /* left middle */
+    .lmid {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center
+    }
 
-        .wizard-card h2 {
-            font-size: 1.35rem;
-            font-weight: 700;
-            margin-bottom: .4rem;
-        }
+    .lheadline {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.16;
+      letter-spacing: -0.035em;
+      margin-bottom: 14px
+    }
 
-        .wizard-card .subtitle {
-            color: var(--muted);
-            font-size: .875rem;
-            margin-bottom: 1.75rem;
-        }
+    .lheadline em {
+      color: var(--amber);
+      font-style: italic
+    }
 
-        .error-list {
-            background: rgba(239, 68, 68, .08);
-            border: 1px solid rgba(239, 68, 68, .2);
-            border-radius: 10px;
-            padding: .75rem 1rem;
-            margin-bottom: 1.25rem;
-            list-style: none;
-        }
+    .lsub {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.48);
+      line-height: 1.78;
+      font-weight: 300;
+      max-width: 340px;
+      margin-bottom: 44px
+    }
 
-        .error-list li {
-            font-size: .85rem;
-            color: var(--error);
-            padding: .15rem 0;
-        }
+    /* steps indicator */
+    .steps-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      margin-bottom: 40px
+    }
 
-        .plan-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
+    .steps-wrap::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 20px;
+      bottom: 20px;
+      width: 1.5px;
+      background: rgba(255, 255, 255, 0.08)
+    }
 
-        .plan-option {
-            position: relative;
-            cursor: pointer;
-        }
+    .step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 12px 0;
+      position: relative;
+      z-index: 1
+    }
 
-        .plan-option input {
-            position: absolute;
-            opacity: 0;
-        }
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
 
-        .plan-card {
-            padding: 1.5rem 1.25rem;
-            border-radius: 14px;
-            text-align: center;
-            border: 2px solid rgba(255, 255, 255, .08);
-            background: rgba(255, 255, 255, .02);
-            transition: all .2s;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
+    .step-circle.done {
+      background: var(--teal);
+      border: none;
+      color: #fff
+    }
 
-        .plan-option input:checked+.plan-card {
-            border-color: var(--accent);
-            background: rgba(59, 130, 246, .06);
-        }
+    .step-circle.active {
+      background: rgba(255, 255, 255, 1);
+      color: var(--navy);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15)
+    }
 
-        .plan-card:hover {
-            border-color: rgba(255, 255, 255, .15);
-        }
+    .step-circle.pending {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.3)
+    }
 
-        .plan-name {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: .25rem;
-        }
+    .step-info {
+      padding-top: 4px
+    }
 
-        .plan-price {
-            font-size: 1.75rem;
-            font-weight: 800;
-            margin-bottom: .25rem;
-        }
+    .step-name {
+      font-size: 0.825rem;
+      font-weight: 500;
+      transition: color 0.3s
+    }
 
-        .plan-price span {
-            font-size: .8rem;
-            font-weight: 400;
-            color: var(--muted);
-        }
+    .step-name.active {
+      color: #fff
+    }
 
-        .plan-tag {
-            display: inline-block;
-            font-size: .65rem;
-            font-weight: 600;
-            padding: .2rem .6rem;
-            border-radius: 99px;
-            margin-bottom: .75rem;
-        }
+    .step-name.done {
+      color: var(--teal-c)
+    }
 
-        .plan-tag.basic {
-            background: rgba(16, 185, 129, .12);
-            color: #34d399;
-        }
+    .step-name.pending {
+      color: rgba(255, 255, 255, 0.3)
+    }
 
-        .plan-tag.pro {
-            background: rgba(59, 130, 246, .12);
-            color: #60a5fa;
-        }
+    /* Bottom */
+    .lbottom {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto
+    }
 
-        .plan-tag.enterprise {
-            background: rgba(139, 92, 246, .12);
-            color: #a78bfa;
-        }
+    .powered-by {
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.2);
+      font-weight: 300
+    }
 
-        .plan-features {
-            list-style: none;
-            text-align: left;
-            flex: 1;
-            font-size: .78rem;
-            color: var(--muted);
-        }
+    /* ── RIGHT PANEL ── */
+    .right {
+      flex: 1;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 60px;
+      overflow-y: auto;
+      position: relative;
+    }
 
-        .plan-features li {
-            padding: .2rem 0;
-            display: flex;
-            align-items: center;
-            gap: .35rem;
-        }
+    .right::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 500px 400px at 100% 0%, rgba(230, 241, 251, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 400px 350px at 0% 100%, rgba(225, 245, 238, 0.04) 0%, transparent 50%);
+    }
 
-        .plan-features li .material-icons-round {
-            font-size: .85rem;
-            color: var(--green);
-        }
+    .fwrap {
+      width: 100%;
+      max-width: 720px;
+      position: relative;
+      z-index: 1
+    }
 
-        .btn-row {
-            display: flex;
-            gap: 1rem;
-        }
+    /* section headlines */
+    .ftitle {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.035em;
+      margin-bottom: 8px
+    }
 
-        .btn-back {
-            flex: 1;
-            padding: .85rem;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, .05);
-            color: var(--text);
-            border: 1px solid rgba(255, 255, 255, .1);
-            font-size: .95rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-            transition: background .2s;
-        }
+    .fsub {
+      font-size: 0.9rem;
+      color: var(--ink-c);
+      font-weight: 300;
+      line-height: 1.7;
+      margin-bottom: 32px
+    }
 
-        .btn-back:hover {
-            background: rgba(255, 255, 255, .08);
-        }
+    /* Plan Stack (Accordion Version) */
+    .plan-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px
+    }
 
-        .btn-next {
-            flex: 2;
-            padding: .85rem;
-            border: none;
-            border-radius: 12px;
-            background: var(--gradient);
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform .2s, box-shadow .2s;
-        }
+    .p-opt {
+      display: block;
+      width: 100%;
+      cursor: pointer;
+      position: relative;
+    }
 
-        .btn-next:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
-        }
-    </style>
+    .p-opt input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0
+    }
+
+    .p-card {
+      border-radius: 16px;
+      border: 1.5px solid var(--ink-e);
+      background: var(--white);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .p-opt input:checked+.p-card {
+      border-color: var(--navy);
+      background: var(--navy-e);
+      box-shadow: 0 8px 24px rgba(12, 68, 124, 0.08);
+    }
+
+    .p-head {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .p-head-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .p-select-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--ink-e);
+      position: relative;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .p-opt input:checked+.p-card .p-select-indicator {
+      border-color: var(--navy);
+      background: var(--navy);
+    }
+
+    .p-opt input:checked+.p-card .p-select-indicator::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    .p-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .p-name {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .p-price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+
+    .p-price span {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--ink-c)
+    }
+
+    .p-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .p-tag.basic { background: var(--teal-d); color: var(--teal-b) }
+    .p-tag.pro { background: var(--navy-d); color: var(--navy-b) }
+    .p-tag.enterprise { background: var(--purple-d); color: var(--purple) }
+
+    /* Expandable Body */
+    .p-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: grid-template-rows;
+    }
+
+    .p-opt input:checked+.p-card .p-body {
+      grid-template-rows: 1fr;
+    }
+
+    .p-inner {
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .p-content {
+      padding: 16px 24px 24px 60px; /* Included padding-top here */
+      border-top: 1px solid rgba(12, 68, 124, 0.05); /* Ensure border is inside p-inner */
+    }
+
+    .p-desc {
+      font-size: 0.85rem;
+      color: var(--ink-c);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .p-features {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 16px;
+    }
+
+    .p-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--ink-b);
+    }
+
+    .p-features li .material-icons-round {
+      font-size: 1rem;
+      color: var(--teal)
+    }
+
+    /* buttons */
+    .btn-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px
+    }
+
+    .back-btn {
+      flex: 1;
+      height: 52px;
+      border-radius: 14px;
+      border: 1.5px solid var(--ink-e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--ink-c);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: var(--ink-f);
+      color: var(--ink-b);
+      border-color: var(--ink-d)
+    }
+
+    .sbtn {
+      flex: 2;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--navy);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 12px 32px rgba(12, 68, 124, 0.15);
+      transition: all 0.22s;
+    }
+
+    .sbtn:hover {
+      background: var(--navy-b);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 48px rgba(12, 68, 124, 0.25)
+    }
+
+    /* Theme Toggle Button */
+    .tbtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 1px solid var(--ink-e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+    }
+
+    /* responsive */
+    @media(max-width:1000px) {
+      .left {
+        width: 300px;
+        padding: 32px
+      }
+    }
+
+    @media(max-width:860px) {
+      .left {
+        display: none
+      }
+
+      .right {
+        padding: 40px 24px
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <div class="wizard-container">
-        <div class="steps">
-            <div class="step done">
-                <div class="num">✓</div> Organization
-            </div>
-            <div class="step-line"></div>
-            <div class="step active">
-                <div class="num">2</div> Plan
-            </div>
-            <div class="step-line"></div>
-            <div class="step">
-                <div class="num">3</div> Confirm
-            </div>
+
+  <div class="shell">
+
+    <!-- ── LEFT PANEL ── -->
+    <div class="left">
+      <div class="lmesh"></div>
+      <div class="lgrain"></div>
+
+      <div class="brand">
+        <div class="bmark">
+          <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+            <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+            <circle cx="9" cy="9" r="2.4" fill="#5DCAA5" />
+          </svg>
         </div>
+        <span class="bname">Arogya</span>
+      </div>
 
-        <div class="wizard-card">
-            <h2>💳 Choose Your Plan</h2>
-            <p class="subtitle">Start with a 14-day free trial on any plan</p>
+      <div class="lmid">
+        <div class="lheadline">Scale your <em>strength</em> with the right plan</div>
+        <div class="lsub">All plans include a 14-day free trial. Start with what you need, upgrade as you grow.</div>
 
-            {% if errors %}
-            <ul class="error-list">
-                {% for err in errors %}<li>{{ err }}</li>{% endfor %}
-            </ul>
-            {% endif %}
-
-            <form method="post" action="/onboarding/plan/">
-                {% csrf_token %}
-
-                <div class="plan-grid">
-                    {% for plan in plans %}
-                    <label class="plan-option">
-                        <input type="radio" name="plan_id" value="{{ plan.pk }}" 
-                        {% if selected.plan_id == plan.pk|stringformat:"s" %}checked{% endif %} 
-                        {% if plan.name == "PRO" and not selected.plan_id %}checked{% endif %}>
-                        <div class="plan-card">
-                            <div class="plan-name">{{ plan.display_name|default:plan.name }}</div>
-                            <div class="plan-price">₹{{ plan.price }}<span>/mo</span></div>
-                            <span
-                                class="plan-tag {% if plan.name == 'BASIC' %}basic{% elif plan.name == 'PRO' %}pro{% else %}enterprise{% endif %}">
-                                {% if plan.name == "BASIC" %}Small Clinics
-                                {% elif plan.name == "PRO" %}Growing Teams
-                                {% else %}Full Power{% endif %}
-                            </span>
-                            <ul class="plan-features">
-                                <li><span class="material-icons-round">check_circle</span> Up to {{ plan.max_doctors }}
-                                    doctors</li>
-                                {% if plan.ai_enabled %}
-                                <li><span class="material-icons-round">check_circle</span> AI Features</li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                    </label>
-                    {% empty %}
-                    <p style="color: var(--muted); grid-column: 1/-1; text-align: center;">No plans configured yet.
-                        Contact admin.</p>
-                    {% endfor %}
-                </div>
-
-                <div class="btn-row">
-                    <a href="/onboarding/" class="btn-back">← Back</a>
-                    <button type="submit" class="btn-next">Review & Confirm →</button>
-                </div>
-            </form>
+        <div class="steps-wrap">
+          <div class="step-row">
+            <div class="step-circle done">✓</div>
+            <div class="step-info">
+              <div class="step-name done">Category</div>
+              <div class="step-name done" style="opacity:0.5;font-weight:300">Domain selected</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-circle done">✓</div>
+            <div class="step-info">
+              <div class="step-name done">Organization</div>
+              <div class="step-name done" style="opacity:0.5;font-weight:300">Basic details confirmed</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-circle active">3</div>
+            <div class="step-info">
+              <div class="step-name active">Plan Details</div>
+              <div class="step-name active" style="opacity:0.7;font-weight:300">Select capacity & power</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-circle pending">4</div>
+            <div class="step-info">
+              <div class="step-name pending">Review</div>
+              <div class="step-name pending" style="opacity:0.3;font-weight:300">Finalize workspace</div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div class="lbottom">
+        <div class="powered-by">Powered by <strong>Devexhub</strong></div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.15)">© 2025 Arogya</div>
+      </div>
     </div>
 
-    
+    <!-- ── RIGHT PANEL ── -->
+    <div class="right">
 
+      <button class="tbtn" id="themeBtn" title="Toggle Theme">
+        <svg id="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5" />
+          <path
+            d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+        <svg id="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          style="display:none">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
 
-    <!-- Theme Toggle -->
-    <button id="themeToggle" title="Toggle Theme"
-        style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #111827); color: var(--text, #f1f5f9); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-        <span class="material-icons-round" id="themeIcon" style="font-size: 1.2rem;">light_mode</span>
-    </button>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const toggleBtn = document.getElementById("themeToggle");
-            const toggleIcon = document.getElementById("themeIcon");
-            if (toggleBtn && toggleIcon) {
-                if (document.documentElement.getAttribute("data-theme") === "light") {
-                    toggleIcon.textContent = "dark_mode";
-                } else {
-                    toggleIcon.textContent = "light_mode";
-                }
-                toggleBtn.addEventListener("click", () => {
-                    let current = document.documentElement.getAttribute("data-theme");
-                    let newTheme = current === "light" ? "dark" : "light";
-                    document.documentElement.setAttribute("data-theme", newTheme);
-                    localStorage.setItem("theme", newTheme);
-                    toggleIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
-                    window.dispatchEvent(new Event("themeChanged"));
-                });
-            }
-        });
-    </script>
+      <div class="fwrap">
+        <div class="ftitle">Select Subscription Plan</div>
+        <p class="fsub">Start your 14-day free trial. No credit card required today.</p>
 
+        {% if errors %}
+        <ul class="err-list"
+          style="background:var(--red-d);border:1px solid rgba(226,75,74,0.2);border-radius:12px;padding:12px 16px;margin-bottom:24px;list-style:none;">
+          {% for err in errors %}<li style="font-size:0.85rem;color:var(--red)">{{ err }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post" action="/onboarding/plan/">
+          {% csrf_token %}
+
+          <div class="plan-stack">
+            {% for p_data in plans %}
+            {% with plan=p_data.plan %}
+            <label class="p-opt">
+              <input type="radio" name="plan_id" value="{{ plan.pk }}" 
+                {% if selected.plan_id == plan.pk|stringformat:"s" %}checked{% endif %} 
+                {% if plan.name == "PRO" and not selected.plan_id %}checked{% endif %}>
+              <div class="p-card">
+                <div class="p-head">
+                  <div class="p-head-left">
+                    <div class="p-select-indicator"></div>
+                    <div class="p-title-wrap">
+                      <div class="p-name">{{ plan.display_name|default:plan.name }}</div>
+                      <span class="p-tag {% if plan.name == 'BASIC' %}basic{% elif plan.name == 'PRO' %}pro{% else %}enterprise{% endif %}">
+                        {{ plan.name }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="p-price">₹{{ plan.price }}<span>/mo</span></div>
+                </div>
+
+                <div class="p-body">
+                  <div class="p-inner">
+                    <div class="p-content">
+                      <div class="p-desc">{{ plan.description|default:"Standard Plan" }}</div>
+                      <ul class="p-features">
+                        {% for res in p_data.resources %}
+                        <li><span class="material-icons-round">check</span> 
+                          {% if res.limit_value == -1 %}Unlimited{% else %}{{ res.limit_value }}{% endif %} 
+                          {{ res.resource.name }}
+                        </li>
+                        {% endfor %}
+                        
+                        {% for feat in p_data.features %}
+                          {% if feat.is_assigned %}
+                          <li><span class="material-icons-round">check</span> {{ feat.name }}</li>
+                          {% endif %}
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </label>
+            {% endwith %}
+            {% endfor %}
+          </div>
+
+          <div class="btn-row">
+            <a href="/onboarding/" class="back-btn">← Back</a>
+            <button type="submit" class="sbtn">Review Workspace Details →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function initTheme() {
+      const btn = document.getElementById('themeBtn');
+      const sun = document.getElementById('sun');
+      const moon = document.getElementById('moon');
+      function updateUI(theme) {
+        if (theme === 'dark') {
+          sun.style.display = 'none'; moon.style.display = 'block';
+        } else {
+          sun.style.display = 'block'; moon.style.display = 'none';
+        }
+      }
+      let current = document.documentElement.getAttribute('data-theme') || 'dark';
+      updateUI(current);
+      btn.onclick = () => {
+        current = current === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', current);
+        localStorage.setItem('theme', current);
+        updateUI(current);
+      };
+    }
+    window.addEventListener('DOMContentLoaded', initTheme);
+  </script>
 </body>
 
 </html>

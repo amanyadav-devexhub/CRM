@@ -17,11 +17,11 @@ class Command(BaseCommand):
         linked = 0
 
         for role in roles:
-            if not role.tenant or not role.tenant.category_obj:
+            if not role.tenant or not role.tenant.category:
                 continue
 
             template = CategoryRoleTemplate.objects.filter(
-                category=role.tenant.category_obj,
+                category=role.tenant.category,
                 name=role.name
             ).first()
 

@@ -26,40 +26,74 @@
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="clinic_name">Clinic Name</label>
+                <label for="clinic_name">Organization Name</label>
                 <input type="text" id="clinic_name" name="clinic_name"
-                       value="{{ settings.clinic_name }}" placeholder="My Clinic">
+                       value="{{ tenant.name }}" placeholder="My Organization">
             </div>
+            <div class="form-group">
+                <label for="country_id">Country</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div id="flag-preview" style="width: 32px; height: 24px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fafafa; flex-shrink: 0;">
+                        <img id="current-flag" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                        <span id="flag-placeholder" class="material-icons-round" style="font-size: 16px; color: #ccc">flag</span>
+                    </div>
+                    <select id="country_id" name="country_id" onchange="updateFlag(this);" style="flex-grow: 1;">
+                        <option value="" disabled>Select Country</option>
+                        {% for country in countries %}
+                        <option value="{{ country.id }}" data-flag="{{ country.flag_url }}" {% if tenant.country.id == country.id %}selected{% endif %}>
+                            {{ country.name }} ({{ country.dial_code }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <script>
+                function updateFlag(select) {
+                    const option = select.options[select.selectedIndex];
+                    const flagUrl = option ? option.getAttribute('data-flag') : null;
+                    const flagImg = document.getElementById('current-flag');
+                    const flagPlaceholder = document.getElementById('flag-placeholder');
+                    
+                    if (flagUrl && flagUrl !== 'None') {
+                        flagImg.src = flagUrl;
+                        flagImg.style.display = 'block';
+                        flagPlaceholder.style.display = 'none';
+                    } else {
+                        flagImg.style.display = 'none';
+                        flagPlaceholder.style.display = 'block';
+                    }
+                }
+                document.addEventListener('DOMContentLoaded', () => {
+                    const sel = document.getElementById('country_id');
+                    if (sel) updateFlag(sel);
+                });
+            </script>
             <div class="form-group">
                 <label for="contact_phone">Contact Phone</label>
                 <input type="tel" id="contact_phone" name="contact_phone"
-                       value="{{ settings.contact_phone }}" placeholder="+91 98765 43210">
-            </div>
-            <div class="form-group">
-                <label for="contact_email">Contact Email</label>
-                <input type="email" id="contact_email" name="contact_email"
-                       value="{{ settings.contact_email }}" placeholder="clinic@example.com">
+                       value="{{ tenant.phone }}" placeholder="+91 98765 43210">
             </div>
             <div class="form-group">
                 <label for="gst_number">GST / Tax Number</label>
                 <input type="text" id="gst_number" name="gst_number"
-                       value="{{ settings.gst_number }}" placeholder="29ABCDE1234F1ZH">
+                       value="{{ tenant.gst_number }}" placeholder="29ABCDE1234F1ZH">
             </div>
             <div class="form-group">
                 <label for="registration_number">Registration Number</label>
                 <input type="text" id="registration_number" name="registration_number"
-                       value="{{ settings.registration_number }}" placeholder="REG-12345">
+                       value="{{ tenant.registration_number }}" placeholder="REG-12345">
             </div>
             <div class="form-group full-width">
                 <label for="address">Address</label>
                 <textarea id="address" name="address" rows="3"
-                          placeholder="123, Main Street, City, State, PIN">{{ settings.address }}</textarea>
+                          placeholder="123, Main Street, City, State, PIN">{{ tenant.address }}</textarea>
             </div>
             <div class="form-group">
-                <label for="logo">Clinic Logo</label>
+                <label for="logo">Organization Logo</label>
                 <input type="file" id="logo" name="logo" accept="image/*">
-                {% if settings.logo %}
-                <span class="current-file">Current: {{ settings.logo.name }}</span>
+                {% if tenant.logo %}
+                <span class="current-file">Current: {{ tenant.logo.name }}</span>
                 {% endif %}
             </div>
         </div>
@@ -76,42 +110,43 @@
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="timezone">Timezone</label>
-                <select id="timezone" name="timezone">
-                    <option value="Asia/Kolkata" {% if settings.timezone == "Asia/Kolkata" %}selected{% endif %}>Asia/Kolkata (IST)</option>
-                    <option value="UTC" {% if settings.timezone == "UTC" %}selected{% endif %}>UTC</option>
-                    <option value="America/New_York" {% if settings.timezone == "America/New_York" %}selected{% endif %}>America/New_York (EST)</option>
-                    <option value="Europe/London" {% if settings.timezone == "Europe/London" %}selected{% endif %}>Europe/London (GMT)</option>
-                    <option value="Asia/Dubai" {% if settings.timezone == "Asia/Dubai" %}selected{% endif %}>Asia/Dubai (GST)</option>
-                    <option value="Asia/Singapore" {% if settings.timezone == "Asia/Singapore" %}selected{% endif %}>Asia/Singapore (SGT)</option>
+                <label for="timezone_id">Timezone</label>
+                <select id="timezone_id" name="timezone_id">
+                    {% for tz in timezones %}
+                    <option value="{{ tz.id }}" {% if tenant.timezone.id == tz.id %}selected{% endif %}>
+                        {{ tz.name }} ({{ tz.offset_label }})
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group">
-                <label for="currency">Currency</label>
-                <select id="currency" name="currency">
-                    <option value="INR" {% if settings.currency == "INR" %}selected{% endif %}>₹ INR (Indian Rupee)</option>
-                    <option value="USD" {% if settings.currency == "USD" %}selected{% endif %}>$ USD (US Dollar)</option>
-                    <option value="EUR" {% if settings.currency == "EUR" %}selected{% endif %}>€ EUR (Euro)</option>
-                    <option value="GBP" {% if settings.currency == "GBP" %}selected{% endif %}>£ GBP (British Pound)</option>
-                    <option value="AED" {% if settings.currency == "AED" %}selected{% endif %}>د.إ AED (UAE Dirham)</option>
+                <label for="currency_id">Currency</label>
+                <select id="currency_id" name="currency_id">
+                    {% for curr in currencies %}
+                    <option value="{{ curr.id }}" {% if tenant.currency.id == curr.id %}selected{% endif %}>
+                        {{ curr.name }} ({{ curr.symbol }})
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group">
-                <label for="language">Language</label>
-                <select id="language" name="language">
-                    <option value="en" {% if settings.language == "en" %}selected{% endif %}>English</option>
-                    <option value="hi" {% if settings.language == "hi" %}selected{% endif %}>Hindi</option>
-                    <option value="ta" {% if settings.language == "ta" %}selected{% endif %}>Tamil</option>
-                    <option value="te" {% if settings.language == "te" %}selected{% endif %}>Telugu</option>
-                    <option value="bn" {% if settings.language == "bn" %}selected{% endif %}>Bengali</option>
+                <label for="language_id">Language</label>
+                <select id="language_id" name="language_id">
+                    {% for lang in languages %}
+                    <option value="{{ lang.id }}" {% if tenant.language.id == lang.id %}selected{% endif %}>
+                        {{ lang.name }} {% if lang.native_name %}({{ lang.native_name }}){% endif %}
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group">
-                <label for="date_format">Date Format</label>
-                <select id="date_format" name="date_format">
-                    <option value="DD/MM/YYYY" {% if settings.date_format == "DD/MM/YYYY" %}selected{% endif %}>DD/MM/YYYY</option>
-                    <option value="MM/DD/YYYY" {% if settings.date_format == "MM/DD/YYYY" %}selected{% endif %}>MM/DD/YYYY</option>
-                    <option value="YYYY-MM-DD" {% if settings.date_format == "YYYY-MM-DD" %}selected{% endif %}>YYYY-MM-DD</option>
+                <label for="date_format_id">Date Format</label>
+                <select id="date_format_id" name="date_format_id">
+                    {% for df in date_formats %}
+                    <option value="{{ df.id }}" {% if tenant.date_format.id == df.id %}selected{% endif %}>
+                        {{ df.label }}
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
         </div>
@@ -133,7 +168,7 @@
 
         <div class="form-group" style="margin-top: 1rem;">
             <label class="toggle-label">
-                <input type="checkbox" name="emergency_available" {% if settings.emergency_available %}checked{% endif %}>
+                <input type="checkbox" name="emergency_available" {% if tenant.emergency_available %}checked{% endif %}>
                 <span class="toggle-text">Emergency services available 24/7</span>
             </label>
         </div>
@@ -147,7 +182,7 @@
         </button>
     </div>
 
-    <input type="hidden" name="holidays" id="holidaysInput" value='{{ settings.holidays|safe }}'>
+    <input type="hidden" name="holidays" id="holidaysInput" value='{{ tenant.holidays|safe }}'>
 </form>
 
 <style>
@@ -215,7 +250,7 @@
 
     // Parse existing working hours from settings
     let wh = {};
-    try { wh = JSON.parse('{{ settings.working_hours|escapejs }}' || '{}'); } catch(e) { wh = {}; }
+    try { wh = JSON.parse('{{ tenant.working_hours|escapejs }}' || '{}'); } catch(e) { wh = {}; }
 
     const grid = document.getElementById('workingHoursGrid');
     const hiddenInput = document.getElementById('workingHoursInput');

@@ -1,0 +1,8 @@
+# Ignore all Django templates to prevent mangling of template tags ({% ... %})
+templates/
+**/*.html
+
+# Ignore static assets that might contain template tags or sensitive formatting
+static/
+**/*.css
+**/*.js

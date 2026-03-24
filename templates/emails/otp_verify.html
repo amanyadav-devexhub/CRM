@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+/* ... Common Styles adapted for email clients ... */
+body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, helvetica, arial, sans-serif; background-color: #f1efe8; -webkit-font-smoothing: antialiased; }
+.email-shell { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #d3d1c7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.email-header { background-color: #0C447C; padding: 32px 40px; position: relative; color: #ffffff; }
+.eh-brand { display: flex; align-items: center; margin-bottom: 24px; }
+.eh-mark { width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); text-align: center; line-height: 30px; margin-right: 10px; }
+.eh-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.03em; }
+.eh-title { font-size: 1.5rem; font-weight: 700; line-height: 1.25; margin: 0; }
+.eh-sub { font-size: 0.825rem; color: rgba(255,255,255,0.5); margin-top: 7px; font-weight: 300; }
+.email-body { padding: 36px 40px; }
+.greeting { font-size: 1rem; font-weight: 500; color: #1a1a18; margin-bottom: 16px; }
+p { font-size: 0.9rem; color: #888780; line-height: 1.78; font-weight: 300; margin-bottom: 16px; }
+.otp-box { background-color: #E6F1FB; border: 1px solid #B5D4F4; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0; }
+.otp-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #0C447C; margin-bottom: 12px; }
+.otp-code { font-size: 2.6rem; font-weight: 700; color: #0C447C; letter-spacing: 0.18em; line-height: 1; margin-bottom: 12px; }
+.otp-expiry { font-size: 0.75rem; color: #b4b2a9; font-weight: 300; display: flex; align-items: center; justify-content: center; }
+.otp-expiry-dot { width: 5px; height: 5px; border-radius: 50%; background-color: #EF9F27; margin-right: 6px; }
+.alert-box { border-radius: 11px; padding: 14px 16px; margin: 20px 0; background-color: #FAEEDA; border: 1px solid rgba(239,159,39,0.2); }
+.alert-content p { color: #7a4a00; font-size: 0.8rem; margin: 0; line-height: 1.6; }
+.email-sig { padding: 0 40px 32px; }
+.sig-divider { height: 1px; background-color: #f1efe8; margin-bottom: 22px; }
+.sig-name { font-size: 0.875rem; font-weight: 500; color: #1a1a18; margin-bottom: 2px; }
+.sig-role { font-size: 0.78rem; color: #b4b2a9; font-weight: 300; margin-bottom: 10px; }
+.email-footer { background-color: #f1efe8; padding: 20px 40px; text-align: center; border-top: 1px solid #d3d1c7; }
+.footer-links a { font-size: 0.72rem; color: #b4b2a9; text-decoration: none; margin: 0 8px; }
+.footer-p { font-size: 0.7rem; color: #b4b2a9; line-height: 1.6; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="email-shell">
+  <div class="email-header">
+    <div class="eh-brand">
+      <div class="eh-mark" style="color:#ffffff;">+</div>
+      <span class="eh-name">Arogya</span>
+    </div>
+    <h1 class="eh-title">Verify your identity</h1>
+    <div class="eh-sub">Use the code below to complete your request.</div>
+  </div>
+  <div class="email-body">
+    <p class="greeting">Hi {{ user_name }},</p>
+    <p>We received a request to access your Arogya account. Enter the 6-digit code below to verify it's really you.</p>
+    <div class="otp-box">
+      <div class="otp-label">Your one-time verification code</div>
+      <div class="otp-code">{{ otp_code }}</div>
+      <div class="otp-expiry">
+        <div class="otp-expiry-dot"></div>
+        This code expires in <strong style="color:#854F0B;">&nbsp;15 minutes</strong>
+      </div>
+    </div>
+    <div class="alert-box">
+      <div class="alert-content"><p><strong>Never share this code.</strong> Arogya staff will never ask you for this code. If you didn't request this, please ignore this email or contact support.</p></div>
+    </div>
+    <p>If you didn't make this request, your account is still safe. You can safely ignore this email — the code will expire automatically.</p>
+  </div>
+  <div class="email-sig">
+    <div class="sig-divider"></div>
+    <div class="sig-name">Arogya Security Team</div>
+    <div class="sig-role">Automated security notification</div>
+  </div>
+  <div class="email-footer">
+    <div class="footer-links">
+      <a href="{{ help_url }}">Help Centre</a>
+      <a href="{{ privacy_url }}">Privacy Policy</a>
+      <a href="{{ terms_url }}">Terms of Service</a>
+    </div>
+    <div class="footer-p">
+      © 2025 Arogya Healthcare CRM. All rights reserved.<br>
+      Arogya Technologies Pvt. Ltd., Mumbai, Maharashtra, India.
+    </div>
+  </div>
+</div>
+</body>
+</html>

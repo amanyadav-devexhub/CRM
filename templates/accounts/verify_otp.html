@@ -1,381 +1,903 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <script>
-        // Apply theme early to prevent flash
-        const savedTheme = localStorage.getItem("theme") || "dark";
-        document.documentElement.setAttribute("data-theme", savedTheme);
-    </script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Arogya — Verify Your Email</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:#f8f7f4;color:#1a1a18;overflow:hidden}
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify OTP — HealthCRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <style>
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+:root{
+  --navy:#0C447C;--navy-b:#185FA5;--navy-c:#378ADD;--navy-d:#B5D4F4;--navy-e:#E6F1FB;
+  --teal:#1D9E75;--teal-b:#0F6E56;--teal-c:#5DCAA5;--teal-d:#E1F5EE;
+  --ink:#1a1a18;--ink-b:#3d3d3a;--ink-c:#888780;--ink-d:#b4b2a9;--ink-e:#d3d1c7;--ink-f:#f1efe8;
+  --bg:#f8f7f4;--white:#fff;
+  --amber:#EF9F27;--amber-d:#FAEEDA;
+  --purple:#534AB7;--purple-d:#EEEDFE;
+  --red:#E24B4A;--red-d:#FCEBEB;
+}
 
-        :root {
-            --bg: #0a0e17;
-            --card: #111827;
-            --border: rgba(255, 255, 255, .06);
-            --input-border: rgba(255, 255, 255, 0.1);
-            --input-bg: rgba(255, 255, 255, 0.04);
-            --input-focus-shadow: rgba(59, 130, 246, 0.15);
-            --input-placeholder: rgba(255, 255, 255, 0.25);
-            --error-bg: rgba(239, 68, 68, 0.08);
-            --error-border: rgba(239, 68, 68, 0.2);
-            --text: #f1f5f9;
-            --muted: rgba(241, 245, 249, .5);
-            --accent: #3b82f6;
-            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            --error: #ef4444;
-            --green: #10b981;
-        }
+:root[data-theme="dark"]{
+  --bg:#0a0d14;--white:#141720;
+  --ink:#f1efe8;--ink-b:#d3d1c7;--ink-c:#b4b2a9;--ink-d:#888780;--ink-e:#3d3d3a;--ink-f:#1c1f26;
+  --navy-e:rgba(181,212,244,0.1);--teal-d:rgba(93,202,165,0.1);
+  --amber-d:rgba(239,159,39,0.1);--red-d:rgba(226,75,74,0.1);
+}
+</style>
 
-        :root[data-theme="light"] {
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --border: rgba(0, 0, 0, .08);
-            --input-border: rgba(0, 0, 0, 0.1);
-            --input-bg: rgba(0, 0, 0, 0.04);
-            --input-focus-shadow: rgba(59, 130, 246, 0.15);
-            --input-placeholder: rgba(0, 0, 0, 0.4);
-            --error-bg: rgba(239, 68, 68, 0.08);
-            --error-border: rgba(239, 68, 68, 0.2);
-            --text: #0f172a;
-            --muted: rgba(15, 23, 42, .6);
-        }
+<!-- ── THEME EARLY LOAD ── -->
+<script>
+  (function() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+  })();
+</script>
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
+<style>
+/* ── SHELL ── */
+.shell{display:flex;height:100vh;width:100vw;overflow:hidden}
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: -30%;
-            right: -20%;
-            width: 60vw;
-            height: 60vh;
-            background: radial-gradient(ellipse, rgba(139, 92, 246, .06) 0%, transparent 70%);
-            pointer-events: none;
-        }
+/* ── LEFT PANEL ── */
+.left{
+  width:52%;flex-shrink:0;
+  background:var(--navy);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+  padding:36px 48px 40px;
+}
+.lmesh{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 600px 500px at 110% 5%,rgba(55,138,221,0.38) 0%,transparent 60%),
+    radial-gradient(ellipse 500px 600px at -10% 92%,rgba(29,158,117,0.22) 0%,transparent 55%),
+    radial-gradient(ellipse 350px 350px at 55% 50%,rgba(93,202,165,0.08) 0%,transparent 50%);
+}
+.lgrain{
+  position:absolute;inset:0;opacity:0.03;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:256px
+}
+.fldot{position:absolute;border-radius:50%;opacity:0.06;pointer-events:none}
 
-        .auth-container {
-            width: 100%;
-            max-width: 440px;
-            position: relative;
-            z-index: 1;
-        }
+/* brand */
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:52px;position:relative;z-index:1}
+.bmark{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center}
+.bname{font-family:'Bricolage Grotesque',sans-serif;font-size:1.15rem;font-weight:600;color:#fff;letter-spacing:-0.03em}
 
-        .auth-brand {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
+/* left middle */
+.lmid{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center}
+.lheadline{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(1.7rem,2.6vw,2.5rem);font-weight:700;color:#fff;line-height:1.16;letter-spacing:-0.035em;margin-bottom:14px}
+.lheadline em{color:var(--teal-c);font-style:italic}
+.lsub{font-size:0.875rem;color:rgba(255,255,255,0.48);line-height:1.78;font-weight:300;max-width:340px;margin-bottom:44px}
 
-        .auth-brand a {
-            text-decoration: none;
-            color: var(--text);
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-        }
+/* email envelope illustration */
+.envelope-wrap{
+  position:relative;width:100%;max-width:300px;
+  margin:0 auto 44px;
+}
+.envelope{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:18px;padding:28px 24px 24px;
+  text-align:center;position:relative;
+  animation:floatEnv 5s ease-in-out infinite;
+}
+@keyframes floatEnv{0%,100%{transform:translateY(0) rotate(0.3deg)}50%{transform:translateY(-10px) rotate(-0.2deg)}}
+.env-top{
+  width:100%;height:60px;
+  background:rgba(255,255,255,0.06);
+  border-radius:10px 10px 0 0;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:10px;
+  border:1px solid rgba(255,255,255,0.1);
+  position:relative;overflow:hidden;
+}
+.env-top::before{
+  content:'';position:absolute;
+  left:50%;top:-1px;
+  transform:translateX(-50%);
+  border-left:60px solid transparent;
+  border-right:60px solid transparent;
+  border-top:34px solid rgba(255,255,255,0.1);
+}
+.env-lines{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.env-line{height:6px;border-radius:3px;background:rgba(255,255,255,0.1)}
+.env-addr{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,0.1)}
+.env-at{font-size:0.72rem;color:rgba(255,255,255,0.5);font-weight:300;text-align:left;line-height:1.4;flex:1;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.env-seal{width:24px;height:24px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:sealPulse 2.5s ease-in-out infinite}
+@keyframes sealPulse{0%,100%{box-shadow:0 0 0 0 rgba(93,202,165,0.4)}50%{box-shadow:0 0 0 6px rgba(93,202,165,0)}}
 
-        .auth-brand .logo {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: var(--gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 1.2rem;
-            color: #fff;
-        }
+/* floating badges on envelope */
+.env-badge{
+  position:absolute;
+  background:#fff;border-radius:12px;
+  padding:7px 11px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.2);
+  display:flex;align-items:center;gap:7px;
+  font-size:0.7rem;font-weight:500;color:var(--ink-b);
+  animation:floatBadge 4s ease-in-out infinite;
+  white-space:nowrap;
+}
+.env-badge.b1{top:-14px;right:-16px;animation-delay:0s}
+.env-badge.b2{bottom:-12px;left:-16px;animation-delay:1.5s}
+@keyframes floatBadge{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
-        .auth-brand h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+/* step pills */
+.step-pills{display:flex;gap:8px;flex-wrap:wrap}
+.spill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:100px;padding:7px 14px;
+  font-size:0.78rem;color:rgba(255,255,255,0.55);font-weight:300;
+  transition:all 0.3s;
+}
+.spill.done{background:rgba(93,202,165,0.15);border-color:rgba(93,202,165,0.3);color:var(--teal-c)}
+.spill.active{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);color:#fff}
+.spill-num{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;background:rgba(255,255,255,0.1)}
+.spill.done .spill-num{background:var(--teal)}
+.spill.active .spill-num{background:rgba(255,255,255,0.25)}
 
-        .auth-card {
-            background: var(--card);
-            border-radius: 20px;
-            padding: 2.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
-            text-align: center;
-        }
+/* left bottom */
+.lbottom{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.back-link{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:rgba(255,255,255,0.38);text-decoration:none;transition:color 0.2s;font-weight:300}
+.back-link:hover{color:rgba(255,255,255,0.65)}
 
-        .verify-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
-            background: rgba(59, 130, 246, .1);
-            border: 1px solid rgba(59, 130, 246, .2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.25rem;
-        }
+/* ── RIGHT PANEL ── */
+.right{
+  flex:1;background:var(--white);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 48px;overflow-y:auto;position:relative;
+}
+.right::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 500px 400px at 100% 0%,rgba(230,241,251,0.06) 0%,transparent 55%),
+    radial-gradient(ellipse 400px 350px at 0% 100%,rgba(225,245,238,0.04) 0%,transparent 50%);
+}
+.fwrap{width:100%;max-width:400px;position:relative;z-index:1}
 
-        .verify-icon .material-icons-round {
-            font-size: 2rem;
-            color: var(--accent);
-        }
+/* form icon */
+.ficon{
+  width:54px;height:54px;border-radius:15px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:22px;
+  position:relative;
+}
+.ficon-ring{
+  position:absolute;inset:-5px;border-radius:20px;
+  border:1.5px solid rgba(29,158,117,0.2);
+  animation:iconRing 2.5s ease-in-out infinite;
+}
+@keyframes iconRing{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.06)}}
 
-        .auth-card h2 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: .4rem;
-        }
+/* heading */
+.ftitle{font-family:'Bricolage Grotesque',sans-serif;font-size:1.65rem;font-weight:700;color:var(--ink);letter-spacing:-0.035em;margin-bottom:8px}
+.fsub{font-size:0.875rem;color:var(--ink-c);font-weight:300;line-height:1.7;margin-bottom:6px}
 
-        .auth-card .subtitle {
-            color: var(--muted);
-            font-size: .875rem;
-            margin-bottom: 1.75rem;
-        }
+/* email chip */
+.echip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--navy-e);border:1px solid rgba(12,68,124,0.15);
+  border-radius:100px;padding:5px 13px 5px 8px;
+  font-size:0.78rem;font-weight:500;color:var(--navy);
+  margin-bottom:28px;cursor:pointer;
+  transition:background 0.2s;
+  position:relative;
+}
+.echip:hover{background:var(--navy-d)}
+.echip-dot{width:7px;height:7px;border-radius:50%;background:var(--navy);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.45;transform:scale(0.8)}}
+.echip-edit{font-size:0.68rem;color:var(--navy-b);margin-left:4px;opacity:0.6}
 
-        .auth-card .email-highlight {
-            color: var(--accent);
-            font-weight: 500;
-        }
+/* OTP label */
+.otp-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.otp-lbl{font-size:0.78rem;font-weight:500;color:var(--ink-b);letter-spacing:0.01em}
+.otp-hint{font-size:0.72rem;color:var(--ink-d);font-weight:300}
 
-        .otp-inputs {
-            display: flex;
-            justify-content: center;
-            gap: .75rem;
-            margin-bottom: 1.5rem;
-        }
+/* OTP boxes */
+.otp-row{display:flex;gap:10px;justify-content:space-between;margin-bottom:8px}
+.obox{
+  width:56px;height:64px;
+  text-align:center;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:1.5rem;font-weight:700;
+  color:var(--ink);
+  border:1.5px solid var(--ink-e);
+  border-radius:14px;
+  background:var(--white);outline:none;
+  caret-color:var(--navy-c);
+  transition:border-color 0.2s,box-shadow 0.2s,transform 0.18s,background 0.2s;
+  padding:0;
+}
+.obox:focus{
+  border-color:var(--navy);
+  box-shadow:0 0 0 3.5px rgba(12,68,124,0.09);
+  transform:translateY(-3px);
+}
+.obox.filled{
+  border-color:var(--navy);
+  background:var(--navy-e);
+  color:var(--ink);
+}
+.obox.error-state{
+  border-color:var(--red)!important;
+  background:var(--red-d)!important;
+  color:var(--red)!important;
+  box-shadow:0 0 0 3px rgba(226,75,74,0.08)!important;
+  animation:shake 0.38s ease;
+}
+.obox.success-state{
+  border-color:var(--teal)!important;
+  background:var(--teal-d)!important;
+  color:var(--teal-b)!important;
+  transform:translateY(-3px);
+}
+@keyframes shake{0%,100%{transform:translateX(0) translateY(-3px)}25%{transform:translateX(-5px) translateY(-3px)}75%{transform:translateX(5px) translateY(-3px)}}
 
-        .otp-inputs input {
-            width: 48px;
-            height: 56px;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: inherit;
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            border-radius: 12px;
-            color: var(--text);
-            transition: border-color .2s, box-shadow .2s;
-        }
+/* error msg */
+.ferr{font-size:0.72rem;color:var(--red);margin-top:4px;display:none;align-items:center;gap:5px}
+.ferr.show{display:flex}
 
-        .otp-inputs input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--input-focus-shadow);
-        }
+/* resend section */
+.resend-wrap{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:18px 0 24px;
+  padding:12px 14px;
+  background:var(--ink-f);border-radius:11px;
+}
+.resend-left{display:flex;align-items:center;gap:8px}
+.resend-timer{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--white);border:1.5px solid var(--ink-e);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.72rem;font-weight:600;color:var(--ink-b);
+  flex-shrink:0;transition:border-color 0.3s;
+  position:relative;
+}
+.timer-ring{
+  position:absolute;inset:-2px;border-radius:50%;
+}
+.resend-txt{font-size:0.78rem;color:var(--ink-c);font-weight:300;line-height:1.4}
+.resend-txt strong{color:var(--ink-b);font-weight:500}
+.resend-btn{
+  font-size:0.78rem;font-weight:500;color:var(--navy);
+  background:none;border:none;cursor:pointer;padding:6px 12px;
+  border-radius:7px;transition:background 0.2s;white-space:nowrap;
+}
+.resend-btn:disabled{color:var(--ink-d);cursor:default}
+.resend-btn:not(:disabled):hover{background:var(--navy-e)}
 
-        /* Hidden full OTP input for form submission */
-        .otp-hidden {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
+/* submit */
+.sbtn{
+  width:100%;height:48px;border-radius:12px;
+  background:var(--navy);color:#fff;
+  font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:500;
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 2px 0 rgba(0,0,0,0.12),0 6px 20px rgba(12,68,124,0.2);
+  transition:all 0.22s;margin-bottom:18px;
+  position:relative;overflow:hidden;
+}
+.sbtn:hover:not(:disabled){background:var(--navy-b);transform:translateY(-1px);box-shadow:0 4px 0 rgba(0,0,0,0.1),0 12px 32px rgba(12,68,124,0.28)}
+.sbtn:active:not(:disabled){transform:translateY(0)}
+.sbtn:disabled{opacity:0.55;cursor:not-allowed;transform:none}
+.sbtn .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.25);transform:scale(0);animation:rpl 0.5s ease-out;pointer-events:none}
+@keyframes rpl{to{transform:scale(4);opacity:0}}
 
-        .error-list {
-            background: var(--error-bg);
-            border: 1px solid var(--error-border);
-            border-radius: 10px;
-            padding: .75rem 1rem;
-            margin-bottom: 1.25rem;
-            list-style: none;
-            text-align: left;
-        }
+/* spinner */
+.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spinr 0.7s linear infinite;display:none}
+@keyframes spinr{to{transform:rotate(360deg)}}
 
-        .error-list li {
-            font-size: .85rem;
-            color: var(--error);
-            padding: .15rem 0;
-        }
+/* helper */
+.helper{text-align:center;font-size:0.78rem;color:var(--ink-d);font-weight:300}
+.helper a{color:var(--navy);font-weight:500;text-decoration:none}
+.helper a:hover{text-decoration:underline}
 
-        .btn-submit {
-            width: 100%;
-            padding: .85rem;
-            border: none;
-            border-radius: 12px;
-            background: var(--gradient);
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform .2s, box-shadow .2s;
-        }
+/* attempts indicator */
+.attempts-row{display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:16px}
+.attempt-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-e);transition:all 0.3s}
+.attempt-dot.used{background:var(--red)}
+.attempt-dot.active{background:var(--amber)}
+.attempts-txt{font-size:0.7rem;color:var(--ink-d);font-weight:300}
 
-        .btn-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
-        }
+/* success panel */
+.success-panel{display:none;text-align:center;padding:8px 0}
+.sring{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--teal-d);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;
+  position:relative;
+}
+.sring::before{content:'';position:absolute;inset:-7px;border-radius:50%;border:2px solid rgba(93,202,165,0.25);animation:rngp 2s ease-in-out infinite}
+.sring::after{content:'';position:absolute;inset:-14px;border-radius:50%;border:1px solid rgba(93,202,165,0.12);animation:rngp 2s 0.5s ease-in-out infinite}
+@keyframes rngp{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:0.4}}
+.success-panel h3{font-family:'Bricolage Grotesque',sans-serif;font-size:1.55rem;font-weight:700;color:var(--ink);letter-spacing:-0.03em;margin-bottom:9px}
+.success-panel p{font-size:0.875rem;color:var(--ink-c);font-weight:300;line-height:1.7;margin-bottom:28px}
+.sdash-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--navy);color:#fff;
+  padding:13px 32px;border-radius:12px;
+  font-size:0.9rem;font-weight:500;text-decoration:none;
+  box-shadow:0 2px 0 rgba(0,0,0,0.12),0 6px 20px rgba(12,68,124,0.2);
+  transition:all 0.22s;width:100%;margin-bottom:12px;
+}
+.sdash-btn:hover{background:var(--navy-b);transform:translateY(-1px);box-shadow:0 4px 0 rgba(0,0,0,0.1),0 12px 32px rgba(12,68,124,0.28)}
 
-        .resend-row {
-            margin-top: 1.5rem;
-            font-size: .85rem;
-            color: var(--muted);
-        }
+/* progress ring SVG */
+.progress-svg{position:absolute;inset:-2px;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:var(--ink-e);stroke-width:2}
+.ring-fill{fill:none;stroke:var(--navy);stroke-width:2;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
 
-        .resend-row form {
-            display: inline;
-        }
+/* tooltip */
+.tooltip-wrap{position:relative;display:inline-flex}
+.tooltip{
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;font-size:0.7rem;font-weight:400;
+  padding:5px 10px;border-radius:7px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;
+}
+.tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--ink)}
+.tooltip-wrap:hover .tooltip{opacity:1}
 
-        .resend-btn {
-            background: none;
-            border: none;
-            color: var(--accent);
-            cursor: pointer;
-            font-size: .85rem;
-            font-weight: 500;
-            font-family: inherit;
-        }
+/* toast */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  background:var(--ink);color:#fff;
+  padding:12px 18px;border-radius:12px;
+  font-size:0.825rem;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+  display:flex;align-items:center;gap:10px;
+  transform:translateY(80px);opacity:0;
+  transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
-        .resend-btn:hover {
-            text-decoration: underline;
-        }
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blobP{0%,100%{transform:scale(1) translate(0,0)}40%{transform:scale(1.1) translate(12px,-10px)}70%{transform:scale(0.92) translate(-10px,12px)}}
+.fuanim{animation:fadeUp 0.4s ease both}
 
-        .timer {
-            color: var(--green);
-            font-weight: 600;
-        }
-    </style>
+/* Theme Toggle Button */
+.tbtn {
+  position: fixed; top: 20px; right: 20px; z-index: 999;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--white); border: 1px solid var(--ink-e);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+}
+.tbtn:hover { background: var(-- ink-f); transform: scale(1.05); }
+
+/* responsive */
+@media(max-width:860px){
+  .left{display:none}
+  .right{padding:32px 24px}
+}
+@media(max-width:440px){
+  .obox{width:44px;height:56px;font-size:1.3rem;border-radius:11px}
+  .otp-row{gap:7px}
+}
+</style>
 </head>
-
 <body>
-    <div class="auth-container">
-        <div class="auth-brand">
-            <a href="/">
-                <div class="logo">H</div>
-                <h1>HealthCRM</h1>
-            </a>
-        </div>
 
-        <div class="auth-card">
-            <div class="verify-icon">
-                <span class="material-icons-round">mark_email_read</span>
-            </div>
-            <h2>Verify Your Email</h2>
-            <p class="subtitle">
-                We sent a 6-digit code to <span class="email-highlight">{{ email }}</span>
-            </p>
+<div class="shell">
 
-            {% if errors %}
-            <ul class="error-list">
-                {% for err in errors %}
-                <li>{{ err }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
+  <!-- ── LEFT PANEL ── -->
+  <div class="left">
+    <div class="lmesh"></div>
+    <div class="lgrain"></div>
+    <div class="fldot" style="width:240px;height:240px;background:#fff;top:-80px;right:-80px;animation:blobP 9s ease infinite"></div>
+  <div class="fldot" style="width:160px;height:160px;background:var(--teal-c);bottom:50px;left:-55px;animation:blobP 12s 2s ease infinite"></div>
 
-            <form method="post" action="/verify-otp/" id="otpForm">
-                {% csrf_token %}
-                <input type="hidden" name="otp" id="otpHidden" class="otp-hidden">
+  <!-- Theme Toggle -->
+  <button class="tbtn" id="themeBtn" title="Toggle Theme">
+    <svg id="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    <svg id="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
 
-                <div class="otp-inputs">
-                    <input type="text" maxlength="1" class="otp-digit" autofocus>
-                    <input type="text" maxlength="1" class="otp-digit">
-                    <input type="text" maxlength="1" class="otp-digit">
-                    <input type="text" maxlength="1" class="otp-digit">
-                    <input type="text" maxlength="1" class="otp-digit">
-                    <input type="text" maxlength="1" class="otp-digit">
-                </div>
-
-                <button type="submit" class="btn-submit">Verify & Continue →</button>
-            </form>
-
-            <div class="resend-row">
-                Didn't receive the code?
-                <form method="post" action="/resend-otp/">
-                    {% csrf_token %}
-                    <button type="submit" class="resend-btn">Resend Code</button>
-                </form>
-            </div>
-        </div>
+    <!-- Brand -->
+    <div class="brand">
+      <div class="bmark">
+        <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+          <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="9" cy="9" r="2.4" fill="#5DCAA5"/>
+        </svg>
+      </div>
+      <span class="bname">Arogya</span>
     </div>
 
-    <script>
-        // OTP digit auto-advance and combine
-        const digits = document.querySelectorAll('.otp-digit');
-        const hidden = document.getElementById('otpHidden');
-        const form = document.getElementById('otpForm');
+    <!-- Middle content -->
+    <div class="lmid">
+      <div class="lheadline">One last step to <em>activate</em><br>your account</div>
+      <div class="lsub">We sent a 6-digit verification code to your email. Enter it to confirm your identity and unlock your Arogya workspace.</div>
 
-        digits.forEach((input, idx) => {
-            input.addEventListener('input', (e) => {
-                const v = e.target.value;
-                if (v && idx < digits.length - 1) digits[idx + 1].focus();
-                combineOTP();
-            });
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace' && !e.target.value && idx > 0) {
-                    digits[idx - 1].focus();
-                }
-            });
-            input.addEventListener('paste', (e) => {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text').trim();
-                if (/^\d{6}$/.test(text)) {
-                    digits.forEach((d, i) => { d.value = text[i]; });
-                    combineOTP();
-                    digits[5].focus();
-                }
-            });
-        });
+      <!-- Envelope illustration -->
+      <div class="envelope-wrap">
+        <div class="envelope">
+          <!-- floating badges -->
+          <div class="env-badge b1">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 2s ease infinite"></div>
+            <span style="color:var(--ink-b)">Code sent!</span>
+          </div>
+          <div class="env-badge b2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--amber)" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="var(--amber)" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span style="color:var(--ink-b)">Expires in 15 min</span>
+          </div>
 
-        function combineOTP() {
-            hidden.value = Array.from(digits).map(d => d.value).join('');
-        }
-    </script>
+          <!-- envelope top -->
+          <div class="env-top">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="4" width="20" height="16" rx="2" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+              <path d="m2 7 10 7 10-7" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
 
-    
+          <!-- lines -->
+          <div class="env-lines">
+            <div class="env-line" style="width:70%"></div>
+            <div class="env-line" style="width:50%"></div>
+          </div>
 
+          <!-- address row -->
+          <div class="env-addr">
+            <div class="env-at" id="envEmail">{{ email }}</div>
+            <div class="env-seal">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12l5 5L19 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Theme Toggle -->
-    <button id="themeToggle" title="Toggle Theme"
-        style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #111827); color: var(--text, #f1f5f9); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-        <span class="material-icons-round" id="themeIcon" style="font-size: 1.2rem;">light_mode</span>
-    </button>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const toggleBtn = document.getElementById("themeToggle");
-            const toggleIcon = document.getElementById("themeIcon");
-            if (toggleBtn && toggleIcon) {
-                if (document.documentElement.getAttribute("data-theme") === "light") {
-                    toggleIcon.textContent = "dark_mode";
-                } else {
-                    toggleIcon.textContent = "light_mode";
-                }
-                toggleBtn.addEventListener("click", () => {
-                    let current = document.documentElement.getAttribute("data-theme");
-                    let newTheme = current === "light" ? "dark" : "light";
-                    document.documentElement.setAttribute("data-theme", newTheme);
-                    localStorage.setItem("theme", newTheme);
-                    toggleIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
-                    window.dispatchEvent(new Event("themeChanged"));
-                });
-            }
-        });
-    </script>
+      <!-- Step pills -->
+      <div class="step-pills">
+        <div class="spill done">
+          <div class="spill-num">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          Create account
+        </div>
+        <div class="spill active">
+          <div class="spill-num" style="color:#fff">2</div>
+          Verify email
+        </div>
+        <div class="spill">
+          <div class="spill-num">3</div>
+          Go to dashboard
+        </div>
+      </div>
+    </div>
 
+    <!-- Bottom -->
+    <div class="lbottom">
+      <a href="/login/" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13 8H3M8 3L3 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to sign in
+      </a>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.18)">© 2025 Arogya</div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right">
+    <div class="fwrap">
+
+      <!-- ── VERIFY PANEL ── -->
+      <div id="verifyPanel" class="fuanim">
+
+        <!-- Icon -->
+        <div class="ficon" style="background:var(--teal-d)">
+          <div class="ficon-ring"></div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="4" width="20" height="16" rx="2" stroke="var(--teal-b)" stroke-width="1.5"/>
+            <path d="m2 7 10 7 10-7" stroke="var(--teal-b)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div class="ftitle">Verify your email</div>
+        <p class="fsub">We sent a 6-digit code to</p>
+
+        <!-- Email chip -->
+        <div class="echip" id="emailChip" onclick="changeEmail()">
+          <div class="echip-dot"></div>
+          <span id="chipEmail">{{ email }}</span>
+          <span class="echip-edit">· change</span>
+        </div>
+
+        <!-- OTP label row -->
+        <div class="otp-label-row">
+          <span class="otp-lbl">Enter verification code</span>
+          <span class="otp-hint" id="otpHint">6 digits</span>
+        </div>
+
+        <!-- OTP inputs -->
+        <div class="otp-row" id="otpRow">
+          <input class="obox" id="o0" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"/>
+          <input class="obox" id="o1" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*"/>
+          <input class="obox" id="o2" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*"/>
+          <input class="obox" id="o3" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*"/>
+          <input class="obox" id="o4" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*"/>
+          <input class="obox" id="o5" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*"/>
+        </div>
+
+        <!-- Error -->
+        <div class="ferr" id="otpErr">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--red)" stroke-width="1.5"/><path d="M12 8v4M12 16h.01" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span id="otpErrMsg">Please enter the complete 6-digit code.</span>
+        </div>
+
+        <!-- Attempts -->
+        <div class="attempts-row" id="attemptsRow" style="margin-top:10px">
+          <div class="attempt-dot active" id="ad0"></div>
+          <div class="attempt-dot" id="ad1"></div>
+          <div class="attempt-dot" id="ad2"></div>
+          <span class="attempts-txt" id="attemptsTxt">3 attempts remaining</span>
+        </div>
+
+        <!-- Resend -->
+        <div class="resend-wrap">
+          <div class="resend-left">
+            <div class="resend-timer" id="resendTimer">
+              <svg class="progress-svg" viewBox="0 0 38 38">
+                <circle class="ring-track" cx="19" cy="19" r="17"/>
+                <circle class="ring-fill" id="ringFill" cx="19" cy="19" r="17" stroke-dasharray="106.8" stroke-dashoffset="0"/>
+              </svg>
+              <span id="countdownNum">30</span>
+            </div>
+            <div class="resend-txt">
+              <div id="resendTopText" style="margin-bottom:1px">Didn't receive the code?</div>
+              <div id="resendSubText" style="font-size:0.7rem;color:var(--ink-d)">Resend available in <strong id="cdSec">30</strong>s</div>
+            </div>
+          </div>
+          <div class="tooltip-wrap">
+            <button class="resend-btn" id="resendBtn" disabled onclick="resendOtp()">Resend code</button>
+            <div class="tooltip" id="resendTooltip">Wait for countdown</div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button class="sbtn" id="verifyBtn" onclick="verifyOtp()">
+          <span id="verifyBtnTxt">Verify email address</span>
+          <div class="spin" id="verifySpin"></div>
+          <svg id="verifyArrow" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <div class="helper">
+          Wrong account? <a href="/register/" onclick="return confirm('This will cancel registration.')">Start over →</a>
+        </div>
+
+      </div>
+
+      <!-- ── SUCCESS PANEL ── -->
+      <div class="success-panel" id="successPanel">
+        <div class="sring">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12l5 5L19 7" stroke="var(--teal-b)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>Email verified!</h3>
+        <p>Your Arogya account is fully activated. Welcome aboard — your dashboard is ready.</p>
+        <a href="/onboarding/" class="sdash-btn">
+          Go to dashboard
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div class="helper">
+          <a href="/onboarding/" style="color:var(--ink-d)">Set up your profile first →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toastDot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+/* ── CONFIG ── */
+let attemptsLeft = 3;
+let countdownTimer = null;
+let countdownSecs = 30;
+const CIRCUMFERENCE = 2 * Math.PI * 17; // 106.8
+
+/* ── OTP INPUTS SETUP ── */
+const boxes = [0,1,2,3,4,5].map(i => document.getElementById('o'+i));
+
+boxes.forEach((box, i) => {
+  box.addEventListener('input', e => {
+    const val = e.target.value.replace(/\D/g,'');
+    box.value = val.slice(-1);
+    box.classList.toggle('filled', !!box.value);
+    clearErrors();
+    if(box.value && i < 5) boxes[i+1].focus();
+    autoSubmit();
+  });
+
+  box.addEventListener('keydown', e => {
+    if(e.key === 'Backspace') {
+      if(!box.value && i > 0) {
+        boxes[i-1].value = '';
+        boxes[i-1].classList.remove('filled');
+        boxes[i-1].focus();
+      } else {
+        box.value = '';
+        box.classList.remove('filled');
+      }
+      clearErrors();
+    }
+    if(e.key === 'ArrowLeft' && i > 0) boxes[i-1].focus();
+    if(e.key === 'ArrowRight' && i < 5) boxes[i+1].focus();
+    if(e.key === 'Enter') verifyOtp();
+  });
+
+  box.addEventListener('paste', e => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+    pasted.split('').forEach((ch, j) => {
+      if(boxes[i+j]) { boxes[i+j].value = ch; boxes[i+j].classList.add('filled'); }
+    });
+    const next = Math.min(i + pasted.length, 5);
+    boxes[next].focus();
+    clearErrors();
+    autoSubmit();
+  });
+
+  box.addEventListener('focus', () => {
+    box.select();
+  });
+});
+
+/* auto-submit when all 6 filled */
+function autoSubmit() {
+  const code = getOtpValue();
+  if(code.length === 6) {
+    setTimeout(verifyOtp, 280);
+  }
+}
+
+function getOtpValue() {
+  return boxes.map(b => b.value).join('');
+}
+
+function clearErrors() {
+  document.getElementById('otpErr').classList.remove('show');
+  boxes.forEach(b => b.classList.remove('error-state'));
+}
+
+/* ── VERIFY ── */
+async function verifyOtp() {
+  const code = getOtpValue();
+  clearErrors();
+
+  if(code.length < 6) {
+    showErr('Please enter the complete 6-digit code.');
+    boxes.forEach(b => { if(!b.value) b.classList.add('error-state'); });
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const response = await fetch('/verify-otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: new URLSearchParams({ 'otp': code })
+    });
+
+    if (response.redirected) {
+        // Successful verification will redirect to /onboarding/
+        boxes.forEach(b => b.classList.add('success-state'));
+        setTimeout(() => {
+          setLoading(false);
+          showSuccess();
+        }, 500);
+        return;
+    }
+
+    const data = await response.text();
+    // If not redirected, it probably returned errors
+    setLoading(false);
+    attemptsLeft--;
+    updateAttempts();
+    boxes.forEach(b => b.classList.add('error-state'));
+
+    if(attemptsLeft <= 0) {
+      showErr('Too many incorrect attempts. Please request a new code.');
+      lockInputs();
+      document.getElementById('resendBtn').disabled = false;
+      if(countdownTimer) clearInterval(countdownTimer);
+    } else {
+      showErr('Incorrect code. Please try again.');
+      setTimeout(() => {
+        boxes.forEach(b => { b.value=''; b.classList.remove('filled','error-state'); });
+        boxes[0].focus();
+      }, 900);
+    }
+    showToast('Incorrect code — try again', 'red');
+
+  } catch (err) {
+    setLoading(false);
+    showErr('An error occurred. Please try again.');
+  }
+}
+
+/* ── SUCCESS ── */
+function showSuccess() {
+  if(countdownTimer) clearInterval(countdownTimer);
+  document.getElementById('verifyPanel').style.animation = 'none';
+  document.getElementById('verifyPanel').style.opacity = '0';
+  document.getElementById('verifyPanel').style.transform = 'translateY(-12px)';
+  document.getElementById('verifyPanel').style.transition = 'all 0.3s ease';
+
+  setTimeout(() => {
+    document.getElementById('verifyPanel').style.display = 'none';
+    const sp = document.getElementById('successPanel');
+    sp.style.display = 'block';
+    sp.style.animation = 'fadeUp 0.45s ease both';
+
+    // update left panel steps
+    document.querySelectorAll('.spill').forEach((p,i) => {
+      p.classList.remove('active','done');
+      if(i < 2) p.classList.add('done');
+      if(i === 2) p.classList.add('active');
+    });
+
+    showToast('Email verified! Welcome to Arogya 🎉', 'teal');
+  }, 320);
+}
+
+/* ── ATTEMPTS UI ── */
+function updateAttempts() {
+  const dots = [0,1,2].map(i => document.getElementById('ad'+i));
+  const used = 3 - attemptsLeft;
+  dots.forEach((d,i) => {
+    d.className = 'attempt-dot';
+    if(i < used) d.classList.add('used');
+    else if(i === used) d.classList.add('active');
+  });
+  const txt = document.getElementById('attemptsTxt');
+  txt.textContent = attemptsLeft > 0 ? `${attemptsLeft} attempt${attemptsLeft>1?'s':''} remaining` : 'No attempts left';
+}
+
+function lockInputs() {
+  boxes.forEach(b => { b.disabled = true; b.classList.add('error-state'); });
+  document.getElementById('verifyBtn').disabled = true;
+}
+
+/* ── COUNTDOWN ── */
+function startCountdown(secs = 30) {
+  countdownSecs = secs;
+  const numEl = document.getElementById('countdownNum');
+  const cdSec = document.getElementById('cdSec');
+  const fill = document.getElementById('ringFill');
+  const btn = document.getElementById('resendBtn');
+  const subTxt = document.getElementById('resendSubText');
+
+  btn.disabled = true;
+  if(countdownTimer) clearInterval(countdownTimer);
+
+  countdownTimer = setInterval(() => {
+    countdownSecs--;
+    numEl.textContent = countdownSecs;
+    cdSec.textContent = countdownSecs;
+
+    const progress = countdownSecs / secs;
+    fill.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+
+    if(countdownSecs <= 0) {
+      clearInterval(countdownTimer);
+      btn.disabled = false;
+      numEl.textContent = '↺';
+      fill.style.strokeDashoffset = CIRCUMFERENCE;
+    }
+  }, 1000);
+}
+
+/* ── RESEND ── */
+async function resendOtp() {
+  try {
+    const response = await fetch('/resend-otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    });
+
+    if (response.ok) {
+      boxes.forEach(b => { b.value=''; b.classList.remove('filled','error-state','success-state'); b.disabled=false; });
+      clearErrors();
+      attemptsLeft = 3;
+      updateAttempts();
+      document.getElementById('verifyBtn').disabled = false;
+      startCountdown(30);
+      showToast('New code sent!', 'teal');
+      boxes[0].focus();
+    }
+  } catch (err) {
+    showToast('Failed to resend code', 'red');
+  }
+}
+
+function changeEmail() {
+  window.location.href = '/register/';
+}
+
+/* ── LOADING ── */
+function setLoading(on) {
+  const btn = document.getElementById('verifyBtn');
+  document.getElementById('verifySpin').style.display = on ? 'block' : 'none';
+  document.getElementById('verifyArrow').style.display = on ? 'none' : '';
+  document.getElementById('verifyBtnTxt').textContent = on ? 'Verifying…' : 'Verify email address';
+  btn.disabled = on;
+}
+
+function showErr(msg) {
+  const err = document.getElementById('otpErr');
+  document.getElementById('otpErrMsg').textContent = msg;
+  err.classList.add('show');
+}
+
+/* ── TOAST ── */
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastDot').style.background = type === 'teal' ? 'var(--teal-c)' : 'var(--red)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ── THEME SWITCHER ── */
+function initTheme() {
+  const btn = document.getElementById('themeBtn');
+  const sun = document.getElementById('sun');
+  const moon = document.getElementById('moon');
+  
+  function updateUI(theme) {
+    if (theme === 'dark') {
+      sun.style.display = 'none';
+      moon.style.display = 'block';
+    } else {
+      sun.style.display = 'block';
+      moon.style.display = 'none';
+    }
+  }
+  
+  let current = document.documentElement.getAttribute('data-theme') || 'light';
+  updateUI(current);
+  
+  btn.onclick = () => {
+    current = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', current);
+    localStorage.setItem('theme', current);
+    updateUI(current);
+  };
+}
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  document.getElementById('ringFill').style.strokeDasharray = CIRCUMFERENCE;
+  document.getElementById('ringFill').style.strokeDashoffset = 0;
+  startCountdown(30);
+  setTimeout(() => boxes[0].focus(), 200);
+});
+</script>
 </body>
-
 </html>

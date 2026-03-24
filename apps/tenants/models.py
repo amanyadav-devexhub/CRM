@@ -82,24 +82,23 @@ class Category(models.Model):
 
 
 class Tenant(models.Model):
-    CATEGORY_CHOICES = [
-        ('CLINIC', 'Clinic'),
-        ('PHARMACY', 'Pharmacy'),
-        ('HOSPITAL', 'Hospital'),
-        ('LAB', 'Lab'),
-    ]
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='CLINIC')
-    category_obj = models.ForeignKey(
+    category = models.ForeignKey(
         'tenants.Category',
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='tenants',
     )
     subdomain = models.CharField(max_length=100, unique=True)
-    email = models.EmailField()
+    
+    # Phone & Localization
+    country = models.ForeignKey(
+        "core.Country",
+        on_delete=models.PROTECT,
+        null=True, blank=True,
+        related_name="tenants"
+    )
     phone = models.CharField(max_length=15)
 
     # Link to django_tenants Client (schema holder)
@@ -112,6 +111,23 @@ class Tenant(models.Model):
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # ── Branding & Contact ──
+    logo = models.ImageField(upload_to="tenant_logos/", blank=True, null=True)
+    address = models.TextField(blank=True)
+    gst_number = models.CharField(max_length=20, blank=True)
+    registration_number = models.CharField(max_length=50, blank=True)
+
+    # ── Localization ──
+    timezone = models.ForeignKey("core.Timezone", on_delete=models.SET_NULL, null=True, blank=True, related_name="tenants")
+    currency = models.ForeignKey("core.Currency", on_delete=models.SET_NULL, null=True, blank=True, related_name="tenants")
+    language = models.ForeignKey("core.Language", on_delete=models.SET_NULL, null=True, blank=True, related_name="tenants")
+    date_format = models.ForeignKey("core.DateFormat", on_delete=models.SET_NULL, null=True, blank=True, related_name="tenants")
+
+    # ── Working Hours ──
+    working_hours = models.JSONField(default=dict, blank=True)
+    holidays = models.JSONField(default=list, blank=True)
+    emergency_available = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -142,49 +158,7 @@ class CategoryRoleTemplate(models.Model):
         return f"{self.name} ({self.category.name})"
 
 
-# ================================
-# CLINIC SETTINGS (Org Configuration)
-# ================================
 
-class ClinicSettings(models.Model):
-    """Per-tenant clinic configuration: branding, localization, working hours."""
-    tenant = models.OneToOneField(
-        "tenants.Tenant",
-        on_delete=models.CASCADE,
-        related_name="clinic_settings",
-    )
-
-    # ── Basic Info ──
-    clinic_name = models.CharField(max_length=255, blank=True)
-    logo = models.ImageField(upload_to="clinic_logos/", blank=True, null=True)
-    address = models.TextField(blank=True)
-    gst_number = models.CharField(max_length=20, blank=True)
-    registration_number = models.CharField(max_length=50, blank=True)
-    contact_phone = models.CharField(max_length=20, blank=True)
-    contact_email = models.EmailField(blank=True)
-
-    # ── Localization ──
-    timezone = models.CharField(max_length=50, default="Asia/Kolkata")
-    currency = models.CharField(max_length=10, default="INR")
-    language = models.CharField(max_length=10, default="en")
-    date_format = models.CharField(max_length=20, default="DD/MM/YYYY")
-
-    # ── Working Hours ──
-    # JSON example: {"mon": {"open": "09:00", "close": "18:00"}, "tue": {...}, ...}
-    working_hours = models.JSONField(default=dict, blank=True)
-    # JSON example: ["2026-01-26", "2026-08-15"]
-    holidays = models.JSONField(default=list, blank=True)
-    emergency_available = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Clinic Settings"
-        verbose_name_plural = "Clinic Settings"
-
-    def __str__(self):
-        return f"Settings for {self.tenant.name}"
 
 
 # ================================

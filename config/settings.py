@@ -51,6 +51,7 @@ SHARED_APPS = [
     "apps.accounts",
     "apps.core",
     "apps.inventory",
+    "apps.notifications",
 ]
 
 TENANT_APPS = [
@@ -68,7 +69,6 @@ TENANT_APPS = [
     "apps.pharmacy",
     "apps.analytics",
     "apps.ai",
-    "apps.notifications",
     "apps.utils",
     "apps.hospitals",
     "apps.inventory",

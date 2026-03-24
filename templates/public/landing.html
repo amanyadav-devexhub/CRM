@@ -1,1177 +1,1925 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <script>
-        // Apply theme early to prevent flash
-        const savedTheme = localStorage.getItem("theme") || "dark";
-        document.documentElement.setAttribute("data-theme", savedTheme);
-    </script>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="HealthCRM — Cloud-based Healthcare CRM for Clinics, Hospitals & Pharmacies">
-    <title>HealthCRM — Modern Healthcare Management Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arogyra — Smart Healthcare CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@300;400;500&display=swap"
+        rel="stylesheet" />
     <style>
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
+        * {
             box-sizing: border-box;
-        }
-
-        :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #1a2233;
-            --bg-card-hover: #1f2a3f;
-            --text-primary: #f1f5f9;
-            --text-secondary: rgba(241, 245, 249, .6);
-            --text-muted: rgba(241, 245, 249, .35);
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-green: #10b981;
-            --accent-orange: #f59e0b;
-            --accent-pink: #ec4899;
-            --accent-cyan: #06b6d4;
-            --gradient-hero: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            --gradient-green: linear-gradient(135deg, #10b981, #059669);
-            --gradient-blue: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            --gradient-purple: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            --border-subtle: rgba(255, 255, 255, .06);
-            --nav-bg: rgba(10, 14, 23, 0.85);
-            --btn-border: rgba(255, 255, 255, 0.12);
-            --btn-secondary-bg: rgba(255, 255, 255, .05);
-            --btn-secondary-bg-hover: rgba(255, 255, 255, .08);
-            --btn-secondary-border: rgba(255, 255, 255, .1);
-            --btn-secondary-border-hover: rgba(255, 255, 255, .2);
-            --btn-login-hover-bg: rgba(255, 255, 255, .04);
-            --btn-login-hover-border: rgba(255, 255, 255, .25);
-            --btn-login-hover-color: #fff;
-            --card-inner-bg: rgba(255, 255, 255, .03);
-            --hero-stat-color: #fff;
-            --glow-blue: rgba(59, 130, 246, .08);
-            --glow-purple: rgba(139, 92, 246, .06);
-            --badge-bg: rgba(59, 130, 246, .1);
-            --badge-border: rgba(59, 130, 246, .2);
-            --nav-hover-bg: rgba(255, 255, 255, .04);
-            --radius: 16px;
-        }
-
-        :root[data-theme="light"] {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-card: #ffffff;
-            --bg-card-hover: #f1f5f9;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --border-subtle: rgba(0, 0, 0, .08);
-            --nav-bg: rgba(255, 255, 255, 0.92);
-            --btn-border: rgba(0, 0, 0, 0.12);
-            --btn-secondary-bg: rgba(0, 0, 0, .04);
-            --btn-secondary-bg-hover: rgba(0, 0, 0, .08);
-            --btn-secondary-border: rgba(0, 0, 0, .1);
-            --btn-secondary-border-hover: rgba(0, 0, 0, .2);
-            --btn-login-hover-bg: rgba(0, 0, 0, .04);
-            --btn-login-hover-border: rgba(0, 0, 0, .25);
-            --btn-login-hover-color: #0f172a;
-            --card-inner-bg: rgba(0, 0, 0, .02);
-            --hero-stat-color: #0f172a;
-            --glow-blue: rgba(59, 130, 246, .04);
-            --glow-purple: rgba(139, 92, 246, .03);
-            --badge-bg: rgba(59, 130, 246, .08);
-            --badge-border: rgba(59, 130, 246, .15);
-            --nav-hover-bg: rgba(0, 0, 0, .04);
+            margin: 0;
+            padding: 0
         }
 
         html {
-            scroll-behavior: smooth;
+            scroll-behavior: smooth
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased
         }
 
-        /* ── Background Glow ── */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -40%;
-            left: -20%;
-            width: 80vw;
-            height: 80vh;
-            background: radial-gradient(ellipse, var(--glow-blue) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
+        :root {
+            --navy: #0C447C;
+            --navy-b: #185FA5;
+            --navy-c: #378ADD;
+            --navy-d: #B5D4F4;
+            --navy-e: #E6F1FB;
+            --teal: #1D9E75;
+            --teal-b: #0F6E56;
+            --teal-c: #5DCAA5;
+            --teal-d: #E1F5EE;
+            --ink: #1a1a18;
+            --ink-b: #3d3d3a;
+            --ink-c: #888780;
+            --ink-d: #b4b2a9;
+            --ink-e: #d3d1c7;
+            --ink-f: #f1efe8;
+            --white: #fff;
+            --bg: #f8f7f4;
+            --amber: #EF9F27;
+            --amber-d: #FAEEDA;
+            --purple-d: #EEEDFE;
+            --nav-glass: rgba(255, 255, 255, 0.85);
+            --nav-border: rgba(0, 0, 0, 0.07);
+            --segment-bg: var(--ink);
         }
 
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: -30%;
-            right: -20%;
-            width: 70vw;
-            height: 70vh;
-            background: radial-gradient(ellipse, var(--glow-purple) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
+        body.dark {
+            --navy: #378ADD;
+            --navy-b: #85B7EB;
+            --navy-c: #B5D4F4;
+            --navy-d: #1a3550;
+            --navy-e: #0C2A4A;
+            --teal-b: #9FE1CB;
+            --teal-d: #082E23;
+            --ink: #f0efeb;
+            --ink-b: #c8c7c2;
+            --ink-c: #6e6d68;
+            --ink-d: #3a3a38;
+            --ink-e: #2a2a28;
+            --ink-f: #1c1c1a;
+            --white: #141412;
+            --bg: #0d0d0b;
+            --amber-d: #1e1504;
+            --purple: #7F77DD;
+            --purple-d: #1a1830;
+            --nav-glass: rgba(20,20,18,0.88);
+            --nav-border: #2a2a28;
+            --segment-bg: #000;
         }
 
-        /* ══════════════════════════════════════
-           NAVBAR
-           ══════════════════════════════════════ */
-        .navbar {
+        .display {
+            font-family: 'Bricolage Grotesque', sans-serif
+        }
+
+        /* ── NAV ── */
+        #nav {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            padding: 1rem 2rem;
-            background: var(--nav-bg);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-subtle);
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            width: calc(100% - 40px);
+            max-width: 1080px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: padding .3s;
+            padding: 0 18px;
+            height: 54px;
+            background: var(--nav-glass);
+            backdrop-filter: blur(18px) saturate(1.5);
+            border: 1px solid var(--nav-border);
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s;
         }
 
-        .navbar.scrolled {
-            padding: .65rem 2rem;
+        #nav.scrolled {
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.09)
         }
 
-        .nav-brand {
+        .logo {
             display: flex;
             align-items: center;
-            gap: .6rem;
-            text-decoration: none;
-            color: var(--text-primary);
+            gap: 8px
         }
 
-        .nav-brand .logo-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            background: var(--gradient-hero);
+        .logomark {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: var(--navy);
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: 800;
+            justify-content: center
+        }
+
+        .logotype {
+            font-family: 'Bricolage Grotesque', sans-serif;
             font-size: 1.1rem;
-            color: #fff;
-        }
-
-        .nav-brand h1 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            background: var(--gradient-hero);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: .9rem;
-            font-weight: 500;
-            transition: color .2s;
-        }
-
-        .nav-links a:hover {
-            color: var(--text-primary);
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-        }
-
-        .btn-login {
-            color: var(--text-secondary);
-            background: none;
-            border: 1px solid var(--btn-border);
-            padding: .55rem 1.25rem;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: .875rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all .2s;
-        }
-
-        .btn-login:hover {
-            color: var(--btn-login-hover-color);
-            border-color: var(--btn-login-hover-border);
-            background: var(--btn-login-hover-bg);
-        }
-
-        .btn-register {
-            background: var(--gradient-hero);
-            color: #fff;
-            border: none;
-            padding: .6rem 1.5rem;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: .875rem;
             font-weight: 600;
+            color: var(--navy);
+            letter-spacing: -0.03em
+        }
+
+        .nl {
+            display: flex;
+            gap: 4px
+        }
+
+        .nl a {
+            font-size: 0.825rem;
+            color: var(--ink-c);
             text-decoration: none;
-            transition: transform .2s, box-shadow .2s;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s
         }
 
-        .btn-register:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
+        .nl a:hover {
+            color: var(--ink);
+            background: var(--ink-f)
         }
 
-        .mobile-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-            font-size: 1.5rem;
-        }
-
-        /* ══════════════════════════════════════
-           HERO
-           ══════════════════════════════════════ */
-        .hero {
-            position: relative;
-            min-height: 100vh;
+        .hnum {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--white);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8rem 2rem 4rem;
-            text-align: center;
-            z-index: 1;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 22px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--nav-border)
         }
 
-        .hero-content {
-            max-width: 800px;
+        .hs:hover .hnum {
+            background: var(--teal);
+            color: var(--white);
+            transform: scale(1.08)
         }
 
-        .hero-badge {
+        .l-link {
+            font-size: 0.825rem;
+            color: var(--ink-b);
+            font-weight: 500;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid var(--nav-border);
+            border-radius: 10px;
+            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: .5rem;
-            background: var(--badge-bg);
-            border: 1px solid var(--badge-border);
-            padding: .4rem 1rem;
-            border-radius: 99px;
-            font-size: .8rem;
-            font-weight: 500;
-            color: #60a5fa;
-            margin-bottom: 1.5rem;
         }
 
-        .hero-badge .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #60a5fa;
-            animation: pulse-dot 2s infinite;
+        .l-link:hover {
+            background: var(--ink-f);
+            color: var(--ink);
+            border-color: var(--ink-d);
         }
 
-        .hero h2 {
-            font-size: clamp(2.5rem, 6vw, 4rem);
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 1.25rem;
-            letter-spacing: -.02em;
-        }
-
-        .hero h2 .gradient-text {
-            background: var(--gradient-hero);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero p {
-            font-size: 1.15rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 2.5rem;
-            line-height: 1.7;
-        }
-
-        .hero-btns {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-hero-primary {
-            background: var(--gradient-hero);
+        .nbtn {
+            background: var(--navy);
             color: #fff;
-            padding: .85rem 2.25rem;
-            border-radius: 12px;
-            border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: transform .2s, box-shadow .2s;
-        }
-
-        .btn-hero-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(59, 130, 246, .35);
-        }
-
-        .btn-hero-secondary {
-            background: var(--btn-secondary-bg);
-            color: var(--text-primary);
-            padding: .85rem 2.25rem;
-            border-radius: 12px;
-            border: 1px solid var(--btn-secondary-border);
-            font-size: 1rem;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-size: 0.825rem;
             font-weight: 500;
-            cursor: pointer;
             text-decoration: none;
-            transition: all .2s;
-        }
-
-        .btn-hero-secondary:hover {
-            background: var(--btn-secondary-bg-hover);
-            border-color: var(--btn-secondary-border-hover);
-        }
-
-        .hero-stats {
-            display: flex;
-            justify-content: center;
-            gap: 3rem;
-            margin-top: 3.5rem;
-            padding-top: 2.5rem;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .hero-stat .num {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: var(--hero-stat-color);
-        }
-
-        .hero-stat .lbl {
-            font-size: .8rem;
-            color: var(--text-muted);
-            margin-top: .15rem;
-        }
-
-        /* ══════════════════════════════════════
-           SECTION SHARED
-           ══════════════════════════════════════ */
-        section {
-            position: relative;
-            z-index: 1;
-        }
-
-        .section-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 6rem 2rem;
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 3.5rem;
-        }
-
-        .section-title h3 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: .6rem;
-        }
-
-        .section-title p {
-            color: var(--text-secondary);
-            font-size: 1.05rem;
-            max-width: 550px;
-            margin: 0 auto;
-        }
-
-        /* ══════════════════════════════════════
-           ABOUT
-           ══════════════════════════════════════ */
-        .about-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            transition: all 0.2s;
+            display: inline-flex;
             align-items: center;
+            gap: 5px;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15)
         }
 
-        .about-text h3 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
+        .theme-toggle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--ink-c);
+            transition: all 0.2s;
+            border: 1px solid transparent;
         }
 
-        .about-text p {
-            color: var(--text-secondary);
-            margin-bottom: 1.25rem;
-            line-height: 1.7;
+        .theme-toggle:hover {
+            background: var(--ink-f);
+            color: var(--ink);
+            border-color: var(--ink-e);
         }
 
-        .about-highlights {
+        body.dark .light-icon { display: block; }
+        body.dark .dark-icon { display: none; }
+        body:not(.dark) .light-icon { display: none; }
+        body:not(.dark) .dark-icon { display: block; }
+
+        .nbtn:hover {
+            background: var(--navy-b);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(12, 68, 124, 0.3)
+        }
+
+        /* ── MOBILE MENU ── */
+        .m-toggle {
+            display: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--ink-c);
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .m-toggle:hover {
+            background: var(--ink-f);
+            color: var(--ink);
+        }
+
+        .m-drawer {
+            position: fixed;
+            top: 76px;
+            right: 20px;
+            width: calc(100% - 40px);
+            max-width: 320px;
+            background: var(--white);
+            border: 1px solid var(--nav-border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
-            gap: .75rem;
+            gap: 12px;
+            transform: translateY(-20px) scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .about-highlight {
+        .m-drawer.on {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .m-link {
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--ink-b);
+            text-decoration: none;
+            background: var(--bg);
+            transition: all 0.2s;
+        }
+
+        .m-link:hover {
+            background: var(--navy-e);
+            color: var(--navy);
+        }
+
+        /* ── HERO ── */
+        .hero {
+            min-height: 100vh;
+            padding: 120px 24px 80px;
             display: flex;
             align-items: center;
-            gap: .75rem;
-            font-size: .95rem;
-            color: var(--text-secondary);
-        }
-
-        .about-highlight .material-icons-round {
-            color: var(--accent-green);
-            font-size: 1.2rem;
-        }
-
-        .about-visual {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            border: 1px solid var(--border-subtle);
-            padding: 2.5rem;
-            text-align: center;
             position: relative;
-            overflow: hidden;
+            overflow: hidden
         }
 
-        .about-visual::before {
-            content: '';
+        .hero-mesh {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(59, 130, 246, .05), rgba(139, 92, 246, .05));
-            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(ellipse 900px 600px at 65% 35%, rgba(182, 212, 244, 0.38) 0%, transparent 65%),
+                radial-gradient(ellipse 600px 500px at 8% 75%, rgba(225, 245, 238, 0.42) 0%, transparent 60%),
+                radial-gradient(ellipse 400px 350px at 88% 5%, rgba(238, 237, 254, 0.28) 0%, transparent 55%)
         }
 
-        .about-visual .stat-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            text-align: center;
-        }
-
-        .mini-stat {
-            padding: 1.25rem;
-            border-radius: 12px;
-            background: var(--card-inner-bg);
-        }
-
-        .mini-stat .val {
-            font-size: 1.75rem;
-            font-weight: 700;
-        }
-
-        .mini-stat .lbl {
-            font-size: .75rem;
-            color: var(--text-muted);
-            margin-top: .2rem;
-        }
-
-        .mini-stat.blue .val {
-            color: var(--accent-blue);
-        }
-
-        .mini-stat.green .val {
-            color: var(--accent-green);
-        }
-
-        .mini-stat.purple .val {
-            color: var(--accent-purple);
-        }
-
-        .mini-stat.orange .val {
-            color: var(--accent-orange);
-        }
-
-        /* ══════════════════════════════════════
-           FEATURES
-           ══════════════════════════════════════ */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.25rem;
-        }
-
-        .feature-card {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-            border: 1px solid var(--border-subtle);
-            transition: transform .2s, border-color .2s;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--btn-border);
-        }
-
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .feature-icon .material-icons-round {
-            font-size: 1.4rem;
-            color: #fff;
-        }
-
-        .feature-icon.blue {
-            background: var(--gradient-blue);
-        }
-
-        .feature-icon.green {
-            background: var(--gradient-green);
-        }
-
-        .feature-icon.purple {
-            background: var(--gradient-purple);
-        }
-
-        .feature-icon.orange {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-
-        .feature-icon.pink {
-            background: linear-gradient(135deg, #ec4899, #be185d);
-        }
-
-        .feature-icon.cyan {
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-        }
-
-        .feature-icon.red {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-        }
-
-        .feature-icon.teal {
-            background: linear-gradient(135deg, #14b8a6, #0d9488);
-        }
-
-        .feature-card h4 {
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin-bottom: .4rem;
-        }
-
-        .feature-card p {
-            font-size: .85rem;
-            color: var(--text-secondary);
-            line-height: 1.55;
-        }
-
-        /* ══════════════════════════════════════
-           PRICING
-           ══════════════════════════════════════ */
-        .pricing-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5rem;
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        .price-card {
-            flex: 1 1 250px;
-            min-width: 250px;
-            max-width: 290px;
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 2.25rem 1.5rem;
-            border: 1px solid var(--border-subtle);
-            position: relative;
-            transition: transform .2s;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .price-card:hover {
-            transform: translateY(-4px);
-        }
-
-        .price-card.featured {
-            border-color: var(--accent-blue);
-            background: linear-gradient(180deg, rgba(59, 130, 246, .08), var(--bg-card));
-        }
-
-        .price-card.featured::before {
-            content: 'MOST POPULAR';
+        .grain {
             position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--gradient-blue);
-            color: #fff;
-            font-size: .7rem;
-            font-weight: 700;
-            padding: .3rem 1rem;
-            border-radius: 99px;
-            letter-spacing: .05em;
-        }
-
-        .price-plan-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: .5rem;
-        }
-
-        .price-amount {
-            font-size: 2.75rem;
-            font-weight: 800;
-            margin-bottom: .25rem;
-        }
-
-        .price-amount span {
-            font-size: 1rem;
-            font-weight: 400;
-            color: var(--text-muted);
-        }
-
-        .price-desc {
-            font-size: .85rem;
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .price-features {
-            list-style: none;
-            flex: 1;
-            margin-bottom: 1.5rem;
-        }
-
-        .price-features li {
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-            font-size: .875rem;
-            color: var(--text-secondary);
-            padding: .4rem 0;
-        }
-
-        .price-features li .material-icons-round {
-            font-size: 1rem;
-            color: var(--accent-green);
-        }
-
-        .price-features li.disabled {
-            opacity: .35;
-        }
-
-        .price-features li.disabled .material-icons-round {
-            color: var(--text-muted);
-        }
-
-        .btn-plan {
-            display: block;
-            width: 100%;
-            text-align: center;
-            padding: .8rem;
-            border-radius: 10px;
-            border: none;
-            font-size: .95rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .2s;
-        }
-
-        .btn-plan.primary {
-            background: var(--gradient-hero);
-            color: #fff;
-        }
-
-        .btn-plan.primary:hover {
-            box-shadow: 0 8px 25px rgba(59, 130, 246, .3);
-        }
-
-        .btn-plan.secondary {
-            background: var(--btn-secondary-bg);
-            color: var(--text-primary);
-            border: 1px solid var(--btn-secondary-border);
-        }
-
-        .btn-plan.secondary:hover {
-            background: var(--btn-secondary-bg-hover);
-        }
-
-        /* ── Category Pills ── */
-        .category-pills {
-            display: flex;
-            justify-content: center;
-            gap: .75rem;
-            margin-bottom: 3.5rem;
-            flex-wrap: wrap;
-        }
-
-        .category-pill {
-            background: var(--btn-secondary-bg);
-            border: 1px solid var(--btn-secondary-border);
-            color: var(--text-secondary);
-            padding: .6rem 1.25rem;
-            border-radius: 99px;
-            font-size: .875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all .24s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .category-pill:hover {
-            border-color: var(--btn-secondary-border-hover);
-            background: var(--btn-secondary-bg-hover);
-            color: var(--text-primary);
-        }
-
-        .category-pill.active {
-            background: var(--gradient-hero);
-            border-color: transparent;
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.25);
-            transform: translateY(-1px);
-        }
-
-        .grouped-plans-section {
-            display: none;
-            opacity: 0;
-            transform: translateY(15px);
-            transition: all .4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .grouped-plans-section.active {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* ══════════════════════════════════════
-           FOOTER
-           ══════════════════════════════════════ */
-        .footer {
-            border-top: 1px solid var(--border-subtle);
-            padding: 3rem 2rem 2rem;
-            text-align: center;
-            position: relative;
+            inset: 0;
             z-index: 1;
+            opacity: 0.022;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 256px
         }
 
-        .footer-brand {
+        .hero-wrap {
+            position: relative;
+            z-index: 2;
+            max-width: 1120px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 52px;
+            align-items: center
+        }
+
+        .hbadge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--white);
+            border: 1px solid var(--nav-border);
+            border-radius: 100px;
+            padding: 5px 13px 5px 7px;
+            margin-bottom: 22px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            color: var(--navy);
+            text-transform: uppercase;
+            animation: fu 0.55s ease both;
+            box-shadow: 0 2px 8px rgba(12, 68, 124, 0.07)
+        }
+
+        .hbdot {
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background: var(--teal-d);
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: .5rem;
-            margin-bottom: 1rem;
+            justify-content: center
         }
 
-        .footer-brand .logo-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: var(--gradient-hero);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: .9rem;
-            color: #fff;
+        .hbinner {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--teal);
+            animation: pulse 2s ease infinite
         }
 
-        .footer-brand span {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .footer p {
-            font-size: .85rem;
-            color: var(--text-muted);
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-top: 1rem;
-        }
-
-        .footer-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: .85rem;
-        }
-
-        .footer-links a:hover {
-            color: #fff;
-        }
-
-        /* ══════════════════════════════════════
-           ANIMATIONS
-           ══════════════════════════════════════ */
-        @keyframes pulse-dot {
+        @keyframes pulse {
 
             0%,
             100% {
                 opacity: 1;
+                transform: scale(1)
             }
 
             50% {
-                opacity: .4;
+                opacity: 0.45;
+                transform: scale(0.8)
             }
         }
 
-        @keyframes fade-up {
+        .hero h1 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(2.5rem, 4.8vw, 3.8rem);
+            font-weight: 700;
+            line-height: 1.09;
+            letter-spacing: -0.04em;
+            color: var(--ink);
+            margin-bottom: 20px;
+            animation: fu 0.55s 0.07s ease both
+        }
+
+        .hero h1 em {
+            color: var(--navy);
+            font-style: italic;
+            font-weight: 600
+        }
+
+        .hdesc {
+            font-size: 1.02rem;
+            color: var(--ink-c);
+            line-height: 1.8;
+            font-weight: 300;
+            max-width: 450px;
+            margin-bottom: 34px;
+            animation: fu 0.55s 0.14s ease both
+        }
+
+        .hbtns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            animation: fu 0.55s 0.21s ease both
+        }
+
+        .bp {
+            background: var(--navy);
+            color: #fff;
+            padding: 13px 28px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.22s;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.14), 0 6px 22px rgba(12, 68, 124, 0.2)
+        }
+
+        .bp:hover {
+            background: var(--navy-b);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1), 0 14px 36px rgba(12, 68, 124, 0.28)
+        }
+
+        .bs {
+            background: var(--white);
+            color: var(--ink-b);
+            padding: 13px 22px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 400;
+            text-decoration: none;
+            border: 1px solid var(--nav-border);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px
+        }
+
+        .bs:hover {
+            background: var(--ink-f);
+            border-color: var(--ink-d)
+        }
+
+        .trust {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 32px;
+            animation: fu 0.55s 0.28s ease both
+        }
+
+        .tavs {
+            display: flex
+        }
+
+        .tav {
+            width: 27px;
+            height: 27px;
+            border-radius: 50%;
+            border: 2px solid var(--white);
+            margin-left: -7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.58rem;
+            font-weight: 600
+        }
+
+        .tav:first-child {
+            margin-left: 0
+        }
+
+        .tstars {
+            display: flex;
+            gap: 1px
+        }
+
+        .star {
+            color: var(--amber);
+            font-size: 0.68rem
+        }
+
+        .ttxt {
+            font-size: 0.75rem;
+            color: var(--ink-d);
+            font-weight: 300
+        }
+
+        /* ── DASHBOARD CARD ── */
+        .hvisual {
+            animation: fu 0.55s 0.14s ease both;
+            position: relative
+        }
+
+        .dash {
+            background: var(--white);
+            width: 100%;
+            max-width: 580px;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.14);
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--nav-border);
+        }
+
+        body.dark .dash {
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
+        }
+
+        @keyframes floaty {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0.25deg)
+            }
+
+            50% {
+                transform: translateY(-9px) rotate(-0.18deg)
+            }
+        }
+
+        .dnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--ink-f);
+            margin-bottom: 14px
+        }
+
+        .dlogo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .dmark {
+            width: 19px;
+            height: 19px;
+            background: var(--navy);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .krow {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px
+        }
+
+        .kcard {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 11px 12px
+        }
+
+        .kv {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--ink);
+            letter-spacing: -0.03em
+        }
+
+        .kl {
+            font-size: 0.62rem;
+            color: var(--ink-c);
+            margin-top: 1px;
+            font-weight: 300
+        }
+
+        .kd {
+            font-size: 0.59rem;
+            font-weight: 500;
+            margin-top: 2px
+        }
+
+        .kd-up {
+            color: var(--teal)
+        }
+
+        .kd-w {
+            color: var(--amber)
+        }
+
+        .shd {
+            font-size: 0.67rem;
+            font-weight: 500;
+            color: var(--ink-d);
+            margin-bottom: 7px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase
+        }
+
+        .pl {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 13px
+        }
+
+        .pr {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: var(--bg);
+            transition: background 0.2s;
+            cursor: default
+        }
+
+        .pr:hover {
+            background: var(--navy-e)
+        }
+
+        .pav {
+            width: 29px;
+            height: 29px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 600
+        }
+
+        .pnm {
+            font-size: 0.77rem;
+            font-weight: 500;
+            color: var(--ink)
+        }
+
+        .pdp {
+            font-size: 0.62rem;
+            color: var(--ink-c);
+            margin-top: 1px
+        }
+
+        .tag {
+            font-size: 0.59rem;
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 100px;
+            flex-shrink: 0
+        }
+
+        .tag-a {
+            background: var(--teal-d);
+            color: var(--teal-b)
+        }
+
+        .tag-p {
+            background: var(--amber-d);
+            color: #7a4800
+        }
+
+        .tag-f {
+            background: var(--purple-d);
+            color: var(--purple)
+        }
+
+        .spark {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 34px;
+            padding: 6px 10px;
+            background: var(--navy);
+            border-radius: 11px
+        }
+
+        .spk {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            background: rgba(255, 255, 255, 0.22);
+            transition: background 0.2s
+        }
+
+        .spk:hover {
+            background: rgba(255, 255, 255, 0.55)
+        }
+
+        .spk.hi {
+            background: var(--teal-c)
+        }
+
+        /* floating pills */
+        .fpill {
+            position: absolute;
+            background: var(--white);
+            border: 1px solid var(--nav-border);
+            border-radius: 13px;
+            padding: 9px 13px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+            font-size: 0.73rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            z-index: 10;
+            color: var(--ink);
+        }
+
+        .fpill.f1 {
+            top: -18px;
+            left: -24px;
+            animation: floaty 5s 0.8s ease-in-out infinite
+        }
+
+        .fpill.f2 {
+            bottom: -14px;
+            right: -20px;
+            animation: floaty 6s 2.2s ease-in-out infinite
+        }
+
+        /* ── DIVIDER ── */
+        .dv {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--ink-e) 25%, var(--ink-e) 75%, transparent);
+            margin: 0 24px
+        }
+
+        /* ── SECTIONS ── */
+        section {
+            padding: 96px 24px
+        }
+
+        body.dark section {
+            background-color: var(--bg);
+        }
+
+        .wrap {
+            max-width: 1120px;
+            margin: 0 auto
+        }
+
+        .eye {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--navy);
+            margin-bottom: 14px
+        }
+
+        .eye::before {
+            content: '';
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: var(--navy);
+            border-radius: 2px
+        }
+
+        section h2 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.85rem, 3.6vw, 2.8rem);
+            font-weight: 700;
+            line-height: 1.16;
+            letter-spacing: -0.035em;
+            color: var(--ink);
+            margin-bottom: 12px
+        }
+
+        .sub {
+            font-size: 0.975rem;
+            color: var(--ink-c);
+            line-height: 1.8;
+            font-weight: 300;
+            max-width: 490px;
+            margin-bottom: 48px
+        }
+
+        /* ── FEATURES ── */
+        .fbg {
+            background: var(--white)
+        }
+
+        .fg {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px
+        }
+
+        .fc {
+            border: 1px solid var(--nav-border);
+            border-radius: 20px;
+            padding: 28px;
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.3s, border-color 0.3s
+        }
+
+        .fc:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.07);
+            border-color: var(--ink-d)
+        }
+
+        .fc::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2.5px;
+            border-radius: 20px 20px 0 0;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease
+        }
+
+        .fc:hover::before {
+            transform: scaleX(1)
+        }
+
+        .fic {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px
+        }
+
+        .fc h3 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 9px;
+            letter-spacing: -0.02em
+        }
+
+        .fc p {
+            font-size: 0.845rem;
+            color: var(--ink-c);
+            line-height: 1.75;
+            font-weight: 300
+        }
+
+        .fc-dark {
+            background: var(--segment-bg);
+            border-color: var(--nav-border)
+        }
+
+        .fc-dark h3 {
+            color: #fff
+        }
+
+        .fc-dark p {
+            color: rgba(255, 255, 255, 0.6)
+        }
+
+        /* ── WHY ── */
+        .wbg {
+            background: var(--bg)
+        }
+
+        .wg {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px
+        }
+
+        .wc {
+            background: var(--white);
+            border: 1px solid var(--nav-border);
+            border-radius: 18px;
+            padding: 22px 16px;
+            text-align: center;
+            transition: transform 0.25s, background 0.25s, border-color 0.25s, box-shadow 0.25s
+        }
+
+        .wc:hover {
+            transform: translateY(-4px);
+            background: var(--navy-e);
+            border-color: var(--navy-d);
+            box-shadow: 0 12px 32px rgba(12, 68, 124, 0.09)
+        }
+
+        .wic {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 13px;
+            background: var(--bg);
+            transition: background 0.25s
+        }
+
+        .wc:hover .wic {
+            background: var(--white)
+        }
+
+        .wc h3 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 5px
+        }
+
+        .wc p {
+            font-size: 0.76rem;
+            color: var(--ink-c);
+            line-height: 1.65;
+            font-weight: 300
+        }
+
+        /* ── HOW IT WORKS ── */
+        .hbg {
+            background: var(--segment-bg);
+            position: relative;
+            overflow: hidden
+        }
+
+        .hmesh {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 700px 500px at 20% 50%, rgba(12, 68, 124, 0.45) 0%, transparent 68%), radial-gradient(ellipse 500px 400px at 82% 28%, rgba(29, 158, 117, 0.15) 0%, transparent 60%)
+        }
+
+        .hg {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            position: relative;
+            z-index: 1
+        }
+
+        .hg::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 9%;
+            right: 9%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.07)
+        }
+
+        .hs {
+            padding: 0 18px;
+            text-align: center;
+            position: relative;
+            z-index: 1
+        }
+
+        .hnum {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 0 auto 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            transition: background 0.3s, border-color 0.3s
+        }
+
+        .hs:hover .hnum {
+            background: var(--teal);
+            border-color: var(--teal)
+        }
+
+        .hchip {
+            display: inline-block;
+            font-size: 0.59rem;
+            font-weight: 500;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            background: rgba(93, 202, 165, 0.14);
+            color: var(--teal-c);
+            padding: 4px 11px;
+            border-radius: 100px;
+            border: 1px solid rgba(93, 202, 165, 0.2);
+            margin-bottom: 11px
+        }
+
+        .hs h3 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px
+        }
+
+        .hs p {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.42);
+            line-height: 1.7;
+            font-weight: 300
+        }
+
+        /* ── BUILT FOR ── */
+        .bbg {
+            background: var(--bg)
+        }
+
+        .bg2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center
+        }
+
+        .trow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 22px
+        }
+
+        .tc {
+            background: var(--bg);
+            color: var(--ink-b);
+            font-size: 0.78rem;
+            padding: 7px 14px;
+            border-radius: 100px;
+            border: 1px solid var(--ink-e);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px
+        }
+
+        .tc:hover {
+            background: var(--navy-e);
+            border-color: var(--navy-d)
+        }
+
+        .cl {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            margin-bottom: 30px
+        }
+
+        .cl li {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            font-size: 0.875rem;
+            color: var(--ink-c);
+            line-height: 1.68;
+            font-weight: 300
+        }
+
+        .ck {
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 1px;
+            background: var(--teal-d);
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .pbox {
+            background: var(--segment-bg);
+            border: 1px solid var(--nav-border);
+            border-radius: 22px;
+            padding: 40px;
+            color: #fff;
+            position: relative;
+            overflow: hidden
+        }
+
+        .pbox::before {
+            content: '';
+            position: absolute;
+            top: -70px;
+            right: -70px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(12, 68, 124, 0.9)
+        }
+
+        .pbox::after {
+            content: '';
+            position: absolute;
+            bottom: -45px;
+            left: -45px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(93, 202, 165, 0.07)
+        }
+
+        .pbg {
+            display: inline-block;
+            font-size: 0.67rem;
+            font-weight: 500;
+            background: rgba(93, 202, 165, 0.14);
+            color: var(--teal-c);
+            padding: 5px 12px;
+            border-radius: 100px;
+            border: 1px solid rgba(93, 202, 165, 0.22);
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1
+        }
+
+        .pbox h3 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 12px;
+            line-height: 1.25;
+            position: relative;
+            z-index: 1
+        }
+
+        .pbox p {
+            font-size: 0.855rem;
+            color: rgba(255, 255, 255, 0.52);
+            line-height: 1.8;
+            font-weight: 300;
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 1
+        }
+
+        .tl {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--teal-c);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: gap 0.2s;
+            position: relative;
+            z-index: 1
+        }
+
+        .tl:hover {
+            gap: 12px
+        }
+
+        /* ── CTA ── */
+        .cbg {
+            background: var(--bg)
+        }
+
+        .cbox {
+            background: var(--segment-bg);
+            border: 1px solid var(--nav-border);
+            border-radius: 32px;
+            padding: 60px 24px;
+            text-align: center;
+            margin-bottom: 24px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            background-image: radial-gradient(ellipse 900px 500px at 50% 130%, rgba(12, 68, 124, 0.55) 0%, transparent 65%)
+        }
+
+        .cbox::before {
+            content: '';
+            position: absolute;
+            top: -90px;
+            right: -70px;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.025)
+        }
+
+        .cbox::after {
+            content: '';
+            position: absolute;
+            bottom: -55px;
+            left: -55px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(93, 202, 165, 0.06)
+        }
+
+        .cbox h2 {
+            color: #fff;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.9rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1
+        }
+
+        .cbox p {
+            color: rgba(255, 255, 255, 0.47);
+            font-size: 1rem;
+            margin-bottom: 34px;
+            font-weight: 300;
+            line-height: 1.78;
+            position: relative;
+            z-index: 1
+        }
+
+        .bw {
+            background: var(--white);
+            color: var(--ink);
+            padding: 14px 36px;
+            border-radius: 12px;
+            font-size: 0.925rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--nav-border);
+        }
+
+        .bw:hover {
+            background: var(--navy-e);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18)
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            padding: 48px 24px;
+            border-top: 1px solid var(--nav-border);
+            background: var(--white)
+        }
+
+        .fw {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px
+        }
+
+        footer p {
+            font-size: 0.77rem;
+            color: var(--ink-d)
+        }
+
+        .fl {
+            display: flex;
+            gap: 18px
+        }
+
+        .fl a {
+            font-size: 0.77rem;
+            color: var(--ink-d);
+            text-decoration: none;
+            transition: color 0.2s
+        }
+
+        .fl a:hover {
+            color: var(--ink)
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fu {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
 
-        .animate-in {
-            animation: fade-up .6s ease-out both;
+        .rv {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease
         }
 
-        .animate-in:nth-child(2) {
-            animation-delay: .1s;
+        .rv.on {
+            opacity: 1;
+            transform: none
         }
 
-        .animate-in:nth-child(3) {
-            animation-delay: .2s;
+        .d1 {
+            transition-delay: 0.09s
         }
 
-        .animate-in:nth-child(4) {
-            animation-delay: .3s;
+        .d2 {
+            transition-delay: 0.17s
         }
 
-        .animate-in:nth-child(5) {
-            animation-delay: .35s;
+        .d3 {
+            transition-delay: 0.25s
         }
 
-        .animate-in:nth-child(6) {
-            animation-delay: .4s;
+        .d4 {
+            transition-delay: 0.33s
         }
 
-        .animate-in:nth-child(7) {
-            animation-delay: .45s;
+        /* ── PRICING ── */
+        .pbg-light { background: var(--bg) }
+        .pcards { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .pcard { background: var(--white); border: 1px solid var(--nav-border); border-radius: 22px; padding: 32px; width: 100%; flex: 1 1 260px; max-width: 310px; display: flex; flex-direction: column; transition: transform 0.3s, box-shadow 0.3s; }
+        .pcard:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.06); border-color: var(--navy-d); }
+        .pcard.popular { border: 2px solid var(--navy); position: relative; }
+        .pbadge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 4px 14px; border-radius: 100px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .pname { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+        .pprice { font-family: 'Bricolage Grotesque', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--ink); margin-bottom: 2px; }
+        .pprice span { font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 300; color: var(--ink-c); }
+        .pdesc { font-size: 0.82rem; color: var(--ink-c); margin-bottom: 24px; font-weight: 300; line-height: 1.6; }
+        .pfeats { list-style: none; margin-bottom: 30px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .pfeat { display: flex; align-items: flex-start; gap: 9px; font-size: 0.85rem; color: var(--ink-b); font-weight: 300; }
+        .pfeat svg { flex-shrink: 0; margin-top: 2px; color: var(--teal); }
+        .pfeat.disabled { opacity: 0.35; }
+        .pbtn { display: block; text-align: center; padding: 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+        .pbtn-p { background: var(--navy); color: #fff; box-shadow: 0 4px 14px rgba(12, 68, 124, 0.2); }
+        .pbtn-p:hover { background: var(--navy-b); transform: scale(1.02); }
+        .pbtn-s { background: var(--bg); color: var(--ink); border: 1px solid var(--ink-e); }
+        .pbtn-s:hover { background: var(--ink-f); }
+
+        .cat-pills { display: flex; justify-content: center; gap: 10px; margin-bottom: 40px; flex-wrap: wrap; }
+        .cat-pill { padding: 9px 20px; border-radius: 100px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border: 1px solid var(--nav-border); background: var(--white); color: var(--ink-c); transition: all 0.2s; }
+        .cat-pill:hover { border-color: var(--ink-d); color: var(--ink); }
+        .cat-pill.on { background: var(--navy); color: #fff; border-color: var(--navy); box-shadow: 0 4px 12px rgba(12, 68, 124, 0.25); }
+
+        .plan-group { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+        .plan-group.on { display: block; opacity: 1; transform: translateY(0); }
+        .pricing-wrap { max-width: 1360px; margin: 0 auto; width: 100%; }
+
+        /* ── RESPONSIVE ── */
+        @media(max-width:1024px) {
+            .pricing-wrap { padding: 0 32px; }
+            .hero-wrap { gap: 60px; }
+            .bg2 { gap: 40px; }
         }
 
-        .animate-in:nth-child(8) {
-            animation-delay: .5s;
+        @media(max-width:960px) {
+            .hero-wrap, .bg2 { grid-template-columns: 1fr; gap: 44px; }
+            .fg { grid-template-columns: 1fr 1fr }
+            .wg { grid-template-columns: repeat(3, 1fr) }
+            .hg { grid-template-columns: 1fr 1fr; gap: 28px }
+            .hg::before { display: none }
+            .cbox { padding: 48px 28px }
+            .dash { transform: scale(0.95); transform-origin: top center; }
+            .m-toggle { display: flex }
+            #nav .nl { display: none }
+            .l-link { display: none }
         }
 
-        /* ══════════════════════════════════════
-           RESPONSIVE
-           ══════════════════════════════════════ */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
+        @media(max-width:768px) {
+            h1 { font-size: clamp(2.2rem, 8vw, 2.8rem); line-height: 1.15; }
+            .hdesc { font-size: 0.95rem; margin-bottom: 24px; }
+            .fg { grid-template-columns: 1fr 1fr }
+            .wg { grid-template-columns: 1fr 1fr }
+            .pcards { gap: 16px; }
+            .pcard { max-width: 100%; flex: 1 1 100%; }
+        }
 
-            .mobile-toggle {
-                display: block;
-            }
+        @media(max-width:640px) {
+            #nav .nl, .l-link, .d-btn { display: none }
+            #nav { padding: 8px 14px; width: calc(100% - 24px); }
+            .logo .logotype { font-size: 0.95rem; }
+            
+            section { padding: 60px 20px }
+            h2 { font-size: 1.8rem; margin-bottom: 11px; }
+            .sub { font-size: 0.9rem; margin-bottom: 30px; }
+            
+            .fg { grid-template-columns: 1fr }
+            .wg { grid-template-columns: 1fr }
+            .hg { grid-template-columns: 1fr }
+            .pcard { padding: 24px; }
+            
+            .dash { transform: scale(0.8); width: 100%; max-width: 100%; margin-top: 20px; }
+            .krow { gap: 10px; }
+            .kcard { padding: 12px; }
+            .kv { font-size: 1.1rem; }
+            
+            .fw { flex-direction: column; text-align: center; }
+            .fl { justify-content: center; }
+        }
 
-            .about-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-
-            .hero-stats {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .pricing-grid {
-                grid-template-columns: 1fr;
-            }
+        @media(max-width:480px) {
+            .hbtns { flex-direction: column; width: 100%; }
+            .hbtns .bp, .hbtns .bs { width: 100%; justify-content: center; }
+            .trust { flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+            .tavs { margin-bottom: 4px; }
+            
+            .cat-pills { gap: 8px; }
+            .cat-pill { padding: 7px 14px; font-size: 0.75rem; }
+            
+            .cbox h2 { font-size: 1.7rem; }
+            .cbox p { font-size: 0.88rem; }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- ═══════════════════════════════════
-     NAVBAR
-     ═══════════════════════════════════ -->
-    <nav class="navbar" id="navbar">
-        <a href="/" class="nav-brand">
-            <div class="logo-icon">H</div>
-            <h1>HealthCRM</h1>
-        </a>
-
-        <ul class="nav-links">
-            <li><a href="#about">About</a></li>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-        </ul>
-
-        <div class="nav-actions">
-            <button class="theme-toggle" id="themeToggle" title="Toggle Theme"
-                style="background: none; border: 1px solid var(--btn-border); color: var(--text-secondary); width: 38px; height: 38px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                <span class="material-icons-round" id="themeIcon" style="font-size: 1.1rem;">light_mode</span>
-            </button>
-            <a href="/login/" class="btn-login">Log in</a>
-            <a href="/register/" class="btn-register">Start Free Trial</a>
+    <!-- NAV -->
+    <nav id="nav">
+        <div class="logo">
+            <div class="logomark">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                    <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                    <circle cx="9" cy="9" r="2.4" fill="#5DCAA5" />
+                </svg>
+            </div>
+            <span class="logotype">Arogyra</span>
         </div>
-
-        <button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">
-            <span class="material-icons-round">menu</span>
-        </button>
+        <div class="nl">
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#how">How it works</a>
+            <a href="#built">Solutions</a>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px">
+            <div id="themeToggle" class="theme-toggle">
+                <svg class="dark-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <svg class="light-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </div>
+            <a href="/login/" class="l-link">Login</a>
+            <a href="/register/" class="nbtn d-btn">Get Started <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg></a>
+            <div id="menuToggle" class="m-toggle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </div>
+        </div>
     </nav>
 
-    <!-- ═══════════════════════════════════
-     HERO
-     ═══════════════════════════════════ -->
+    <!-- MOBILE DRAWER -->
+    <div id="mDrawer" class="m-drawer">
+        <a href="#features" class="m-link">Features</a>
+        <a href="#pricing" class="m-link">Pricing</a>
+        <a href="#how" class="m-link">How it works</a>
+        <a href="#built" class="m-link">Solutions</a>
+        <div style="height:1px; background:var(--nav-border); margin:4px 0"></div>
+        <a href="/login/" class="m-link" style="background:transparent">Login</a>
+        <a href="/register/" class="nbtn" style="justify-content:center; padding:12px">Register Now</a>
+    </div>
+
+    <!-- HERO -->
     <section class="hero">
-        <div class="hero-content">
-            <div class="hero-badge animate-in">
-                <span class="dot"></span>
-                Cloud-Powered Healthcare Platform
-            </div>
-            <h2 class="animate-in">
-                The Modern CRM for<br>
-                <span class="gradient-text">Healthcare Excellence</span>
-            </h2>
-            <p class="animate-in">
-                Streamline your clinic, hospital, or pharmacy with our all-in-one platform.
-                Manage patients, appointments, billing, labs, and communications — all from a single dashboard.
-            </p>
-            <div class="hero-btns animate-in">
-                <a href="/register/" class="btn-hero-primary">
-                    Start Free Trial →
-                </a>
-                <a href="#features" class="btn-hero-secondary">
-                    Explore Features
-                </a>
-            </div>
-
-            <div class="hero-stats animate-in">
-                <div class="hero-stat">
-                    <div class="num">500+</div>
-                    <div class="lbl">Healthcare Providers</div>
+        <div class="hero-mesh"></div>
+        <div class="grain"></div>
+        <div class="hero-wrap">
+            <div>
+                <div class="hbadge">
+                    <div class="hbdot">
+                        <div class="hbinner"></div>
+                    </div>Healthcare CRM Platform
                 </div>
-                <div class="hero-stat">
-                    <div class="num">1M+</div>
-                    <div class="lbl">Patients Managed</div>
+                <h1>Smart CRM for <em>Easy Patient</em> Management</h1>
+                <p class="hdesc">Managing a clinic or hospital should be simple. With Arogyra, manage patients,
+                    appointments, billing, and reports — all in one place.</p>
+                <div class="hbtns">
+                    <a href="/register/" class="bp">Start Free Trial <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg></a>
+                    <a href="#features" class="bs">See features <svg width="14" height="14" viewBox="0 0 16 16"
+                            fill="none">
+                            <path d="M8 3l5 5-5 5M3 8h10" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg></a>
                 </div>
-                <div class="hero-stat">
-                    <div class="num">99.9%</div>
-                    <div class="lbl">Uptime SLA</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ═══════════════════════════════════
-     ABOUT
-     ═══════════════════════════════════ -->
-    <section id="about">
-        <div class="section-container">
-            <div class="about-grid">
-                <div class="about-text">
-                    <h3>Built for Modern Healthcare</h3>
-                    <p>
-                        HealthCRM is a cloud-based, multi-tenant SaaS platform designed to centralize
-                        every aspect of healthcare operations. Whether you run a single clinic or a network
-                        of hospitals, our modular architecture adapts to your needs.
-                    </p>
-                    <p>
-                        Each organization gets its own isolated data environment with enterprise-grade security,
-                        while sharing a powerful feature set that grows with your subscription.
-                    </p>
-                    <div class="about-highlights">
-                        <div class="about-highlight">
-                            <span class="material-icons-round">check_circle</span>
-                            Multi-tenant data isolation per organization
-                        </div>
-                        <div class="about-highlight">
-                            <span class="material-icons-round">check_circle</span>
-                            Modular features — pay only for what you need
-                        </div>
-                        <div class="about-highlight">
-                            <span class="material-icons-round">check_circle</span>
-                            AI-powered insights & clinical assistance
-                        </div>
-                        <div class="about-highlight">
-                            <span class="material-icons-round">check_circle</span>
-                            WhatsApp, SMS & email communications built-in
-                        </div>
-                        <div class="about-highlight">
-                            <span class="material-icons-round">check_circle</span>
-                            HIPAA & GDPR compliant infrastructure
-                        </div>
+                <div class="trust">
+                    <div class="tavs">
+                        <div class="tav" style="background:#E6F1FB;color:#185FA5">AK</div>
+                        <div class="tav" style="background:#E1F5EE;color:#0F6E56">PS</div>
+                        <div class="tav" style="background:#EEEDFE;color:#534AB7">RM</div>
+                        <div class="tav" style="background:#FAEEDA;color:#854F0B">+</div>
                     </div>
-                </div>
-
-                <div class="about-visual">
-                    <div class="stat-row">
-                        <div class="mini-stat blue">
-                            <div class="val">4</div>
-                            <div class="lbl">Organization Types</div>
-                        </div>
-                        <div class="mini-stat green">
-                            <div class="val">12+</div>
-                            <div class="lbl">Core Modules</div>
-                        </div>
-                        <div class="mini-stat purple">
-                            <div class="val">AI</div>
-                            <div class="lbl">Smart Insights</div>
-                        </div>
-                        <div class="mini-stat orange">
-                            <div class="val">3</div>
-                            <div class="lbl">Flexible Plans</div>
-                        </div>
+                    <div>
+                        <div class="tstars"><span class="star">★</span><span class="star">★</span><span
+                                class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+                        <div class="ttxt">Trusted by 500+ healthcare providers</div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- ═══════════════════════════════════
-     FEATURES
-     ═══════════════════════════════════ -->
-    <section id="features">
-        <div class="section-container">
-            <div class="section-title">
-                <h3>Everything You Need to Run Your Practice</h3>
-                <p>Comprehensive modules designed for clinics, hospitals, pharmacies, and diagnostic labs.</p>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-card animate-in">
-                    <div class="feature-icon blue">
-                        <span class="material-icons-round">people</span>
+            <div class="hvisual">
+                <div class="fpill f1">
+                    <div
+                        style="width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite">
                     </div>
-                    <h4>Patient Management</h4>
-                    <p>Complete patient records, demographics, medical history, and visit tracking with smart search.
-                    </p>
+                    <span style="font-size:0.7rem;color:var(--ink-b)">24 new appointments today</span>
                 </div>
-                <div class="feature-card animate-in">
-                    <div class="feature-icon green">
-                        <span class="material-icons-round">calendar_month</span>
+                <div class="fpill f2">
+                    <div
+                        style="width:28px;height:28px;border-radius:8px;background:var(--teal-d);display:flex;align-items:center;justify-content:center">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 2v12M2 8h12" stroke="var(--teal-b)" stroke-width="1.8" stroke-linecap="round" />
+                        </svg>
                     </div>
-                    <h4>Appointments</h4>
-                    <p>Online booking, queue management, automated reminders, and doctor schedule coordination.</p>
+                    <div>
+                        <div style="font-size:0.7rem;font-weight:600;color:var(--ink)">Lab report ready</div>
+                        <div style="font-size:0.6rem;color:var(--ink-c);font-weight:300">Arjun K. · just now</div>
+                    </div>
                 </div>
-                <div class="feature-card animate-in">
-                    <div class="feature-icon purple">
-                        <span class="material-icons-round">receipt_long</span>
+                <div class="dash">
+                    <div class="dnav">
+                        <div class="dlogo">
+                            <div class="dmark"><svg width="11" height="11" viewBox="0 0 18 18" fill="none">
+                                    <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2"
+                                        stroke-linecap="round" />
+                                    <circle cx="9" cy="9" r="2" fill="#5DCAA5" />
+                                </svg></div>
+                            Arogyra
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div
+                                style="font-size:0.65rem;background:var(--teal-d);color:var(--teal-b);padding:3px 9px;border-radius:100px;font-weight:500">
+                                ● Live</div>
+                            <div
+                                style="width:25px;height:25px;border-radius:50%;background:var(--navy-e);display:flex;align-items:center;justify-content:center;font-size:0.58rem;font-weight:600;color:var(--navy)">
+                                DR</div>
+                        </div>
                     </div>
-                    <h4>Billing & Invoicing</h4>
-                    <p>Generate invoices, track payments, insurance claims, and revenue analytics in real-time.</p>
-                </div>
-                <div class="feature-card animate-in">
-                    <div class="feature-icon cyan">
-                        <span class="material-icons-round">biotech</span>
+                    <div class="krow">
+                        <div class="kcard">
+                            <div class="kv">248</div>
+                            <div class="kl">Patients today</div>
+                            <div class="kd kd-up">↑ 12%</div>
+                        </div>
+                        <div class="kcard">
+                            <div class="kv">34</div>
+                            <div class="kl">Appointments</div>
+                            <div class="kd kd-up">↑ 8%</div>
+                        </div>
+                        <div class="kcard">
+                            <div class="kv">6</div>
+                            <div class="kl">Pending bills</div>
+                            <div class="kd kd-w">● Review</div>
+                        </div>
                     </div>
-                    <h4>Lab Management</h4>
-                    <p>Order tests, track samples, publish results, and integrate with diagnostic equipment.</p>
-                </div>
-                <div class="feature-card animate-in">
-                    <div class="feature-icon orange">
-                        <span class="material-icons-round">medication</span>
+                    <div class="shd">Today's patients</div>
+                    <div class="pl">
+                        <div class="pr">
+                            <div class="pav" style="background:var(--navy-e);color:var(--navy)">AK</div>
+                            <div style="flex:1">
+                                <div class="pnm">Arjun Kapoor</div>
+                                <div class="pdp">Cardiology · 10:30 AM</div>
+                            </div><span class="tag tag-a">Active</span>
+                        </div>
+                        <div class="pr">
+                            <div class="pav" style="background:var(--teal-d);color:var(--teal-b)">PS</div>
+                            <div style="flex:1">
+                                <div class="pnm">Priya Sharma</div>
+                                <div class="pdp">Orthopedics · 11:00 AM</div>
+                            </div><span class="tag tag-p">Pending</span>
+                        </div>
+                        <div class="pr">
+                            <div class="pav" style="background:var(--purple-d);color:var(--purple)">RM</div>
+                            <div style="flex:1">
+                                <div class="pnm">Ravi Mehta</div>
+                                <div class="pdp">General · 11:30 AM</div>
+                            </div><span class="tag tag-f">Follow-up</span>
+                        </div>
                     </div>
-                    <h4>Pharmacy & Inventory</h4>
-                    <p>Track stock, manage prescriptions, automate reorders, and monitor expiry dates.</p>
-                </div>
-                <div class="feature-card animate-in">
-                    <div class="feature-icon pink">
-                        <span class="material-icons-round">chat</span>
+                    <div class="shd">Weekly trend</div>
+                    <div class="spark">
+                        <div class="spk" style="height:55%"></div>
+                        <div class="spk" style="height:72%"></div>
+                        <div class="spk" style="height:44%"></div>
+                        <div class="spk" style="height:88%"></div>
+                        <div class="spk hi" style="height:100%"></div>
+                        <div class="spk" style="height:62%"></div>
+                        <div class="spk" style="height:38%"></div>
                     </div>
-                    <h4>Communications</h4>
-                    <p>WhatsApp, SMS, and email — send reminders, campaigns, and collect patient feedback.</p>
-                </div>
-                <div class="feature-card animate-in">
-                    <div class="feature-icon red">
-                        <span class="material-icons-round">bar_chart</span>
-                    </div>
-                    <h4>Analytics & Reports</h4>
-                    <p>Dashboards for patient flow, revenue trends, doctor performance, and operational KPIs.</p>
-                </div>
-                <div class="feature-card animate-in">
-                    <div class="feature-icon teal">
-                        <span class="material-icons-round">psychology</span>
-                    </div>
-                    <h4>AI-Powered Insights</h4>
-                    <p>Smart triage, clinical note generation, no-show prediction, and appointment optimization.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ═══════════════════════════════════
-     PRICING
-     ═══════════════════════════════════ -->
-    <section id="pricing">
-        <div class="section-container">
-            <div class="section-title">
-                <h3>Simple, Transparent Pricing</h3>
-                <p>Choose the plan that fits your organization. Start with a free trial.</p>
+    <div class="dv"></div>
+
+    <!-- FEATURES -->
+    <section class="fbg" id="features">
+        <div class="wrap">
+            <div class="rv">
+                <div class="eye">All-in-one platform</div>
+                <h2>All in One Healthcare<br>Management System</h2>
+                <p class="sub">Arogyra brings everything into one easy platform. No need for multiple tools — handle
+                    daily tasks without confusion from a single dashboard.</p>
+            </div>
+            <div class="fg">
+                <div class="fc rv d1">
+                    <div class="fc"
+                        style="position:absolute;top:0;left:0;right:0;height:2.5px;background:var(--navy);border-radius:20px 20px 0 0;transform:none;border:none;padding:0">
+                    </div>
+                    <div class="fic" style="background:var(--navy-e)"><svg width="22" height="22" viewBox="0 0 24 24"
+                            fill="none">
+                            <rect x="5" y="3" width="14" height="18" rx="2" stroke="var(--navy)" stroke-width="1.5" />
+                            <path d="M9 8h6M9 12h6M9 16h4" stroke="var(--navy)" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg></div>
+                    <h3>Patient Records Management</h3>
+                    <p>Store and access patient data anytime with a secure EMR system. Keep medical history,
+                        prescriptions, and reports well organised.</p>
+                </div>
+                <div class="fc rv d2">
+                    <div class="fic" style="background:var(--teal-d)"><svg width="22" height="22" viewBox="0 0 24 24"
+                            fill="none">
+                            <rect x="3" y="4" width="18" height="18" rx="2" stroke="var(--teal-b)" stroke-width="1.5" />
+                            <path d="M16 2v4M8 2v4M3 10h18" stroke="var(--teal-b)" stroke-width="1.5"
+                                stroke-linecap="round" />
+                            <circle cx="8" cy="15" r="1.5" fill="var(--teal-b)" />
+                            <circle cx="12" cy="15" r="1.5" fill="var(--teal-b)" />
+                            <circle cx="16" cy="15" r="1.5" fill="var(--teal-b)" />
+                        </svg></div>
+                    <h3>Appointment Scheduling</h3>
+                    <p>Book, reschedule, and manage appointments with ease. Stay organised and avoid missed bookings
+                        throughout the day.</p>
+                </div>
+                <div class="fc rv d3">
+                    <div class="fic" style="background:var(--amber-d)"><svg width="22" height="22" viewBox="0 0 24 24"
+                            fill="none">
+                            <rect x="3" y="6" width="18" height="14" rx="2" stroke="#854F0B" stroke-width="1.5" />
+                            <path d="M7 6V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2" stroke="#854F0B" stroke-width="1.5" />
+                            <path d="M12 11v4M10 13h4" stroke="#854F0B" stroke-width="1.5" stroke-linecap="round" />
+                        </svg></div>
+                    <h3>Billing and Payments</h3>
+                    <p>Create invoices, track payments, and manage billing without errors. Keep your financial process
+                        simple and clear.</p>
+                </div>
+                <div class="fc rv d1">
+                    <div class="fic" style="background:var(--purple-d)"><svg width="22" height="22" viewBox="0 0 24 24"
+                            fill="none">
+                            <path d="M9 12h6M9 16h4M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-6-6Z"
+                                stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M13 3v6h6" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round" />
+                        </svg></div>
+                    <h3>Lab Reports Management</h3>
+                    <p>Upload and store lab reports in one place. Doctors and patients can access them anytime when
+                        needed.</p>
+                </div>
+                <div class="fc rv d2">
+                    <div class="fic" style="background:var(--teal-d)"><svg width="22" height="22" viewBox="0 0 24 24"
+                            fill="none">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z"
+                                stroke="var(--teal-b)" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg></div>
+                    <h3>Patient Communication</h3>
+                    <p>Send reminders, updates, and notifications automatically. Stay connected and reduce missed
+                        appointments.</p>
+                </div>
+                <div class="fc fc-dark rv d3">
+                    <div class="fic" style="background:rgba(255,255,255,0.08)"><svg width="22" height="22"
+                            viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#5DCAA5" stroke-width="1.5" />
+                        </svg></div>
+                    <h3>One Unified Dashboard</h3>
+                    <p>Manage everything from a single screen. No confusion, no switching — everything your team needs,
+                        right here.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="dv"></div>
+
+    <!-- WHY -->
+    <section class="wbg">
+        <div class="wrap">
+            <div class="rv" style="text-align:center;max-width:520px;margin:0 auto 40px">
+                <div class="eye" style="justify-content:center">Why Arogyra</div>
+                <h2>Why Choose Arogyra</h2>
+                <p class="sub" style="max-width:100%;margin-bottom:0">Built with healthcare teams in mind — from solo
+                    practitioners to large hospital networks.</p>
+            </div>
+            <div class="wg rv">
+                <div class="wc">
+                    <div class="wic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7l10 5 10-5-10-5ZM2 17l10 5 10-5M2 12l10 5 10-5" stroke="var(--navy)"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg></div>
+                    <h3>Simple to Use</h3>
+                    <p>Clean interface anyone can use from day one</p>
+                </div>
+                <div class="wc">
+                    <div class="wic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 15a4 4 0 0 0 4 4h10a4 4 0 0 0 0-8h-.5A5.5 5.5 0 0 0 5 10" stroke="var(--navy)"
+                                stroke-width="1.5" stroke-linecap="round" />
+                        </svg></div>
+                    <h3>Cloud Based</h3>
+                    <p>Access from anywhere, any device, any time</p>
+                </div>
+                <div class="wc">
+                    <div class="wic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <rect x="5" y="11" width="14" height="10" rx="2" stroke="var(--navy)" stroke-width="1.5" />
+                            <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="var(--navy)" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg></div>
+                    <h3>Secure Data</h3>
+                    <p>Patient info kept safe and fully protected</p>
+                </div>
+                <div class="wc">
+                    <div class="wic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="var(--navy)" stroke-width="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="var(--navy)" stroke-width="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="var(--navy)" stroke-width="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="var(--navy)" stroke-width="1.5" />
+                        </svg></div>
+                    <h3>All-in-One</h3>
+                    <p>Manage everything from one unified place</p>
+                </div>
+                <div class="wc">
+                    <div class="wic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" stroke="var(--navy)" stroke-width="1.5" />
+                            <path d="M12 7v5l3 3" stroke="var(--navy)" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg></div>
+                    <h3>Save Time</h3>
+                    <p>Automate tasks, reduce manual work daily</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="dv"></div>
+
+    <!-- HOW IT WORKS -->
+    <section class="hbg" id="how">
+        <div class="hmesh"></div>
+        <div class="wrap" style="position:relative;z-index:1">
+            <div class="rv" style="text-align:center;max-width:500px;margin:0 auto 60px">
+                <div class="eye" style="justify-content:center;color:var(--teal-c)"><span
+                        style="display:block;width:18px;height:2px;background:var(--teal-c);border-radius:2px"></span>Getting
+                    started</div>
+                <h2 style="color:#fff">How It Works</h2>
+                <p class="sub" style="color:rgba(255,255,255,0.42);max-width:100%;margin-bottom:0">Up and running in
+                    minutes. No technical skills required.</p>
+            </div>
+            <div class="hg rv">
+                <div class="hs">
+                    <div class="hnum">1</div>
+                    <div class="hchip">Setup</div>
+                    <h3>Create your account</h3>
+                    <p>Set up your workspace in minutes with no technical skills needed</p>
+                </div>
+                <div class="hs">
+                    <div class="hnum">2</div>
+                    <div class="hchip">Onboard</div>
+                    <h3>Add patients and staff</h3>
+                    <p>Manage records and roles easily from one centralised place</p>
+                </div>
+                <div class="hs">
+                    <div class="hnum">3</div>
+                    <div class="hchip">Operate</div>
+                    <h3>Start managing</h3>
+                    <p>Handle appointments, billing, and reports from day one</p>
+                </div>
+                <div class="hs">
+                    <div class="hnum">4</div>
+                    <div class="hchip">Grow</div>
+                    <h3>Improve patient care</h3>
+                    <p>Give better service with organised data and clear insights</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="dv"></div>
+
+    <!-- BUILT FOR -->
+    <section class="bbg" id="built">
+        <div class="wrap">
+            <div class="bg2">
+                <div class="rv">
+                    <div class="eye">Built for everyone</div>
+                    <h2>Built for Every Healthcare Business</h2>
+                    <p style="font-size:0.93rem;color:var(--ink-c);line-height:1.8;font-weight:300;margin-bottom:20px">
+                        Arogyra is designed for clinics, hospitals, pharmacies, and diagnostic centres. Whether you're
+                        small or growing fast, our flexible platform grows with you.</p>
+                    <div class="trow">
+                        {% for group in grouped_plans %}
+                        <span class="tc">{{ group.category.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <ul class="cl">
+                        <li>
+                            <div class="ck"><svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M2 5l2.5 2.5L8 3" stroke="var(--teal-b)" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg></div>Set up quickly and start using it without any technical skills
+                        </li>
+                        <li>
+                            <div class="ck"><svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M2 5l2.5 2.5L8 3" stroke="var(--teal-b)" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg></div>Grow your business without changing your system
+                        </li>
+                        <li>
+                            <div class="ck"><svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M2 5l2.5 2.5L8 3" stroke="var(--teal-b)" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg></div>Help your team work better and faster every day
+                        </li>
+                    </ul>
+                    <a href="/register/" class="bp">Get started <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg></a>
+                </div>
+                <div class="rv d2">
+                    <div class="pbox">
+                        <div class="pbg">Partnership Programme</div>
+                        <h3>Grow Together with Arogyra</h3>
+                        <p>We welcome clinics, labs, and healthcare providers to partner with us. Expand your services,
+                            reach more patients, and build stronger healthcare connections.</p>
+                        <a href="/register/" class="tl">Become a partner <svg width="14" height="14" viewBox="0 0 16 16"
+                                fill="none">
+                                <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="dv"></div>
+
+    <!-- PRICING -->
+    <section class="pbg-light" id="pricing">
+        <div class="pricing-wrap px-4">
+            <div class="rv" style="text-align:center;max-width:550px;margin:0 auto 45px">
+                <div class="eye" style="justify-content:center">Simple Pricing</div>
+                <h2>Plans that grow with you</h2>
+                <p class="sub" style="max-width:100%;margin-bottom:0">Choose the perfect plan for your healthcare practice. No hidden fees, cancel anytime.</p>
             </div>
 
-            <div class="category-pills animate-in" id="categoryPills">
+            <div class="cat-pills">
                 {% for group in grouped_plans %}
-                <div class="category-pill {% if forloop.first %}active{% endif %}"
-                    data-target="cat-{{ group.category.id }}" onclick="switchPricingCategory(this)">
+                <div class="cat-pill {% if forloop.first %}on{% endif %}" data-target="cat-{{ group.category.id }}" onclick="switchPricing(this)">
                     {{ group.category.name }}
                 </div>
                 {% endfor %}
             </div>
 
             {% for group in grouped_plans %}
-            <div id="cat-{{ group.category.id }}" class="grouped-plans-section {% if forloop.first %}active{% endif %}">
-
-                <div class="pricing-grid">
+            <div id="cat-{{ group.category.id }}" class="plan-group {% if forloop.first %}on{% endif %}">
+                <div class="pcards">
                     {% for item in group.plans %}
-                    <div
-                        class="price-card {% if item.plan.name == 'PRO' or item.plan.name == 'CLINIC_PRO' %}featured{% endif %} animate-in">
-                        <div class="price-plan-name">{{ item.plan.display_name|default:item.plan.name }}</div>
-                        <div class="price-amount">
+                    <div class="pcard {% if item.plan.name == 'PRO' or item.plan.name == 'CLINIC_PRO' %}popular{% endif %}">
+                        {% if item.plan.name == 'PRO' or item.plan.name == 'CLINIC_PRO' %}
+                        <div class="pbadge">Most Popular</div>
+                        {% endif %}
+                        <div class="pname">{{ item.plan.display_name|default:item.plan.name }}</div>
+                        <div class="pprice">
                             {% if item.plan.price == 0 %}Free{% else %}₹{{ item.plan.price|floatformat:0 }}{% endif %}
                             {% if item.plan.price != 0 %}<span>/{{ item.display_billing }}</span>{% endif %}
                         </div>
-                        <div class="price-desc">{{ item.display_desc }}</div>
-
-                        <ul class="price-features">
-                            <!-- Resource Limits -->
+                        <div class="pdesc">{{ item.display_desc }}</div>
+                        
+                        <ul class="pfeats">
                             {% for r_limit in item.resources %}
-                            <li>
-                                <span class="material-icons-round" style="color:var(--accent-blue);">verified</span>
+                            <li class="pfeat">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 {% if r_limit.limit_value == -1 %}
                                 Unlimited {{ r_limit.resource.name }}
                                 {% else %}
@@ -1180,120 +1928,110 @@
                             </li>
                             {% endfor %}
 
-                            <!-- All Features -->
                             {% for feat in item.features %}
-                            <li class="{{ feat.li_class }}">
-                                <span class="material-icons-round">{{ feat.icon }}</span>
+                            <li class="pfeat {{ feat.li_class }}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 {{ feat.name }}
                             </li>
                             {% endfor %}
                         </ul>
 
-                        <a href="/register/?plan_id={{ item.plan.id }}"
-                            class="btn-plan {% if item.plan.name == 'PRO' or item.plan.name == 'CLINIC_PRO' %}primary{% else %}secondary{% endif %}"
-                            style="margin-top:auto;">
+                        <a href="/register/?plan_id={{ item.plan.id }}" class="pbtn {% if item.plan.name == 'PRO' or item.plan.name == 'CLINIC_PRO' %}pbtn-p{% else %}pbtn-s{% endif %}">
                             Start with {{ item.plan.display_name|default:item.plan.name }} →
                         </a>
                     </div>
                     {% empty %}
-                    <div class="price-card animate-in">
-                        <div class="price-plan-name">Coming Soon</div>
-                        <div class="price-amount">—</div>
-                        <div class="price-desc">Plans for {{ group.category.name }} are being configured.</div>
-                        <ul class="price-features"></ul>
+                    <div style="text-align:center; padding: 60px; color: var(--ink-d); border: 2px dashed var(--ink-f); border-radius: 22px; width: 100%">
+                         Coming soon for {{ group.category.name }}
                     </div>
                     {% endfor %}
                 </div>
-            </div>
-            {% empty %}
-            <div
-                style="text-align:center; padding: 4rem; color: var(--text-muted); border:1px dashed rgba(255,255,255,0.1); border-radius:12px;">
-                <span class="material-icons-round" style="font-size:3rem; margin-bottom:1rem;">inventory_2</span><br>
-                Pricing plans are currently being updated. Please check back later.
             </div>
             {% endfor %}
         </div>
     </section>
 
-    <!-- ═══════════════════════════════════
-     FOOTER
-     ═══════════════════════════════════ -->
-    <footer class="footer">
-        <div class="footer-brand">
-            <div class="logo-icon">H</div>
-            <span>HealthCRM</span>
+    <div class="dv"></div>
+
+    <!-- CTA -->
+    <section class="cbg" id="cta">
+        <div class="wrap">
+            <div class="cbox rv">
+                <h2>Start Managing Your Healthcare Better</h2>
+                <p>Bring everything into one platform with Arogyra.<br>Stay organised, work faster, give better care.</p>
+                <a href="/register/" class="bw">Start Now — It's Free <svg width="14" height="14" viewBox="0 0 16 16"
+                        fill="none">
+                        <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg></a>
+            </div>
         </div>
-        <p>&copy; 2026 HealthCRM. All rights reserved.</p>
-        <div class="footer-links">
-            <a href="#about">About</a>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="/login/">Login</a>
+    </section>
+
+    <footer>
+        <div class="fw">
+            <div class="logo">
+                <div class="logomark" style="width:26px;height:26px;border-radius:7px"><svg width="13" height="13"
+                        viewBox="0 0 18 18" fill="none">
+                        <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                        <circle cx="9" cy="9" r="2.4" fill="#5DCAA5" />
+                    </svg></div>
+                <span class="logotype" style="font-size:0.95rem">Arogyra</span>
+            </div>
+            <p>© 2025 Arogyra Healthcare CRM. All rights reserved. <span style="opacity: 0.5; margin-left: 8px">Powered by <a href="https://devexhub.com" target="_blank" style="color:var(--navy);text-decoration:none;font-weight:600">Devexhub</a></span></p>
+            <div class="fl"><a href="/login/">Login</a><a href="/register/">Register</a><a href="#">Privacy</a><a href="#">Terms</a></div>
         </div>
     </footer>
 
     <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
-        });
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20), { passive: true });
 
-        // Intersection Observer for animations
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(e => {
-                if (e.isIntersecting) {
-                    e.target.style.animationPlayState = 'running';
-                    observer.unobserve(e.target);
-                }
-            });
-        }, { threshold: 0.15 });
+        const io = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } });
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.rv').forEach(el => io.observe(el));
 
-        document.querySelectorAll('.feature-card, .price-card').forEach(el => {
-            el.style.animationPlayState = 'paused';
-            observer.observe(el);
-        });
-
-        // Pricing Category Switcher
-        function switchPricingCategory(pill) {
-            const targetId = pill.getAttribute('data-target');
-
-            // Update pills
-            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-
-            // Update sections
-            document.querySelectorAll('.grouped-plans-section').forEach(section => {
-                section.classList.remove('active');
-            });
-
-            const targetSection = document.getElementById(targetId);
-            if (targetSection) {
-                targetSection.classList.add('active');
-            }
+        function switchPricing(pill) {
+            const tid = pill.getAttribute('data-target');
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('on'));
+            pill.classList.add('on');
+            document.querySelectorAll('.plan-group').forEach(g => g.classList.remove('on'));
+            document.getElementById(tid).classList.add('on');
         }
-    </script>
 
+        const themeToggle = document.getElementById('themeToggle');
+        const updateTheme = (dark) => {
+            document.body.classList.toggle('dark', dark);
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        };
 
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            updateTheme(savedTheme === 'dark');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            updateTheme(true);
+        }
 
+        themeToggle.addEventListener('click', () => {
+            updateTheme(!document.body.classList.contains('dark'));
+        });
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const themeToggle = document.getElementById("themeToggle");
-            const themeIcon = document.getElementById("themeIcon");
-            if (themeToggle && themeIcon) {
-                if (document.documentElement.getAttribute("data-theme") === "light") {
-                    themeIcon.textContent = "dark_mode";
-                } else {
-                    themeIcon.textContent = "light_mode";
-                }
-                themeToggle.addEventListener("click", () => {
-                    let current = document.documentElement.getAttribute("data-theme");
-                    let newTheme = current === "light" ? "dark" : "light";
-                    document.documentElement.setAttribute("data-theme", newTheme);
-                    localStorage.setItem("theme", newTheme);
-                    themeIcon.textContent = newTheme === "light" ? "dark_mode" : "light_mode";
-                    window.dispatchEvent(new Event("themeChanged"));
-                });
+        // MOBILE MENU
+        const menuToggle = document.getElementById('menuToggle');
+        const mDrawer = document.getElementById('mDrawer');
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mDrawer.classList.toggle('on');
+        });
+
+        document.querySelectorAll('.m-link, .m-drawer .nbtn').forEach(link => {
+            link.addEventListener('click', () => mDrawer.classList.remove('on'));
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!mDrawer.contains(e.target) && !menuToggle.contains(e.target)) {
+                mDrawer.classList.remove('on');
             }
         });
     </script>

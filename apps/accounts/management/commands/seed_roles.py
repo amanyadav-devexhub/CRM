@@ -128,15 +128,9 @@ class Command(BaseCommand):
         tenants = Tenant.objects.all()
 
         for tenant in tenants:
-            category_obj = tenant.category_obj
-            category_code = tenant.category
-            
-            if category_obj:
-                templates = CategoryRoleTemplate.objects.filter(category=category_obj)
+            if tenant.category:
+                templates = CategoryRoleTemplate.objects.filter(category=tenant.category)
             else:
-                templates = CategoryRoleTemplate.objects.filter(category__code=category_code)
-
-            if not templates.exists():
                 templates = CategoryRoleTemplate.objects.filter(category__code="CLINIC")
 
             for template in templates:
