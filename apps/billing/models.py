@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 from django.db import models
 from django.conf import settings
+from .stripe_models import StripeCustomer, StripeProductMapping
 
 
 class UsageMetric(models.Model):
@@ -33,6 +34,7 @@ class ServiceCatalog(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='CONSULTATION')
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Tax percentage")
+    stripe_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="Linked Stripe Price ID")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -73,6 +75,7 @@ class Invoice(models.Model):
     tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    stripe_checkout_id = models.CharField(max_length=255, blank=True, null=True, db_index=True)
 
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey(
@@ -141,6 +144,7 @@ class Payment(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='CASH')
     transaction_ref = models.CharField(max_length=100, blank=True)
+    stripe_payment_intent_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     paid_at = models.DateTimeField(auto_now_add=True)
     received_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,

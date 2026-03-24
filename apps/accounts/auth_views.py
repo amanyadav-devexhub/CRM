@@ -11,10 +11,12 @@ in the URL and setting local cookies on the tenant subdomain.
 import random
 import logging
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.views import View
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.utils import timezone
 from django.core.mail import send_mail
+from django.core.exceptions import MultipleObjectsReturned
 from django.conf import settings
 from django.core import signing
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -477,4 +479,136 @@ class AuthBridgeView(View):
         response = redirect(dashboard_url)
         _set_jwt_cookies(response, user)
         return response
+
+
+class PasswordResetOTPView(View):
+    """
+    GET  → render email input form
+    POST → check user, generate 6-digit OTP, send email, redirect to verify
+    """
+    template_name = "accounts/password_reset.html"
+
+    def get(self, request):
+        return render(request, self.template_name)
+
+    def post(self, request):
+        email = request.POST.get("email", "").strip()
+        logger.info(f"PasswordResetOTPView.post: Request for email '{email}'")
+
+        if not email:
+            return render(request, self.template_name, {"errors": ["Email is required."]})
+
+        try:
+            # Use iexact for case-insensitive lookup
+            user = User.objects.filter(email__iexact=email).first()
+            if not user:
+                logger.warning(f"PasswordResetOTPView: No user found for '{email}'")
+                return render(request, "accounts/password_reset_done.html")
+        except Exception as e:
+            logger.error(f"PasswordResetOTPView: Error looking up user '{email}': {e}")
+            return render(request, "accounts/password_reset_done.html")
+
+        otp = f"{random.randint(100000, 999999)}"
+        logger.info(f"PasswordResetOTPView: Generated OTP {otp} for user {user.username} ({email})")
+        
+        request.session["reset_otp_code"] = otp
+        request.session["reset_otp_user_id"] = str(user.pk)
+        request.session["reset_otp_email"] = email
+        request.session["reset_otp_created"] = timezone.now().isoformat()
+
+        html_message = render_to_string("accounts/password_reset_email.html", {
+            "user": user,
+            "otp": otp,
+        })
+        
+        try:
+            send_mail(
+                subject="Your HealthCRM Password Reset Code",
+                message=f"Your reset code is: {otp}",
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@healthcrm.com"),
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send reset OTP to {email}: {e}")
+
+        return redirect("/password-reset/verify/")
+
+
+class PasswordResetOTPVerifyView(View):
+    """
+    GET  → render OTP input form
+    POST → verify OTP, set verified flag in session
+    """
+    template_name = "accounts/password_reset_verify.html"
+
+    def get(self, request):
+        email = request.session.get("reset_otp_email", "")
+        if not email:
+            return redirect("/password-reset/")
+        return render(request, self.template_name, {"email": email})
+
+    def post(self, request):
+        entered = request.POST.get("otp", "").strip()
+        stored = request.session.get("reset_otp_code")
+        created = request.session.get("reset_otp_created")
+        email = request.session.get("reset_otp_email", "")
+
+        if not stored or not created:
+            return redirect("/password-reset/")
+
+        from datetime import datetime, timedelta
+        created_dt = datetime.fromisoformat(created)
+        if timezone.now().replace(tzinfo=None) - created_dt.replace(tzinfo=None) > timedelta(minutes=5):
+            return render(request, self.template_name, {"errors": ["Code expired."], "email": email})
+
+        if entered != stored:
+            return render(request, self.template_name, {"errors": ["Invalid code."], "email": email})
+
+        request.session["reset_otp_verified"] = True
+        return redirect("/password-reset/new/")
+
+
+class PasswordResetNewPasswordView(View):
+    """
+    GET  → render new password form
+    POST → update password, clean session
+    """
+    template_name = "accounts/password_reset_new.html"
+
+    def get(self, request):
+        if not request.session.get("reset_otp_verified"):
+            return redirect("/password-reset/")
+        return render(request, self.template_name)
+
+    def post(self, request):
+        if not request.session.get("reset_otp_verified"):
+            return redirect("/password-reset/")
+
+        password = request.POST.get("password", "")
+        confirm = request.POST.get("confirm_password", "")
+        user_id = request.session.get("reset_otp_user_id")
+
+        errors = []
+        if not password or len(password) < 8:
+            errors.append("Password must be at least 8 characters.")
+        if password != confirm:
+            errors.append("Passwords do not match.")
+
+        if errors:
+            return render(request, self.template_name, {"errors": errors})
+
+        try:
+            user = User.objects.get(pk=user_id)
+            user.set_password(password)
+            user.save()
+
+            # Clean up
+            for key in ["reset_otp_code", "reset_otp_user_id", "reset_otp_email", "reset_otp_created", "reset_otp_verified"]:
+                request.session.pop(key, None)
+
+            return render(request, "accounts/password_reset_complete.html")
+        except User.DoesNotExist:
+            return redirect("/login/")
 

@@ -51,6 +51,7 @@ SHARED_APPS = [
     "apps.accounts",
     "apps.core",
     "apps.inventory",
+    "apps.notifications",
 ]
 
 TENANT_APPS = [
@@ -68,7 +69,6 @@ TENANT_APPS = [
     "apps.pharmacy",
     "apps.analytics",
     "apps.ai",
-    "apps.notifications",
     "apps.utils",
     "apps.hospitals",
     "apps.inventory",
@@ -152,14 +152,14 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Auth transfer is handled via a signed token bridge instead (see auth_views.AuthBridgeView).
 # CSRF_TRUSTED_ORIGINS allows form submissions from tenant subdomains and ngrok.
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "http://*.localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://*.127.0.0.1:8000",
-    "https://*.ngrok-free.app",
-    "https://*.ngrok-free.dev",
-    "https://*.ngrok.io",
-]
+        "http://localhost:8000",
+        "http://*.localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://*.127.0.0.1:8000",
+        "https://*.ngrok-free.app",
+        "https://*.ngrok-free.dev",
+        "https://*.ngrok.io",
+    ]
 
 
 
@@ -298,4 +298,11 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "saniyatanyal1@gmail.com"
 EMAIL_HOST_PASSWORD = "yibiguqicxrtuwxv"
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# ──────────────────────────────────────────────
+# Stripe Integration
+# ──────────────────────────────────────────────
+STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+STRIPE_CURRENCY = os.environ.get("STRIPE_CURRENCY", "INR")

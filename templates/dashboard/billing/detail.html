@@ -81,6 +81,15 @@
                 </button>
             </div>
         </form>
+
+        <form action="{% url 'billing:stripe-checkout' %}" method="post" style="margin-top:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="type" value="invoice">
+            <input type="hidden" name="id" value="{{ invoice.id }}">
+            <button type="submit" class="action-btn blue">
+                <span class="material-icons-round">payment</span> Pay Online (Stripe)
+            </button>
+        </form>
     </div>
     {% endif %}
 </div>
@@ -119,6 +128,8 @@
     .action-btn { width: 100%; padding: .6rem; border-radius: 10px; border: none; cursor: pointer; font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: .5rem; justify-content: center; }
     .action-btn.green { background: rgba(16,185,129,.12); color: #10b981; }
     .action-btn.green:hover { background: rgba(16,185,129,.2); }
+    .action-btn.blue { background: rgba(59,130,246,.12); color: #3b82f6; }
+    .action-btn.blue:hover { background: rgba(59,130,246,.2); }
     .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: rgba(241,245,249,.5); text-decoration: none; }
     .btn-back:hover { color: #3b82f6; }
 </style>

@@ -208,6 +208,7 @@ class SubscriptionPlan(models.Model):
         ('YEARLY', 'Yearly'),
     ]
     billing_cycle = models.CharField(max_length=20, choices=BILLING_CHOICES, default='MONTHLY')
+    stripe_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="Linked Stripe Price ID")
     
     description = models.TextField(blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Order in which plan appears (lowest first)")

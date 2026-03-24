@@ -32,3 +32,5 @@ fix_links.py
 remove_local_sidebars.py
 debug_urls.py
 all_matches.txt
+check_tables.py
+verify_fix.py

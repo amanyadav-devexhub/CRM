@@ -44,6 +44,7 @@ from apps.accounts.public_views import LandingPageView
 from apps.accounts.auth_views import (
     RegisterView, OTPVerifyView, ResendOTPView,
     LoginView, LogoutView, AuthBridgeView,
+    PasswordResetOTPView, PasswordResetOTPVerifyView, PasswordResetNewPasswordView,
 )
 from apps.accounts.jwt_views import (
     JWTTokenObtainView, JWTTokenRefreshView, JWTTokenVerifyView,
@@ -61,9 +62,6 @@ from apps.accounts.role_views import (
 from apps.appointments.views import (
     AppointmentListView, AppointmentCreateView, AppointmentDetailView,
     AvailableSlotsAPIView,
-)
-from apps.billing.views import (
-    BillingListView, BillingCreateView, BillingDetailView,
 )
 from apps.clinical.views import (
     ClinicalNoteListView, ClinicalNoteCreateView, ClinicalNoteEditView,
@@ -89,20 +87,13 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("auth-bridge/", AuthBridgeView.as_view(), name="auth-bridge"),
 
-    # ── Password Reset ──
-    path("password-reset/", auth_views.PasswordResetView.as_view(
-        template_name="accounts/password_reset.html",
-        email_template_name="accounts/password_reset_email.html",
-        subject_template_name="accounts/password_reset_subject.txt",
-        success_url="/password-reset/done/",
-    ), name="password_reset"),
+    # ── Password Reset (OTP Based) ──
+    path("password-reset/", PasswordResetOTPView.as_view(), name="password_reset"),
+    path("password-reset/verify/", PasswordResetOTPVerifyView.as_view(), name="password_reset_verify"),
+    path("password-reset/new/", PasswordResetNewPasswordView.as_view(), name="password_reset_confirm"),
     path("password-reset/done/", auth_views.PasswordResetDoneView.as_view(
         template_name="accounts/password_reset_done.html",
     ), name="password_reset_done"),
-    path("password-reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
-        template_name="accounts/password_reset_confirm.html",
-        success_url="/password-reset/complete/",
-    ), name="password_reset_confirm"),
     path("password-reset/complete/", auth_views.PasswordResetCompleteView.as_view(
         template_name="accounts/password_reset_complete.html",
     ), name="password_reset_complete"),
@@ -170,9 +161,7 @@ urlpatterns = [
     path("dashboard/appointments/<uuid:pk>/", AppointmentDetailView.as_view(), name="appointment-detail"),
 
     # ── Billing ──
-    path("dashboard/billing/", BillingListView.as_view(), name="billing-list"),
-    path("dashboard/billing/create/", BillingCreateView.as_view(), name="billing-create"),
-    path("dashboard/billing/<uuid:pk>/", BillingDetailView.as_view(), name="billing-detail"),
+    path("dashboard/billing/", include("apps.billing.urls")),
 
     # ── Clinical Notes & Prescriptions ──
     path("dashboard/clinical/notes/", ClinicalNoteListView.as_view(), name="note-list"),
