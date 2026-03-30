@@ -12,6 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Management{% endblock %} — HealthCRM</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
@@ -43,25 +44,43 @@
         }
     </style>
     {% block extra_css %}{% endblock %}
+
+    <style>
+        #global-preloader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg, #f8f7f4);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        [data-theme="dark"] #global-preloader {
+            background: var(--bg, #0a0d14);
+        }
+        #global-preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Global Preloader -->
+    <div id="global-preloader">
+        <div id="lottie-preloader" style="width: 150px; height: 150px;"></div>
+    </div>
+
     <div class="layout">
         <!-- ─── Unified Management Sidebar ─── -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
-                    <div class="logo-icon"
-                        style="background: var(--mgmt-gradient, var(--gradient-blue)); -webkit-background-clip: padding-box; border-radius: 8px; color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
-                        {% block hub_icon %}M{% endblock %}
-                    </div>
-                    <div class="logo-text" style="display: flex; flex-direction: column; justify-content: center;">
-                        <h2
-                            style="margin: 0; font-size: 18px; font-weight: 700; background: var(--mgmt-gradient, var(--gradient-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                            {% block hub_name %}HealthCRM{% endblock %}
-                        </h2>
-                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 500; line-height: 1.2;">{% block hub_subtitle %}Management{% endblock %}</span>
-                    </div>
+                <div class="sidebar-brand">
+                    <a href="/dashboard/">
+                        <img src="{% static 'images/dark_logo.png' %}" alt="Arogya" class="brand-logo logo-dark">
+                        <img src="{% static 'images/light_logo.png' %}" alt="Arogya" class="brand-logo logo-light">
+                    </a>
                 </div>
             </div>
 
@@ -197,6 +216,32 @@
     </script>
     {% block extra_js %}{% endblock %}
 
+
+    <!-- Lottie Preloader Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var lottieContainer = document.getElementById('lottie-preloader');
+            if (lottieContainer && typeof lottie !== 'undefined') {
+                lottie.loadAnimation({
+                    container: lottieContainer,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: (document.documentElement.getAttribute('data-theme') === 'dark' || localStorage.getItem('theme') === 'dark') ? '{% static "animations/dark_preloader.json" %}' : '{% static "animations/preloader.json" %}'
+                });
+            }
+        });
+
+        window.addEventListener("load", function() {
+            var preloader = document.getElementById('global-preloader');
+            if (preloader) {
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                }, 150);
+            }
+        });
+    </script>
 </body>
 
 </html>

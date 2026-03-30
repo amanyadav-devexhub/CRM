@@ -6,6 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirm Your Workspace — Arogya</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
   <link
     href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
@@ -515,9 +516,34 @@
       }
     }
   </style>
+
+    <style>
+        #global-preloader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg, #f8f7f4);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        [data-theme="dark"] #global-preloader {
+            background: var(--bg, #0a0d14);
+        }
+        #global-preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Global Preloader -->
+    <div id="global-preloader">
+        <div id="lottie-preloader" style="width: 150px; height: 150px;"></div>
+    </div>
+
 
   <div id="loader" class="loader-overlay">
     <div class="l-spin"></div>
@@ -532,13 +558,7 @@
       <div class="lgrain"></div>
 
       <div class="brand">
-        <div class="bmark">
-          <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-            <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2" stroke-linecap="round" />
-            <circle cx="9" cy="9" r="2.4" fill="#5DCAA5" />
-          </svg>
-        </div>
-        <span class="bname">Arogya</span>
+        <img src="{% static 'images/light_logo.png' %}" alt="Arogya" style="height:32px;width:auto;">
       </div>
 
       <div class="lmid">
@@ -706,6 +726,32 @@
     }
     window.addEventListener('DOMContentLoaded', initTheme);
   </script>
+
+    <!-- Lottie Preloader Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var lottieContainer = document.getElementById('lottie-preloader');
+            if (lottieContainer && typeof lottie !== 'undefined') {
+                lottie.loadAnimation({
+                    container: lottieContainer,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: (document.documentElement.getAttribute('data-theme') === 'dark' || localStorage.getItem('theme') === 'dark') ? '{% static "animations/dark_preloader.json" %}' : '{% static "animations/preloader.json" %}'
+                });
+            }
+        });
+
+        window.addEventListener("load", function() {
+            var preloader = document.getElementById('global-preloader');
+            if (preloader) {
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                }, 150);
+            }
+        });
+    </script>
 </body>
 
 </html>

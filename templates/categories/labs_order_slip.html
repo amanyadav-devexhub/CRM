@@ -1,7 +1,9 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Lab Test Slip - {{ order.id|stringformat:".8s" }}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
         .slip-container { max-width: 600px; margin: auto; border: 2px solid #EEE; padding: 30px; border-radius: 12px; }

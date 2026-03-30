@@ -355,7 +355,7 @@ class ClinicSettingsView(LoginRequiredMixin, View):
         date_formats = DateFormat.objects.filter(status=True).order_by('label')
 
         return render(request, self.template_name, {
-            "tenant": tenant, 
+            "tenant_profile": tenant, 
             "countries": countries,
             "currencies": currencies,
             "languages": languages,
@@ -433,7 +433,7 @@ class ClinicSettingsView(LoginRequiredMixin, View):
         tenant.emergency_available = request.POST.get("emergency_available") == "on"
 
         tenant.save()
-        return render(request, self.template_name, {"tenant": tenant, "saved": True})
+        return render(request, self.template_name, {"tenant_profile": tenant, "saved": True})
 
 
 # ==========================================

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,6 +6,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Arogyra — Smart Healthcare CRM</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@300;400;500&display=swap"
@@ -113,6 +115,20 @@
             align-items: center;
             gap: 8px
         }
+
+        .logo-img {
+            height: 34px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* Light theme: show dark_logo, hide light_logo */
+        .logo-dark { display: block; }
+        .logo-light { display: none; }
+
+        /* Dark theme: show light_logo, hide dark_logo */
+        body.dark .logo-dark { display: none; }
+        body.dark .logo-light { display: block; }
 
         .logomark {
             width: 30px;
@@ -1448,20 +1464,40 @@
             .cbox p { font-size: 0.88rem; }
         }
     </style>
+
+    <style>
+        #global-preloader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg, #f8f7f4);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        [data-theme="dark"] #global-preloader {
+            background: var(--bg, #0a0d14);
+        }
+        #global-preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Global Preloader -->
+    <div id="global-preloader">
+        <div id="lottie-preloader" style="width: 150px; height: 150px;"></div>
+    </div>
+
 
     <!-- NAV -->
     <nav id="nav">
         <div class="logo">
-            <div class="logomark">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                    <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2" stroke-linecap="round" />
-                    <circle cx="9" cy="9" r="2.4" fill="#5DCAA5" />
-                </svg>
-            </div>
-            <span class="logotype">Arogyra</span>
+            <img src="{% static 'images/dark_logo.png' %}" alt="Arogyra" class="logo-img logo-dark">
+            <img src="{% static 'images/light_logo.png' %}" alt="Arogyra" class="logo-img logo-light">
         </div>
         <div class="nl">
             <a href="#features">Features</a>
@@ -1971,12 +2007,8 @@
     <footer>
         <div class="fw">
             <div class="logo">
-                <div class="logomark" style="width:26px;height:26px;border-radius:7px"><svg width="13" height="13"
-                        viewBox="0 0 18 18" fill="none">
-                        <path d="M9 2v5M9 11v5M2 9h5M11 9h5" stroke="#fff" stroke-width="2" stroke-linecap="round" />
-                        <circle cx="9" cy="9" r="2.4" fill="#5DCAA5" />
-                    </svg></div>
-                <span class="logotype" style="font-size:0.95rem">Arogyra</span>
+                <img src="{% static 'images/dark_logo.png' %}" alt="Arogyra" class="logo-img logo-dark" style="height:28px">
+                <img src="{% static 'images/light_logo.png' %}" alt="Arogyra" class="logo-img logo-light" style="height:28px">
             </div>
             <p>© 2025 Arogyra Healthcare CRM. All rights reserved. <span style="opacity: 0.5; margin-left: 8px">Powered by <a href="https://devexhub.com" target="_blank" style="color:var(--navy);text-decoration:none;font-weight:600">Devexhub</a></span></p>
             <div class="fl"><a href="/login/">Login</a><a href="/register/">Register</a><a href="#">Privacy</a><a href="#">Terms</a></div>
@@ -2032,6 +2064,32 @@
         document.addEventListener('click', (e) => {
             if (!mDrawer.contains(e.target) && !menuToggle.contains(e.target)) {
                 mDrawer.classList.remove('on');
+            }
+        });
+    </script>
+
+    <!-- Lottie Preloader Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var lottieContainer = document.getElementById('lottie-preloader');
+            if (lottieContainer && typeof lottie !== 'undefined') {
+                lottie.loadAnimation({
+                    container: lottieContainer,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: (document.documentElement.getAttribute('data-theme') === 'dark' || localStorage.getItem('theme') === 'dark') ? '{% static "animations/dark_preloader.json" %}' : '{% static "animations/preloader.json" %}'
+                });
+            }
+        });
+
+        window.addEventListener("load", function() {
+            var preloader = document.getElementById('global-preloader');
+            if (preloader) {
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                }, 150);
             }
         });
     </script>

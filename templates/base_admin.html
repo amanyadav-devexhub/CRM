@@ -13,6 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Healthcare CRM — Platform Admin">
     <title>{% block title %}Admin{% endblock %} — HealthCRM Platform</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
@@ -206,19 +207,43 @@
         }
     </style>
     {% block extra_css %}{% endblock %}
+
+    <style>
+        #global-preloader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg, #f8f7f4);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        [data-theme="dark"] #global-preloader {
+            background: var(--bg, #0a0d14);
+        }
+        #global-preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Global Preloader -->
+    <div id="global-preloader">
+        <div id="lottie-preloader" style="width: 150px; height: 150px;"></div>
+    </div>
+
     <div class="layout">
 
         <!-- ─── Admin Sidebar ─── -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <div class="brand-icon">P</div>
-                <div>
-                    <h2>HealthCRM</h2>
-                    <span>Platform Admin</span>
-                </div>
+                <a href="/admin-dashboard/">
+                    <img src="{% static 'images/dark_logo.png' %}" alt="Arogya" class="brand-logo logo-dark">
+                    <img src="{% static 'images/light_logo.png' %}" alt="Arogya" class="brand-logo logo-light">
+                </a>
             </div>
 
             <nav class="sidebar-nav">
@@ -445,6 +470,32 @@
     </script>
     {% block extra_js %}{% endblock %}
 
+
+    <!-- Lottie Preloader Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var lottieContainer = document.getElementById('lottie-preloader');
+            if (lottieContainer && typeof lottie !== 'undefined') {
+                lottie.loadAnimation({
+                    container: lottieContainer,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: (document.documentElement.getAttribute('data-theme') === 'dark' || localStorage.getItem('theme') === 'dark') ? '{% static "animations/dark_preloader.json" %}' : '{% static "animations/preloader.json" %}'
+                });
+            }
+        });
+
+        window.addEventListener("load", function() {
+            var preloader = document.getElementById('global-preloader');
+            if (preloader) {
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                }, 150);
+            }
+        });
+    </script>
 </body>
 
 </html>

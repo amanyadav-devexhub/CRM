@@ -28,7 +28,7 @@
             <div class="form-group">
                 <label for="clinic_name">Organization Name</label>
                 <input type="text" id="clinic_name" name="clinic_name"
-                       value="{{ tenant.name }}" placeholder="My Organization">
+                       value="{{ tenant_profile.name }}" placeholder="My Organization">
             </div>
             <div class="form-group">
                 <label for="country_id">Country</label>
@@ -40,7 +40,7 @@
                     <select id="country_id" name="country_id" onchange="updateFlag(this);" style="flex-grow: 1;">
                         <option value="" disabled>Select Country</option>
                         {% for country in countries %}
-                        <option value="{{ country.id }}" data-flag="{{ country.flag_url }}" {% if tenant.country.id == country.id %}selected{% endif %}>
+                        <option value="{{ country.id }}" data-flag="{{ country.flag_url }}" {% if tenant_profile.country.id == country.id %}selected{% endif %}>
                             {{ country.name }} ({{ country.dial_code }})
                         </option>
                         {% endfor %}
@@ -72,28 +72,28 @@
             <div class="form-group">
                 <label for="contact_phone">Contact Phone</label>
                 <input type="tel" id="contact_phone" name="contact_phone"
-                       value="{{ tenant.phone }}" placeholder="+91 98765 43210">
+                       value="{{ tenant_profile.phone }}" placeholder="+91 98765 43210">
             </div>
             <div class="form-group">
                 <label for="gst_number">GST / Tax Number</label>
                 <input type="text" id="gst_number" name="gst_number"
-                       value="{{ tenant.gst_number }}" placeholder="29ABCDE1234F1ZH">
+                       value="{{ tenant_profile.gst_number }}" placeholder="29ABCDE1234F1ZH">
             </div>
             <div class="form-group">
                 <label for="registration_number">Registration Number</label>
                 <input type="text" id="registration_number" name="registration_number"
-                       value="{{ tenant.registration_number }}" placeholder="REG-12345">
+                       value="{{ tenant_profile.registration_number }}" placeholder="REG-12345">
             </div>
             <div class="form-group full-width">
                 <label for="address">Address</label>
                 <textarea id="address" name="address" rows="3"
-                          placeholder="123, Main Street, City, State, PIN">{{ tenant.address }}</textarea>
+                          placeholder="123, Main Street, City, State, PIN">{{ tenant_profile.address }}</textarea>
             </div>
             <div class="form-group">
                 <label for="logo">Organization Logo</label>
                 <input type="file" id="logo" name="logo" accept="image/*">
-                {% if tenant.logo %}
-                <span class="current-file">Current: {{ tenant.logo.name }}</span>
+                {% if tenant_profile.logo %}
+                <span class="current-file">Current: {{ tenant_profile.logo.name }}</span>
                 {% endif %}
             </div>
         </div>
@@ -113,7 +113,7 @@
                 <label for="timezone_id">Timezone</label>
                 <select id="timezone_id" name="timezone_id">
                     {% for tz in timezones %}
-                    <option value="{{ tz.id }}" {% if tenant.timezone.id == tz.id %}selected{% endif %}>
+                    <option value="{{ tz.id }}" {% if tenant_profile.timezone.id == tz.id %}selected{% endif %}>
                         {{ tz.name }} ({{ tz.offset_label }})
                     </option>
                     {% endfor %}
@@ -123,7 +123,7 @@
                 <label for="currency_id">Currency</label>
                 <select id="currency_id" name="currency_id">
                     {% for curr in currencies %}
-                    <option value="{{ curr.id }}" {% if tenant.currency.id == curr.id %}selected{% endif %}>
+                    <option value="{{ curr.id }}" {% if tenant_profile.currency.id == curr.id %}selected{% endif %}>
                         {{ curr.name }} ({{ curr.symbol }})
                     </option>
                     {% endfor %}
@@ -133,7 +133,7 @@
                 <label for="language_id">Language</label>
                 <select id="language_id" name="language_id">
                     {% for lang in languages %}
-                    <option value="{{ lang.id }}" {% if tenant.language.id == lang.id %}selected{% endif %}>
+                    <option value="{{ lang.id }}" {% if tenant_profile.language.id == lang.id %}selected{% endif %}>
                         {{ lang.name }} {% if lang.native_name %}({{ lang.native_name }}){% endif %}
                     </option>
                     {% endfor %}
@@ -143,7 +143,7 @@
                 <label for="date_format_id">Date Format</label>
                 <select id="date_format_id" name="date_format_id">
                     {% for df in date_formats %}
-                    <option value="{{ df.id }}" {% if tenant.date_format.id == df.id %}selected{% endif %}>
+                    <option value="{{ df.id }}" {% if tenant_profile.date_format.id == df.id %}selected{% endif %}>
                         {{ df.label }}
                     </option>
                     {% endfor %}
@@ -168,7 +168,7 @@
 
         <div class="form-group" style="margin-top: 1rem;">
             <label class="toggle-label">
-                <input type="checkbox" name="emergency_available" {% if tenant.emergency_available %}checked{% endif %}>
+                <input type="checkbox" name="emergency_available" {% if tenant_profile.emergency_available %}checked{% endif %}>
                 <span class="toggle-text">Emergency services available 24/7</span>
             </label>
         </div>
@@ -182,7 +182,7 @@
         </button>
     </div>
 
-    <input type="hidden" name="holidays" id="holidaysInput" value='{{ tenant.holidays|safe }}'>
+    <input type="hidden" name="holidays" id="holidaysInput" value='{{ tenant_profile.holidays|safe }}'>
 </form>
 
 <style>
@@ -250,7 +250,7 @@
 
     // Parse existing working hours from settings
     let wh = {};
-    try { wh = JSON.parse('{{ tenant.working_hours|escapejs }}' || '{}'); } catch(e) { wh = {}; }
+    try { wh = JSON.parse('{{ tenant_profile.working_hours|escapejs }}' || '{}'); } catch(e) { wh = {}; }
 
     const grid = document.getElementById('workingHoursGrid');
     const hiddenInput = document.getElementById('workingHoursInput');

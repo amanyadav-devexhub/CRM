@@ -154,13 +154,39 @@ a:hover {
 }
 
 .sidebar-brand {
-    padding: 20px 24px;
+    padding: 16px 24px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 12px;
 }
 
+.sidebar-brand a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.sidebar-brand .brand-logo {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Theme-aware logo switching for sidebar */
+.sidebar-brand .logo-dark { display: block; }
+.sidebar-brand .logo-light { display: none; }
+
+[data-theme="dark"] .sidebar-brand .logo-dark { display: none; }
+[data-theme="dark"] .sidebar-brand .logo-light { display: block; }
+
+/* Theme-aware logo switching — generic utility */
+.logo-dark { display: block; }
+.logo-light { display: none; }
+
+[data-theme="dark"] .logo-dark { display: none; }
+[data-theme="dark"] .logo-light { display: block; }
+
+/* Legacy support for pages still using old brand structure */
 .sidebar-brand .brand-icon {
     width: 40px;
     height: 40px;
