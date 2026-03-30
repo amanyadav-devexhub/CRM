@@ -72,7 +72,7 @@ class RoleCreateView(View):
             if selected_perms:
                 role.permissions.set(selected_perms)
 
-        return redirect("/dashboard/settings/roles/")
+        return redirect("/roles/")
 
 
 class RoleEditView(View):
@@ -130,7 +130,7 @@ class RoleEditView(View):
             role.is_customized = True
             role.save(update_fields=["is_customized"])
 
-        return redirect("/dashboard/settings/roles/")
+        return redirect("/roles/")
 
 
 class RoleDeleteView(View):
@@ -144,11 +144,11 @@ class RoleDeleteView(View):
         role = get_object_or_404(Role, pk=pk, tenant=tenant)
         
         if role.is_system_role:
-            return redirect("/dashboard/settings/roles/")
+            return redirect("/roles/")
             
         if role.users.exists():
             # In a real app, flash a message "Cannot delete role in use"
-            return redirect("/dashboard/settings/roles/")
+            return redirect("/roles/")
 
         role.delete()
-        return redirect("/dashboard/settings/roles/")
+        return redirect("/roles/")

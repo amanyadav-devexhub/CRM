@@ -156,7 +156,7 @@ class StaffCreateView(View):
             # Non-blocking error logging here if preferred
             pass
 
-        return redirect("/dashboard/staff/")
+        return redirect("/staff/")
 
 
 class StaffEditView(View):
@@ -266,7 +266,7 @@ class StaffEditView(View):
                 }
             )
 
-        return redirect("/dashboard/staff/")
+        return redirect("/staff/")
 
 
 class StaffDeleteView(View):
@@ -285,7 +285,7 @@ class StaffDeleteView(View):
         employee.user.is_active = False
         employee.user.save(update_fields=["is_active"])
 
-        return redirect("/dashboard/staff/")
+        return redirect("/staff/")
 
 
 class DoctorListView(View):

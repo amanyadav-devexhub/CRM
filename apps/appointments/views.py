@@ -207,11 +207,11 @@ class AppointmentCreateView(View):
             booking_time = datetime.strptime(apt_time, "%H:%M").time()
         except (ValueError, TypeError):
             django_messages.error(request, "Invalid date or time format.")
-            return redirect("/dashboard/appointments/book/")
+            return redirect("/appointments/book/")
 
         if booking_date < datetime.now().date():
             django_messages.error(request, "Cannot book appointments for past dates.")
-            return redirect("/dashboard/appointments/book/")
+            return redirect("/appointments/book/")
 
         # ── Slot Validation ──
         matching_slot = DoctorSlot.objects.filter(
@@ -227,7 +227,7 @@ class AppointmentCreateView(View):
                 request,
                 f"Dr. {doctor.name} does not have a schedule slot at {apt_time} on {booking_date.strftime('%d %b %Y')}."
             )
-            return redirect("/dashboard/appointments/book/")
+            return redirect("/appointments/book/")
 
         # ── Double-Booking Prevention (with row-level lock) ──
         with transaction.atomic():
@@ -248,7 +248,7 @@ class AppointmentCreateView(View):
                     request,
                     f"This slot is already fully booked ({matching_slot.max_bookings} booking(s) max)."
                 )
-                return redirect("/dashboard/appointments/book/")
+                return redirect("/appointments/book/")
 
             appointment = Appointment.objects.create(
                 patient=patient,
@@ -270,7 +270,7 @@ class AppointmentCreateView(View):
         )
 
         django_messages.success(request, "Appointment booked successfully! Awaiting doctor confirmation.")
-        return redirect("/dashboard/appointments/")
+        return redirect("/appointments/")
 
 
 class AppointmentDetailView(View):
@@ -362,5 +362,5 @@ class AppointmentDetailView(View):
                 notes=f"Status changed from {old_status} to {new_status}",
             )
 
-        return redirect(f"/dashboard/appointments/{pk}/")
+        return redirect(f"/appointments/{pk}/")
 

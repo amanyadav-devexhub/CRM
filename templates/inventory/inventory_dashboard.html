@@ -236,7 +236,7 @@
             return;
         }
 
-        fetch(`/dashboard/inventory/ajax/categories/?type_id=${typeId}`)
+        fetch(`/inventory/ajax/categories/?type_id=${typeId}`)
             .then(response => response.json())
             .then(data => {
                 catSelect.innerHTML = '<option value="">Select Category</option>';
@@ -251,7 +251,7 @@
 
     function openStockTransaction(itemId, itemName) {
         document.getElementById('transItemName').textContent = itemName;
-        document.getElementById('stockTransForm').action = `/dashboard/inventory/${itemId}/transaction/`;
+        document.getElementById('stockTransForm').action = `/inventory/${itemId}/transaction/`;
         openDrawer('stockTransDrawer');
     }
 

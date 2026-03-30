@@ -74,11 +74,11 @@ class ScheduleCreateView(View):
             parsed_date = datetime.strptime(schedule_date, "%Y-%m-%d").date()
         except (ValueError, TypeError):
             messages.error(request, "Invalid date format.")
-            return redirect("/dashboard/schedules/create/")
+            return redirect("/schedules/create/")
 
         if parsed_date < date.today():
             messages.error(request, "Cannot create schedules for past dates.")
-            return redirect("/dashboard/schedules/create/")
+            return redirect("/schedules/create/")
 
         # Check for overlapping slots on the same date
         existing = DoctorSlot.objects.filter(
@@ -91,7 +91,7 @@ class ScheduleCreateView(View):
         )
         if existing.exists():
             messages.error(request, "This time range overlaps with an existing slot for this doctor on this date.")
-            return redirect("/dashboard/schedules/create/")
+            return redirect("/schedules/create/")
 
         DoctorSlot.objects.create(
             doctor=doctor,
@@ -102,7 +102,7 @@ class ScheduleCreateView(View):
             max_bookings=int(max_bookings),
         )
         messages.success(request, f"Schedule slot added for Dr. {doctor.name} on {parsed_date.strftime('%d %b %Y')}.")
-        return redirect("/dashboard/schedules/")
+        return redirect("/schedules/")
 
 
 class ScheduleEditView(View):
@@ -126,11 +126,11 @@ class ScheduleEditView(View):
             parsed_date = datetime.strptime(new_date, "%Y-%m-%d").date()
         except (ValueError, TypeError):
             messages.error(request, "Invalid date format.")
-            return redirect(f"/dashboard/schedules/{pk}/edit/")
+            return redirect(f"/schedules/{pk}/edit/")
 
         if parsed_date < date.today():
             messages.error(request, "Cannot set schedule to a past date.")
-            return redirect(f"/dashboard/schedules/{pk}/edit/")
+            return redirect(f"/schedules/{pk}/edit/")
 
         slot.schedule_date = parsed_date
         slot.start_time = request.POST.get("start_time", slot.start_time)
@@ -149,11 +149,11 @@ class ScheduleEditView(View):
         )
         if existing.exists():
             messages.error(request, "This time range overlaps with an existing slot.")
-            return redirect(f"/dashboard/schedules/{pk}/edit/")
+            return redirect(f"/schedules/{pk}/edit/")
 
         slot.save()
         messages.success(request, f"Schedule updated for Dr. {slot.doctor.name}.")
-        return redirect("/dashboard/schedules/")
+        return redirect("/schedules/")
 
 
 class ScheduleDeleteView(View):
@@ -164,4 +164,4 @@ class ScheduleDeleteView(View):
         slot.is_active = False
         slot.save()
         messages.success(request, f"Schedule slot removed for Dr. {slot.doctor.name}.")
-        return redirect("/dashboard/schedules/")
+        return redirect("/schedules/")

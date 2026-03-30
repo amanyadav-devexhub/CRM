@@ -489,7 +489,7 @@ class DoctorDashboardView(LoginRequiredMixin, View):
             "recent_appointments": recent_qs,
             "recent_patients": recent_patients,
         }
-        return render(request, "dashboard/roles/doctor.html", context)
+        return render(request, "/roles/doctor.html", context)
 
 
 class ReceptionDashboardView(LoginRequiredMixin, View):
@@ -512,5 +512,5 @@ class ReceptionDashboardView(LoginRequiredMixin, View):
             "recent_patients": recent_patients,
             "today_appointments": 0,
         }
-        return render(request, "dashboard/roles/reception.html", context)
+        return render(request, "/roles/reception.html", context)
 

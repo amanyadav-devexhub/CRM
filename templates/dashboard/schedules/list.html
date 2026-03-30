@@ -19,7 +19,7 @@
             </select>
         </form>
     </div>
-    <a href="/dashboard/schedules/create/" class="btn-primary">
+    <a href="/schedules/create/" class="btn-primary">
         <span class="material-icons-round">add_circle</span>
         Add Schedule Slot
     </a>
@@ -61,10 +61,10 @@
                 <td>{{ slot.max_bookings }}</td>
                 <td>
                     <div class="action-btns">
-                        <a href="/dashboard/schedules/{{ slot.pk }}/edit/" class="btn-icon" title="Edit">
+                        <a href="/schedules/{{ slot.pk }}/edit/" class="btn-icon" title="Edit">
                             <span class="material-icons-round">edit</span>
                         </a>
-                        <form method="post" action="/dashboard/schedules/{{ slot.pk }}/delete/" class="inline-form"
+                        <form method="post" action="/schedules/{{ slot.pk }}/delete/" class="inline-form"
                               onsubmit="return confirm('Remove this schedule slot?')">
                             {% csrf_token %}
                             <button type="submit" class="btn-icon danger" title="Delete">
@@ -89,7 +89,7 @@
     <span class="material-icons-round">schedule</span>
     <h3>No Schedules Found</h3>
     <p>Add working hours for your doctors to enable appointment booking.</p>
-    <a href="/dashboard/schedules/create/" class="btn-primary" style="margin-top: 1rem;">
+    <a href="/schedules/create/" class="btn-primary" style="margin-top: 1rem;">
         <span class="material-icons-round">add_circle</span>
         Add First Schedule
     </a>

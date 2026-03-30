@@ -130,57 +130,57 @@ urlpatterns = [
     path("dashboard/", SubAdminDashboardView.as_view(), name="dashboard"),
     path("dashboard/doctor/", DoctorDashboardView.as_view(), name="doctor-dashboard"),
     path("dashboard/reception/", ReceptionDashboardView.as_view(), name="reception-dashboard"),
-    path("dashboard/settings/", ClinicSettingsView.as_view(), name="clinic-settings"),
+    path("settings/", ClinicSettingsView.as_view(), name="clinic-settings"),
 
     # ── Staff / Employee CRUD ──
-    path("dashboard/staff/", StaffListView.as_view(), name="staff-list"),
-    path("dashboard/staff/create/", StaffCreateView.as_view(), name="staff-create"),
-    path("dashboard/staff/<uuid:pk>/edit/", StaffEditView.as_view(), name="staff-edit"),
-    path("dashboard/staff/<uuid:pk>/delete/", StaffDeleteView.as_view(), name="staff-delete"),
+    path("staff/", StaffListView.as_view(), name="staff-list"),
+    path("staff/create/", StaffCreateView.as_view(), name="staff-create"),
+    path("staff/<uuid:pk>/edit/", StaffEditView.as_view(), name="staff-edit"),
+    path("staff/<uuid:pk>/delete/", StaffDeleteView.as_view(), name="staff-delete"),
 
     # ── Roles & Permissions ──
-    path("dashboard/settings/roles/", RoleListView.as_view(), name="role-list"),
-    path("dashboard/settings/roles/create/", RoleCreateView.as_view(), name="role-create"),
-    path("dashboard/settings/roles/<int:pk>/edit/", RoleEditView.as_view(), name="role-edit"),
-    path("dashboard/settings/roles/<int:pk>/delete/", RoleDeleteView.as_view(), name="role-delete"),
+    path("roles/", RoleListView.as_view(), name="role-list"),
+    path("roles/create/", RoleCreateView.as_view(), name="role-create"),
+    path("roles/<int:pk>/edit/", RoleEditView.as_view(), name="role-edit"),
+    path("roles/<int:pk>/delete/", RoleDeleteView.as_view(), name="role-delete"),
 
     # ── Doctors ──
-    path("dashboard/doctors/", DoctorListView.as_view(), name="doctor-list"),
+    path("doctors/", DoctorListView.as_view(), name="doctor-list"),
 
     # ── Schedules ──
-    path("dashboard/schedules/", ScheduleListView.as_view(), name="schedule-list"),
-    path("dashboard/schedules/create/", ScheduleCreateView.as_view(), name="schedule-create"),
-    path("dashboard/schedules/<uuid:pk>/edit/", ScheduleEditView.as_view(), name="schedule-edit"),
-    path("dashboard/schedules/<uuid:pk>/delete/", ScheduleDeleteView.as_view(), name="schedule-delete"),
+    path("schedules/", ScheduleListView.as_view(), name="schedule-list"),
+    path("schedules/create/", ScheduleCreateView.as_view(), name="schedule-create"),
+    path("schedules/<uuid:pk>/edit/", ScheduleEditView.as_view(), name="schedule-edit"),
+    path("schedules/<uuid:pk>/delete/", ScheduleDeleteView.as_view(), name="schedule-delete"),
 
     # ── Appointments ──
-    path("dashboard/appointments/", AppointmentListView.as_view(), name="appointment-list"),
-    path("dashboard/appointments/book/", AppointmentCreateView.as_view(), name="appointment-create"),
-    path("dashboard/appointments/slots/", AvailableSlotsAPIView.as_view(), name="available-slots"),
-    path("dashboard/appointments/<uuid:pk>/", AppointmentDetailView.as_view(), name="appointment-detail"),
+    path("appointments/", AppointmentListView.as_view(), name="appointment-list"),
+    path("appointments/book/", AppointmentCreateView.as_view(), name="appointment-create"),
+    path("appointments/slots/", AvailableSlotsAPIView.as_view(), name="available-slots"),
+    path("appointments/<uuid:pk>/", AppointmentDetailView.as_view(), name="appointment-detail"),
 
     # ── Billing ──
-    path("dashboard/billing/", BillingListView.as_view(), name="billing-list"),
-    path("dashboard/billing/create/", BillingCreateView.as_view(), name="billing-create"),
-    path("dashboard/billing/<uuid:pk>/", BillingDetailView.as_view(), name="billing-detail"),
+    path("billing/", BillingListView.as_view(), name="billing-list"),
+    path("billing/create/", BillingCreateView.as_view(), name="billing-create"),
+    path("billing/<uuid:pk>/", BillingDetailView.as_view(), name="billing-detail"),
 
     # ── Clinical Notes & Prescriptions ──
-    path("dashboard/clinical/notes/", ClinicalNoteListView.as_view(), name="note-list"),
-    path("dashboard/clinical/notes/create/", ClinicalNoteCreateView.as_view(), name="note-create"),
-    path("dashboard/clinical/notes/<uuid:pk>/edit/", ClinicalNoteEditView.as_view(), name="note-edit"),
-    path("dashboard/clinical/prescriptions/", PrescriptionListView.as_view(), name="prescription-list"),
-    path("dashboard/clinical/prescriptions/create/", PrescriptionCreateView.as_view(), name="prescription-create"),
-    path("dashboard/clinical/prescriptions/<uuid:pk>/", PrescriptionDetailView.as_view(), name="prescription-detail"),
-    path("dashboard/clinical/prescriptions/<uuid:pk>/pdf/", PrescriptionCreateView.as_view(), name="prescription-pdf"), # Placeholder for now
+    path("notes/", ClinicalNoteListView.as_view(), name="note-list"),
+    path("notes/create/", ClinicalNoteCreateView.as_view(), name="note-create"),
+    path("notes/<uuid:pk>/edit/", ClinicalNoteEditView.as_view(), name="note-edit"),
+    path("prescriptions/", PrescriptionListView.as_view(), name="prescription-list"),
+    path("prescriptions/create/", PrescriptionCreateView.as_view(), name="prescription-create"),
+    path("prescriptions/<uuid:pk>/", PrescriptionDetailView.as_view(), name="prescription-detail"),
+    path("prescriptions/<uuid:pk>/pdf/", PrescriptionCreateView.as_view(), name="prescription-pdf"), # Placeholder for now
 
     # ── Analytics & Reports ──
-    path("dashboard/analytics/", AnalyticsDashboardView.as_view(), name="analytics-dashboard"),
-    path("dashboard/analytics/revenue/", RevenueAnalyticsView.as_view(), name="analytics-revenue"),
-    path("dashboard/analytics/appointments/", AppointmentAnalyticsView.as_view(), name="analytics-appointments"),
-    path("dashboard/analytics/doctors/", DoctorAnalyticsView.as_view(), name="analytics-doctors"),
+    path("analytics/", AnalyticsDashboardView.as_view(), name="analytics-dashboard"),
+    path("analytics/revenue/", RevenueAnalyticsView.as_view(), name="analytics-revenue"),
+    path("analytics/appointments/", AppointmentAnalyticsView.as_view(), name="analytics-appointments"),
+    path("analytics/doctors/", DoctorAnalyticsView.as_view(), name="analytics-doctors"),
 
     # ── Global Inventory ──
-    path("dashboard/inventory/", include("apps.inventory.urls")),
+    path("inventory/", include("apps.inventory.urls")),
 
     # ── Patient HTML pages ──
     path("patients/", PatientListView.as_view(), name="patient-list"),
