@@ -51,7 +51,7 @@
             --amber: #EF9F27;
             --amber-d: #FAEEDA;
             --purple-d: #EEEDFE;
-            --nav-glass: rgba(255, 255, 255, 0.85);
+            --nav-glass: var(--bg-secondary);
             --nav-border: rgba(0, 0, 0, 0.07);
             --segment-bg: var(--ink);
         }
@@ -723,12 +723,12 @@
         .spk {
             flex: 1;
             border-radius: 3px 3px 0 0;
-            background: rgba(255, 255, 255, 0.22);
+            background: var(--bg-secondary);
             transition: background 0.2s
         }
 
         .spk:hover {
-            background: rgba(255, 255, 255, 0.55)
+            background: var(--bg-secondary)
         }
 
         .spk.hi {
@@ -906,7 +906,7 @@
         }
 
         .fc-dark p {
-            color: rgba(255, 255, 255, 0.6)
+            color: var(--bg-secondary)
         }
 
         /* ── WHY ── */
@@ -994,7 +994,7 @@
             left: 9%;
             right: 9%;
             height: 1px;
-            background: rgba(255, 255, 255, 0.07)
+            background: var(--bg-secondary)
         }
 
         .hs {
@@ -1012,8 +1012,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             font-family: 'Bricolage Grotesque', sans-serif;
             font-size: 1.2rem;
             font-weight: 700;
@@ -1050,7 +1050,7 @@
 
         .hs p {
             font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.42);
+            color: var(--bg-secondary);
             line-height: 1.7;
             font-weight: 300
         }
@@ -1181,7 +1181,7 @@
 
         .pbox p {
             font-size: 0.855rem;
-            color: rgba(255, 255, 255, 0.52);
+            color: var(--bg-secondary);
             line-height: 1.8;
             font-weight: 300;
             margin-bottom: 22px;
@@ -1232,7 +1232,7 @@
             width: 280px;
             height: 280px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.025)
+            background: var(--bg-secondary)
         }
 
         .cbox::after {
@@ -1258,7 +1258,7 @@
         }
 
         .cbox p {
-            color: rgba(255, 255, 255, 0.47);
+            color: var(--bg-secondary);
             font-size: 1rem;
             margin-bottom: 34px;
             font-weight: 300;

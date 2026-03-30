@@ -27,8 +27,8 @@
         bottom: 0;
         width: 100%;
         max-width: 440px;
-        background: #111827; /* Deep dark background */
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        background: var(--bg-card); /* Deep dark background */
+        border-left: 1px solid var(--border-color);
         box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
         z-index: 2001;
         transform: translateX(100%);
@@ -43,11 +43,11 @@
 
     .drawer-header {
         padding: 24px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--bg-secondary);
     }
 
     .drawer-header h2 {
@@ -65,15 +65,15 @@
 
     .drawer-footer {
         padding: 24px;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        border-top: 1px solid var(--border-color);
         display: flex;
         justify-content: flex-end;
         gap: 12px;
-        background: rgba(255, 255, 255, 0.01);
+        background: var(--bg-secondary);
     }
 
     .drawer-close {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--bg-secondary);
         border: none;
         color: var(--text-muted);
         width: 36px;
@@ -96,7 +96,7 @@
         display: block;
         font-size: 0.8rem;
         font-weight: 500;
-        color: rgba(241, 245, 249, 0.5);
+        color: var(--text-secondary);
         margin-bottom: 8px;
         text-transform: uppercase;
         letter-spacing: 0.02em;
@@ -106,8 +106,8 @@
     .drawer-form .form-select {
         width: 100%;
         padding: 12px 14px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         border-radius: 10px;
         color: #fff;
         font-size: 0.95rem;
@@ -117,7 +117,7 @@
 
     .drawer-form .form-input:focus, 
     .drawer-form .form-select:focus {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--bg-secondary);
         border-color: var(--accent-orange);
         outline: none;
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);

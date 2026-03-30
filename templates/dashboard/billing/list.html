@@ -63,26 +63,26 @@
 <style>
     .page-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
     .filter-bar { display: flex; gap: .5rem; }
-    .filter-input { padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .8rem; }
-    .filter-input option { background: #111827; }
-    .btn-filter { padding: .5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.06); color: #f1f5f9; font-size: .8rem; cursor: pointer; display: inline-flex; align-items: center; gap: .3rem; }
+    .filter-input { padding: .5rem .75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: .8rem; }
+    .filter-input option { background: var(--bg-card); }
+    .btn-filter { padding: .5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: .8rem; cursor: pointer; display: inline-flex; align-items: center; gap: .3rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.25rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; text-decoration: none; }
-    .table-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; overflow: hidden; }
+    .table-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; }
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th { padding: .75rem 1rem; text-align: left; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: rgba(241,245,249,.4); border-bottom: 1px solid rgba(255,255,255,.06); }
-    .data-table td { padding: .65rem 1rem; font-size: .84rem; border-bottom: 1px solid rgba(255,255,255,.03); }
-    .data-table tr:hover { background: rgba(255,255,255,.02); }
+    .data-table th { padding: .75rem 1rem; text-align: left; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); }
+    .data-table td { padding: .65rem 1rem; font-size: .84rem; border-bottom: 1px solid var(--border-color); }
+    .data-table tr:hover { background: var(--bg-secondary); }
     .inv-num { font-family: monospace; color: #60a5fa; font-weight: 500; }
     .status-pill { padding: .2rem .5rem; border-radius: 5px; font-size: .72rem; font-weight: 600; }
-    .status-pill.draft { background: rgba(255,255,255,.08); color: rgba(241,245,249,.5); }
+    .status-pill.draft { background: var(--bg-secondary); color: var(--text-secondary); }
     .status-pill.sent { background: rgba(59,130,246,.1); color: #60a5fa; }
     .status-pill.paid { background: rgba(16,185,129,.12); color: #10b981; }
     .status-pill.partially_paid { background: rgba(245,158,11,.1); color: #f59e0b; }
     .status-pill.refunded { background: rgba(139,92,246,.1); color: #8b5cf6; }
     .status-pill.cancelled { background: rgba(239,68,68,.1); color: #ef4444; }
-    .btn-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: rgba(241,245,249,.6); text-decoration: none; }
+    .btn-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary); text-decoration: none; }
     .btn-icon:hover { background: rgba(59,130,246,.1); color: #3b82f6; }
-    .empty-state { text-align: center; padding: 3rem !important; color: rgba(241,245,249,.4); }
+    .empty-state { text-align: center; padding: 3rem !important; color: var(--text-secondary); }
     .empty-state .material-icons-round { font-size: 2.5rem; margin-bottom: .5rem; display: block; }
     .empty-state a { color: #3b82f6; text-decoration: none; }
 </style>

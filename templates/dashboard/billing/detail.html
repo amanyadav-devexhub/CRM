@@ -94,32 +94,32 @@
 <style>
     .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
     @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
-    .detail-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.5rem; }
+    .detail-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; }
     .card-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
     .card-header .material-icons-round { color: #3b82f6; }
     .card-header h3 { font-size: 1rem; font-weight: 600; }
     .detail-rows { display: flex; flex-direction: column; gap: .5rem; }
-    .row { display: flex; justify-content: space-between; align-items: center; padding: .35rem 0; border-bottom: 1px solid rgba(255,255,255,.03); font-size: .84rem; }
-    .row .label { color: rgba(241,245,249,.45); font-weight: 500; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: .35rem 0; border-bottom: 1px solid var(--border-color); font-size: .84rem; }
+    .row .label { color: var(--text-secondary); font-weight: 500; }
     .status-pill { padding: .2rem .5rem; border-radius: 5px; font-size: .72rem; font-weight: 600; margin-left: .5rem; }
-    .status-pill.draft { background: rgba(255,255,255,.08); color: rgba(241,245,249,.5); }
+    .status-pill.draft { background: var(--bg-secondary); color: var(--text-secondary); }
     .status-pill.paid { background: rgba(16,185,129,.12); color: #10b981; }
     .status-pill.partially_paid { background: rgba(245,158,11,.1); color: #f59e0b; }
     .items-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-    .items-table th { text-align: left; padding: .5rem; color: rgba(241,245,249,.4); font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.06); }
-    .items-table td { padding: .4rem .5rem; border-bottom: 1px solid rgba(255,255,255,.03); }
-    .items-table .grand td { border-top: 2px solid rgba(255,255,255,.08); }
-    .pay-row { display: flex; justify-content: space-between; padding: .4rem 0; font-size: .82rem; border-bottom: 1px solid rgba(255,255,255,.03); }
-    .time-text { color: rgba(241,245,249,.4); font-size: .75rem; }
+    .items-table th { text-align: left; padding: .5rem; color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border-color); }
+    .items-table td { padding: .4rem .5rem; border-bottom: 1px solid var(--border-color); }
+    .items-table .grand td { border-top: 2px solid var(--border-color); }
+    .pay-row { display: flex; justify-content: space-between; padding: .4rem 0; font-size: .82rem; border-bottom: 1px solid var(--border-color); }
+    .time-text { color: var(--text-secondary); font-size: .75rem; }
     .pay-summary { margin-top: .5rem; font-size: .85rem; color: #10b981; }
     .pay-form { display: flex; flex-direction: column; gap: .75rem; }
-    .form-group label { display: block; font-size: .8rem; color: rgba(241,245,249,.55); margin-bottom: .3rem; }
-    .form-group input, .form-group select { width: 100%; padding: .5rem .75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .82rem; }
-    .form-group select option { background: #111827; }
+    .form-group label { display: block; font-size: .8rem; color: var(--text-secondary); margin-bottom: .3rem; }
+    .form-group input, .form-group select { width: 100%; padding: .5rem .75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: .82rem; }
+    .form-group select option { background: var(--bg-card); }
     .action-btn { width: 100%; padding: .6rem; border-radius: 10px; border: none; cursor: pointer; font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: .5rem; justify-content: center; }
     .action-btn.green { background: rgba(16,185,129,.12); color: #10b981; }
     .action-btn.green:hover { background: rgba(16,185,129,.2); }
-    .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: rgba(241,245,249,.5); text-decoration: none; }
+    .btn-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: var(--text-secondary); text-decoration: none; }
     .btn-back:hover { color: #3b82f6; }
 </style>
 

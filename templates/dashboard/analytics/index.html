@@ -68,12 +68,12 @@
 </div>
 
 <style>
-    .report-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; text-decoration: none; color: inherit; transition: all .2s; }
+    .report-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; text-decoration: none; color: inherit; transition: all .2s; }
     .report-card:hover { border-color: rgba(59,130,246,.4); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
     .report-card .icon { font-size: 1.75rem; padding: .75rem; border-radius: 12px; }
     .report-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .25rem; }
-    .report-card p { font-size: .82rem; color: rgba(241,245,249,.5); line-height: 1.4; margin: 0; }
-    .report-card .arrow { margin-left: auto; color: rgba(241,245,249,.3); font-size: 1.5rem; }
+    .report-card p { font-size: .82rem; color: var(--text-secondary); line-height: 1.4; margin: 0; }
+    .report-card .arrow { margin-left: auto; color: var(--text-secondary); font-size: 1.5rem; }
 </style>
 
 {% endblock %}

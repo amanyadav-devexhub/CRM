@@ -46,12 +46,12 @@
         padding: 1rem 1.25rem;
         background: var(--card-bg, #1e2530);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, .06);
+        border: 1px solid var(--border-color);
     }
 
     .filter-bar select {
-        background: rgba(255, 255, 255, .06);
-        border: 1px solid rgba(255, 255, 255, .1);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         color: #fff;
         padding: .55rem 1rem;
         border-radius: 8px;
@@ -76,8 +76,8 @@
 
     .filter-bar .btn-clear {
         background: transparent;
-        color: rgba(255, 255, 255, .5);
-        border: 1px solid rgba(255, 255, 255, .12);
+        color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         padding: .55rem 1rem;
         border-radius: 8px;
         cursor: pointer;
@@ -97,13 +97,13 @@
         background: var(--card-bg, #1e2530);
         border-radius: 12px;
         padding: 1rem 1.25rem;
-        border: 1px solid rgba(255, 255, 255, .06);
+        border: 1px solid var(--border-color);
         cursor: pointer;
         transition: background .15s, transform .15s;
     }
 
     .notif-item:hover {
-        background: rgba(255, 255, 255, .03);
+        background: var(--bg-secondary);
         transform: translateX(2px);
     }
 
@@ -146,7 +146,7 @@
 
     .icon-system {
         background: rgba(148, 163, 184, .15);
-        color: #94a3b8;
+        color: var(--text-secondary);
     }
 
     .icon-campaign {
@@ -171,21 +171,21 @@
     }
 
     .notif-text {
-        color: rgba(255, 255, 255, .55);
+        color: var(--bg-secondary);
         font-size: .85rem;
         line-height: 1.4;
     }
 
     .notif-time {
         font-size: .75rem;
-        color: rgba(255, 255, 255, .3);
+        color: var(--bg-secondary);
         margin-top: .35rem;
     }
 
     .empty-state {
         text-align: center;
         padding: 3rem;
-        color: rgba(255, 255, 255, .35);
+        color: var(--bg-secondary);
     }
 
     .empty-state .material-icons-round {
@@ -196,7 +196,7 @@
 
     .result-count {
         font-size: .85rem;
-        color: rgba(255, 255, 255, .4);
+        color: var(--bg-secondary);
         margin-bottom: 1rem;
     }
 </style>

@@ -74,12 +74,12 @@
     .stat-pills { display: flex; gap: .5rem; }
     .pill { padding: .35rem .8rem; border-radius: 20px; font-size: .75rem; font-weight: 600; }
     .pill.green { background: rgba(16,185,129,.12); color: #10b981; }
-    .pill.muted { background: rgba(255,255,255,.06); color: rgba(241,245,249,.5); }
+    .pill.muted { background: var(--bg-secondary); color: var(--text-secondary); }
     .btn-primary { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.25rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; text-decoration: none; }
 
     .doctor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
 
-    .doctor-card { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.5rem; transition: transform .15s, box-shadow .15s; }
+    .doctor-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; transition: transform .15s, box-shadow .15s; }
     .doctor-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.2); }
     .doctor-card.inactive { opacity: .5; }
 
@@ -89,13 +89,13 @@
     .spec-badge { font-size: .72rem; padding: .2rem .5rem; border-radius: 5px; background: rgba(59,130,246,.1); color: #60a5fa; font-weight: 500; }
 
     .doc-details { display: flex; flex-direction: column; gap: .5rem; }
-    .detail-row { display: flex; align-items: center; gap: .6rem; font-size: .825rem; color: rgba(241,245,249,.65); }
-    .detail-row .material-icons-round { font-size: 1rem; color: rgba(241,245,249,.35); }
+    .detail-row { display: flex; align-items: center; gap: .6rem; font-size: .825rem; color: var(--text-secondary); }
+    .detail-row .material-icons-round { font-size: 1rem; color: var(--text-secondary); }
 
     .doc-footer { margin-top: 1rem; }
     .inactive-label { font-size: .75rem; color: #ef4444; font-weight: 500; }
 
-    .empty-state-block { grid-column: 1 / -1; text-align: center; padding: 3rem; color: rgba(241,245,249,.4); }
+    .empty-state-block { grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-secondary); }
     .empty-state-block .material-icons-round { font-size: 3rem; margin-bottom: .5rem; }
 </style>
 

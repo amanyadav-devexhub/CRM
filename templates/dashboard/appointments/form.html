@@ -76,22 +76,22 @@
 
 <style>
     .crud-form { max-width: 800px; }
-    .form-section { background: var(--card, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; }
+    .form-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; }
     .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
     .section-icon { font-size: 1.5rem; padding: .5rem; border-radius: 10px; background: rgba(59,130,246,.1); color: #3b82f6; }
     .section-header h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .1rem; }
-    .section-header p { font-size: .78rem; color: rgba(241,245,249,.45); }
+    .section-header p { font-size: .78rem; color: var(--text-secondary); }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.15rem; }
     .form-group.full-width { grid-column: 1 / -1; }
-    .form-group label { display: block; font-size: .8rem; font-weight: 500; color: rgba(241,245,249,.55); margin-bottom: .35rem; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: .6rem .85rem; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #f1f5f9; font-size: .85rem; font-family: inherit; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: .35rem; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: .6rem .85rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: .85rem; font-family: inherit; }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #3b82f6; }
-    .form-group select option { background: #111827; }
+    .form-group select option { background: var(--bg-card); }
     .form-group textarea { resize: vertical; }
     .form-actions { display: flex; justify-content: flex-end; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: .875rem; font-weight: 600; border: none; cursor: pointer; }
     .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-    .btn-secondary { padding: .65rem 1.25rem; border-radius: 10px; background: rgba(255,255,255,.06); color: rgba(241,245,249,.7); font-size: .875rem; text-decoration: none; border: 1px solid rgba(255,255,255,.08); }
+    .btn-secondary { padding: .65rem 1.25rem; border-radius: 10px; background: var(--bg-secondary); color: var(--text-secondary); font-size: .875rem; text-decoration: none; border: 1px solid var(--border-color); }
 
     .slot-status { font-size: .75rem; margin-top: .35rem; min-height: 1.2em; }
     .slot-status.loading { color: #fbbf24; }
@@ -99,7 +99,7 @@
     .slot-status.error { color: #ef4444; }
     .slot-status.info { color: #60a5fa; }
 
-    select option:disabled { color: rgba(241,245,249,.3); }
+    select option:disabled { color: var(--text-secondary); }
 </style>
 
 <script>
