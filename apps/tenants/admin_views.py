@@ -28,7 +28,7 @@ class AdminCategoryListView(View):
         for cat in categories:
             from django.db.models import Q
             tenant_count = Tenant.objects.filter(
-                Q(category=cat.code) | Q(category_obj=cat)
+                Q(category=cat)
             ).distinct().count()
             cat_data.append({
                 "category": cat,
@@ -116,7 +116,7 @@ class AdminCategoryListView(View):
 
         elif action == "delete":
             tenant_count = Tenant.objects.filter(
-                Q(category=cat.code) | Q(category_obj=cat)
+                Q(category=cat)
             ).distinct().count()
             if tenant_count > 0:
                 messages.error(request, f"Cannot delete '{cat.name}' — {tenant_count} tenant(s) are using it. Deactivate it instead.")
@@ -883,7 +883,7 @@ class AdminRolesPermissionsView(View):
                     # Propagate: Create this role for all tenants in the category
                     from apps.accounts.models import Role
                     from apps.tenants.models import Tenant
-                    tenants = Tenant.objects.filter(category_obj=category)
+                    tenants = Tenant.objects.filter(category=category)
                     created_count = 0
                     for tenant in tenants:
                         role, created = Role.objects.get_or_create(

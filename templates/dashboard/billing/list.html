@@ -17,7 +17,7 @@
             <span class="material-icons-round">filter_list</span> Filter
         </button>
     </form>
-    <a href="/dashboard/billing/create/" class="btn-primary">
+    <a href="/billing/create/" class="btn-primary">
         <span class="material-icons-round">receipt</span> New Invoice
     </a>
 </div>
@@ -43,7 +43,7 @@
                 <td><span class="status-pill {{ inv.status|lower }}">{{ inv.get_status_display }}</span></td>
                 <td>{{ inv.created_at|date:"d M Y" }}</td>
                 <td>
-                    <a href="/dashboard/billing/{{ inv.pk }}/" class="btn-icon" title="View">
+                    <a href="/billing/{{ inv.pk }}/" class="btn-icon" title="View">
                         <span class="material-icons-round">visibility</span>
                     </a>
                 </td>
@@ -52,7 +52,7 @@
             <tr>
                 <td colspan="6" class="empty-state">
                     <span class="material-icons-round">receipt_long</span>
-                    <p>No invoices yet. <a href="/dashboard/billing/create/">Create one</a>.</p>
+                    <p>No invoices yet. <a href="/billing/create/">Create one</a>.</p>
                 </td>
             </tr>
             {% endfor %}

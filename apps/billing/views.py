@@ -71,7 +71,7 @@ class BillingCreateView(View):
         invoice.grand_total = subtotal
         invoice.save()
 
-        return redirect("/dashboard/billing/")
+        return redirect("/billing/")
 
 
 class BillingDetailView(View):
@@ -113,4 +113,4 @@ class BillingDetailView(View):
                     invoice.status = "PARTIALLY_PAID"
                 invoice.save()
 
-        return redirect(f"/dashboard/billing/{pk}/")
+        return redirect(f"/billing/{pk}/")

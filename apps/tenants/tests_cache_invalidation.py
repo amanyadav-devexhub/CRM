@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.core.cache import cache
-from apps.tenants.models import Tenant, SubscriptionPlan, Feature, PlanFeature, TenantFeature, TenantSubscription, Client
+from apps.tenants.models import Tenant, SubscriptionPlan, Feature, PlanFeature, TenantFeature, TenantSubscription, Client, Category
 from django.utils import timezone
 from datetime import timedelta
 
@@ -9,11 +9,15 @@ class CacheInvalidationTest(TestCase):
         cache.clear()
         # Setup base objects
         self.client_obj = Client.objects.create(name="Test Client", schema_name="test_schema")
+        self.category = Category.objects.create(
+            code="CLINIC",
+            name="Clinics"
+        )
         self.tenant = Tenant.objects.create(
             name="Test Clinic",
             subdomain="testclinic",
             client=self.client_obj,
-            category="CLINIC"
+            category=self.category
         )
         self.plan = SubscriptionPlan.objects.create(
             name="BASIC",

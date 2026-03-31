@@ -251,7 +251,7 @@
     <div class="card">
         <div class="card-header" style="justify-content:space-between; display:flex;">
             <h3><span class="icon material-icons-round">history_edu</span> Clinical Notes (SOAP)</h3>
-            <a href="/dashboard/clinical/notes/create/?patient={{ patient.id }}" class="action-btn" style="padding:4px 8px; font-size:12px; background:rgba(59,130,246,.1); color:#3b82f6; text-decoration:none; border-radius:6px;">
+            <a href="/notes/create/?patient={{ patient.id }}" class="action-btn" style="padding:4px 8px; font-size:12px; background:rgba(59,130,246,.1); color:#3b82f6; text-decoration:none; border-radius:6px;">
                 <span class="material-icons-round" style="font-size:14px;">add</span> Add Note
             </a>
         </div>
@@ -259,7 +259,7 @@
             {% if patient.clinical_notes.exists %}
             <div style="display:flex; flex-direction:column;">
                 {% for note in patient.clinical_notes.all|slice:":3" %}
-                <a href="/dashboard/clinical/notes/{{ note.pk }}/edit/" style="padding:16px; border-bottom:1px solid rgba(255,255,255,.05); display:block; text-decoration:none; color:inherit; transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
+                <a href="/notes/{{ note.pk }}/edit/" style="padding:16px; border-bottom:1px solid rgba(255,255,255,.05); display:block; text-decoration:none; color:inherit; transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                         <strong>Dr. {{ note.doctor.name }}</strong>
                         <span style="color:var(--text-muted); font-size:.8rem;">{{ note.created_at|date:"d M Y" }}</span>
@@ -284,7 +284,7 @@
     <div class="card">
         <div class="card-header" style="justify-content:space-between; display:flex;">
             <h3><span class="icon material-icons-round">medication</span> Prescriptions</h3>
-            <a href="/dashboard/clinical/prescriptions/create/?patient={{ patient.id }}" class="action-btn" style="padding:4px 8px; font-size:12px; background:rgba(16,185,129,.1); color:#10b981; text-decoration:none; border-radius:6px;">
+            <a href="/prescriptions/create/?patient={{ patient.id }}" class="action-btn" style="padding:4px 8px; font-size:12px; background:rgba(16,185,129,.1); color:#10b981; text-decoration:none; border-radius:6px;">
                 <span class="material-icons-round" style="font-size:14px;">add</span> Write Rx
             </a>
         </div>
@@ -301,12 +301,12 @@
                 </thead>
                 <tbody>
                     {% for rx in patient.prescriptions.all|slice:":5" %}
-                    <tr style="cursor:pointer;" onclick="window.location='/dashboard/clinical/prescriptions/{{ rx.pk }}/'">
+                    <tr style="cursor:pointer;" onclick="window.location='/prescriptions/{{ rx.pk }}/'">
                         <td style="white-space:nowrap;">{{ rx.created_at|date:"d M Y" }}</td>
                         <td>Dr. {{ rx.doctor.name }}</td>
                         <td><span class="badge-tag active">{{ rx.items.count }} items</span></td>
                         <td>
-                            <a href="/dashboard/clinical/prescriptions/{{ rx.pk }}/" class="tbl-action" title="View Prescription" style="text-decoration:none;">
+                            <a href="/prescriptions/{{ rx.pk }}/" class="tbl-action" title="View Prescription" style="text-decoration:none;">
                                 <span class="material-icons-round">visibility</span>
                             </a>
                         </td>

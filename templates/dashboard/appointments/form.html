@@ -67,7 +67,7 @@
     </div>
 
     <div class="form-actions">
-        <a href="/dashboard/appointments/" class="btn-secondary">Cancel</a>
+        <a href="/appointments/" class="btn-secondary">Cancel</a>
         <button type="submit" class="btn-primary" id="submitBtn" disabled>
             <span class="material-icons-round">event_available</span> Book Appointment
         </button>
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         slotStatus.textContent = 'Loading available slots...';
         slotStatus.className = 'slot-status loading';
 
-        fetch(`/dashboard/appointments/slots/?doctor=${doctorId}&date=${date}`)
+        fetch(`/appointments/slots/?doctor=${doctorId}&date=${date}`)
             .then(r => r.json())
             .then(data => {
                 if (data.error) {

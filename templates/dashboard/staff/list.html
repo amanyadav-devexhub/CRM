@@ -13,7 +13,7 @@
             <span class="pill muted">{{ total }} Total</span>
         </div>
     </div>
-    <a href="/dashboard/staff/create/" class="btn-primary">
+    <a href="/staff/create/" class="btn-primary">
         <span class="material-icons-round">person_add</span>
         Add Employee
     </a>
@@ -60,10 +60,10 @@
                 </td>
                 <td>
                     <div class="action-btns">
-                        <a href="/dashboard/staff/{{ emp.pk }}/edit/" class="btn-icon" title="Edit">
+                        <a href="/staff/{{ emp.pk }}/edit/" class="btn-icon" title="Edit">
                             <span class="material-icons-round">edit</span>
                         </a>
-                        <form method="post" action="/dashboard/staff/{{ emp.pk }}/delete/" class="inline-form"
+                        <form method="post" action="/staff/{{ emp.pk }}/delete/" class="inline-form"
                               onsubmit="return confirm('Deactivate this employee?')">
                             {% csrf_token %}
                             <button type="submit" class="btn-icon danger" title="Deactivate">
@@ -77,7 +77,7 @@
             <tr>
                 <td colspan="7" class="empty-state">
                     <span class="material-icons-round">group_off</span>
-                    <p>No employees yet. <a href="/dashboard/staff/create/">Add your first employee</a>.</p>
+                    <p>No employees yet. <a href="/staff/create/">Add your first employee</a>.</p>
                 </td>
             </tr>
             {% endfor %}

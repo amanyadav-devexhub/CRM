@@ -112,7 +112,7 @@
 
                     {% if "staff" in enabled_features %}
                     {% if request.user|has_permission:'users.manage' %}
-                    <a href="/dashboard/staff/" class="nav-item {% block nav_staff %}{% endblock %}">
+                    <a href="/staff/" class="nav-item {% block nav_staff %}{% endblock %}">
                         <span class="icon material-icons-round">badge</span>
                         Staff
                     </a>
@@ -126,14 +126,14 @@
                     {% endif %}
 
                     {% if request.user|has_permission:'clinics.manage' %}
-                    <a href="/dashboard/doctors/" class="nav-item {% block nav_doctors %}{% endblock %}">
+                    <a href="/doctors/" class="nav-item {% block nav_doctors %}{% endblock %}">
                         <span class="icon material-icons-round">stethoscope</span>
                         Doctors
                     </a>
                     {% endif %}
 
                     {% if request.user|has_permission:'clinics.manage' %}
-                    <a href="/dashboard/schedules/" class="nav-item {% block nav_schedules %}{% endblock %}">
+                    <a href="/schedules/" class="nav-item {% block nav_schedules %}{% endblock %}">
                         <span class="icon material-icons-round">schedule</span>
                         Schedules
                     </a>
@@ -144,7 +144,7 @@
                     <div class="nav-section-title">Operations</div>
                     {% if "appointments" in enabled_features %}
                         {% if request.user|has_feature_access:"appointments" %}
-                        <a href="/dashboard/appointments/" class="nav-item {% block nav_appointments %}{% endblock %}">
+                        <a href="/appointments/" class="nav-item {% block nav_appointments %}{% endblock %}">
                             <span class="icon material-icons-round">calendar_month</span>
                             Appointments
                         </a>
@@ -159,7 +159,7 @@
 
                     {% if "billing" in enabled_features %}
                         {% if request.user|has_feature_access:"billing" %}
-                        <a href="/dashboard/billing/" class="nav-item {% block nav_billing %}{% endblock %}">
+                        <a href="/billing/" class="nav-item {% block nav_billing %}{% endblock %}">
                             <span class="icon material-icons-round">receipt_long</span>
                             Billing
                         </a>
@@ -174,7 +174,7 @@
 
                     {% if "prescriptions" in enabled_features %}
                         {% if request.user|has_feature_access:"prescriptions" %}
-                        <a href="/dashboard/clinical/prescriptions/" class="nav-item {% block nav_prescriptions %}{% endblock %}">
+                        <a href="/prescriptions/" class="nav-item {% block nav_prescriptions %}{% endblock %}">
                             <span class="icon material-icons-round">description</span>
                             Prescriptions
                         </a>
@@ -192,7 +192,7 @@
                     <div class="nav-section-title">Clinical</div>
                     {% if "clinical_notes" in enabled_features %}
                         {% if request.user|has_feature_access:"clinical" %}
-                        <a href="/dashboard/clinical/notes/" class="nav-item {% block nav_clinical %}{% endblock %}">
+                        <a href="/notes/" class="nav-item {% block nav_clinical %}{% endblock %}">
                             <span class="icon material-icons-round">medical_services</span>
                             Clinical Notes
                         </a>
@@ -283,7 +283,7 @@
                     <div class="nav-section-title">Insights</div>
                     {% if "analytics" in enabled_features %}
                     {% if request.user|has_permission:'reports.view' %}
-                    <a href="/dashboard/analytics/" class="nav-item {% block nav_analytics %}{% endblock %}">
+                    <a href="/analytics/" class="nav-item {% block nav_analytics %}{% endblock %}">
                         <span class="icon material-icons-round">bar_chart</span>
                         Analytics
                     </a>
@@ -319,14 +319,14 @@
                     {% endif %}
 
                     {% if request.user|has_permission:'clinics.manage' %}
-                    <a href="/dashboard/settings/" class="nav-item {% block nav_settings %}{% endblock %}">
+                    <a href="/settings/" class="nav-item {% block nav_settings %}{% endblock %}">
                         <span class="icon material-icons-round">settings</span>
                         Clinic Settings
                     </a>
                     {% endif %}
 
                     {% if request.user|has_permission:'roles.manage' %}
-                    <a href="/dashboard/settings/roles/" class="nav-item {% block nav_roles %}{% endblock %}">
+                    <a href="/roles/" class="nav-item {% block nav_roles %}{% endblock %}">
                         <span class="icon material-icons-round">security</span>
                         Roles & Permissions
                     </a>

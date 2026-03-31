@@ -15,7 +15,7 @@
             <span class="material-icons-round">filter_list</span> Filter
         </button>
     </form>
-    <a href="/dashboard/clinical/notes/create/" class="btn-primary">
+    <a href="/notes/create/" class="btn-primary">
         <span class="material-icons-round">edit_note</span> New Note
     </a>
 </div>
@@ -32,7 +32,7 @@
                 </div>
             </div>
             {% if request.user.is_superuser or request.user|has_permission:'patients.edit_records' %}
-            <a href="/dashboard/clinical/notes/{{ note.pk }}/edit/" class="btn-icon" title="Edit"><span class="material-icons-round">edit</span></a>
+            <a href="/notes/{{ note.pk }}/edit/" class="btn-icon" title="Edit"><span class="material-icons-round">edit</span></a>
             {% endif %}
         </div>
         <div class="card-body">
@@ -47,7 +47,7 @@
     {% empty %}
     <div class="empty-state full-width">
         <div class="icon material-icons-round">history_edu</div>
-        <p>No clinical notes found. <a href="/dashboard/clinical/notes/create/">Write one</a>.</p>
+        <p>No clinical notes found. <a href="/notes/create/">Write one</a>.</p>
     </div>
     {% endfor %}
 </div>

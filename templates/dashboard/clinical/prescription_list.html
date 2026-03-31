@@ -15,7 +15,7 @@
             <span class="material-icons-round">filter_list</span> Filter
         </button>
     </form>
-    <a href="/dashboard/clinical/prescriptions/create/" class="btn-primary">
+    <a href="/prescriptions/create/" class="btn-primary">
         <span class="material-icons-round">add_box</span> Write Prescription
     </a>
 </div>
@@ -33,7 +33,7 @@
         </thead>
         <tbody>
             {% for rx in prescriptions %}
-            <tr style="cursor:pointer;" onclick="window.location='/dashboard/clinical/prescriptions/{{ rx.pk }}/'">
+            <tr style="cursor:pointer;" onclick="window.location='/prescriptions/{{ rx.pk }}/'">
                 <td>{{ rx.created_at|date:"d M Y" }} <span class="time-text">{{ rx.created_at|time:"h:i A" }}</span></td>
                 <td>
                     <a href="/patients/{{ rx.patient.pk }}/" style="color:inherit; text-decoration:none; font-weight:500;">
@@ -43,7 +43,7 @@
                 <td>Dr. {{ rx.doctor.name }}</td>
                 <td><span class="badge-tag active">{{ rx.items.count }}</span></td>
                 <td>
-                    <a href="/dashboard/clinical/prescriptions/{{ rx.pk }}/" class="btn-icon" title="View Details">
+                    <a href="/prescriptions/{{ rx.pk }}/" class="btn-icon" title="View Details">
                         <span class="material-icons-round">visibility</span>
                     </a>
                 </td>
@@ -52,7 +52,7 @@
             <tr>
                 <td colspan="5" class="empty-state">
                     <span class="material-icons-round">prescriptions</span>
-                    <p>No prescriptions found. <a href="/dashboard/clinical/prescriptions/create/">Write one</a>.</p>
+                    <p>No prescriptions found. <a href="/prescriptions/create/">Write one</a>.</p>
                 </td>
             </tr>
             {% endfor %}
