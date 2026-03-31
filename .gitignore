@@ -3,7 +3,7 @@ text_files/
 implementation.md
 
 # Python bytecode
-__pycache__/
+/__pycache__/
 *.pyc
 
 # Virtual environment
